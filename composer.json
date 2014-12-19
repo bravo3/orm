@@ -1,0 +1,54 @@
+{
+    "name": "bravo3/orm",
+    "type": "library",
+    "description": "No-SQL ORM for databases such as Redis",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Jordon Scott",
+            "email": "jordon@novatek.com.au"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "": ["src/","tests/"]
+        }
+    },
+    "require": {
+        "php": ">=5.5.0",
+        "psr/log": "~1.0",
+        "eloquent/enumeration": "~5.1",
+        "jms/serializer": "~0.16.0",
+        "symfony/event-dispatcher": "~2.4",
+        "doctrine/annotations": "~1.2"
+    },
+    "require-dev": {
+        "phpunit/phpunit": ">=4.1.0",
+        "predis/predis": "~0.8",
+        "incenteev/composer-parameter-handler": "~2.0",
+        "bravo3/properties": "~1.0"
+    },
+    "suggest": {
+        "predis/predis": "For Redis support"
+    },
+    "config": {
+        "bin-dir": "bin",
+        "preferred-install": "dist"
+    },
+    "extra": {
+        "incenteev-parameters": {
+            "file": "tests/config/parameters.yml"
+        },
+        "branch-alias": {
+            "dev-master": "1.0.x-dev"
+        }
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "Incenteev\\ParameterHandler\\ScriptHandler::buildParameters"
+        ],
+        "post-update-cmd": [
+            "Incenteev\\ParameterHandler\\ScriptHandler::buildParameters"
+        ]
+    }
+}

@@ -1,0 +1,4 @@
+parameters:
+    redis_host:
+    redis_port:
+    redis_database:
