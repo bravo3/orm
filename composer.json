@@ -1,7 +1,7 @@
 {
     "name": "bravo3/orm",
     "type": "library",
-    "description": "No-SQL ORM for databases such as Redis",
+    "description": "NoSQL ORM for databases such as Redis",
     "license": "MIT",
     "authors": [
         {
@@ -18,9 +18,9 @@
         "php": ">=5.5.0",
         "psr/log": "~1.0",
         "eloquent/enumeration": "~5.1",
-        "jms/serializer": "~0.16.0",
         "symfony/event-dispatcher": "~2.4",
-        "doctrine/annotations": "~1.2"
+        "doctrine/annotations": "~1.2",
+        "doctrine/inflector": "~1.0"
     },
     "require-dev": {
         "phpunit/phpunit": ">=4.1.0",
