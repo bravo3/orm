@@ -1,8 +1,7 @@
 <?php
-namespace Bravo3\Orm\Mappers\Annotion;
+namespace Bravo3\Orm\Mappers\Annotation;
 
-use Bravo3\Orm\Mappers\Annotation\AnnotationMetadata;
-use Bravo3\Orm\Services\MapperInterface;
+use Bravo3\Orm\Mappers\MapperInterface;
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Annotations\AnnotationRegistry;
 
@@ -26,7 +25,7 @@ class AnnotationMapper implements MapperInterface
     public function __construct($paths = [])
     {
         if (!$paths) {
-            $paths[] = ['Bravo3\Orm\Annotations', __DIR__.'/../../../'];
+            $paths[] = ['Bravo3\Orm\Annotations', __DIR__.'/../../../../'];
         }
 
         foreach ($paths as $path) {

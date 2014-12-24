@@ -26,7 +26,8 @@ class AnnotationMetadata implements MetadataInterface
             throw new InvalidArgumentException("Entity must be an object");
         }
 
-        $this->reflection_obj = new \ReflectionClass($entity);
+        $this->annotion_reader = new AnnotationReader();
+        $this->reflection_obj  = new \ReflectionClass($entity);
     }
 
     /**

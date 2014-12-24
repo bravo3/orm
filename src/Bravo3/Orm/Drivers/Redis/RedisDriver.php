@@ -1,8 +1,13 @@
 <?php
 namespace Bravo3\Orm\Drivers\Redis;
 
+use Bravo3\Orm\Drivers\Common\Command;
 use Bravo3\Orm\Drivers\Common\UnitOfWork;
 use Bravo3\Orm\Drivers\DriverInterface;
+use Bravo3\Orm\Exceptions\NotFoundException;
+use Predis\Client;
+use Predis\Command\CommandInterface;
+use Predis\Transaction\MultiExec;
 
 class RedisDriver implements DriverInterface
 {
@@ -11,8 +16,20 @@ class RedisDriver implements DriverInterface
      */
     protected $unit_of_work;
 
-    public function __construct()
+    /**
+     * @var Client
+     */
+    protected $client;
+
+    /**
+     * Create a new Redis driver
+     *
+     * @param mixed $params
+     * @param mixed $options
+     */
+    public function __construct($params = null, $options = null)
     {
+        $this->client       = new Client($params, $options);
         $this->unit_of_work = new UnitOfWork();
     }
 
@@ -25,7 +42,7 @@ class RedisDriver implements DriverInterface
      */
     public function persist($key, $data)
     {
-        // TODO: Implement persist() method.
+        $this->unit_of_work->addCommand('StringSet', [$key, $data]);
     }
 
     /**
@@ -36,18 +53,22 @@ class RedisDriver implements DriverInterface
      */
     public function delete($key)
     {
-        // TODO: Implement delete() method.
+        $this->unit_of_work->addCommand('KeyDelete', [$key]);
     }
 
     /**
-     * Retrieve an object
+     * Retrieve an object, throwing an exception if not found
      *
      * @param string $key
      * @return string
      */
     public function retrieve($key)
     {
-        // TODO: Implement retrieve() method.
+        if (!$this->client->exists($key)) {
+            throw new NotFoundException('Key "'.$key.'" does not exist');
+        }
+
+        return $this->client->get($key);
     }
 
     /**
@@ -57,7 +78,53 @@ class RedisDriver implements DriverInterface
      */
     public function flush()
     {
-        // TODO: Implement flush() method.
+        switch ($this->unit_of_work->getQueueSize()) {
+            case 0:
+                return;
+            case 1:
+                $this->flushSingle();
+                break;
+            default:
+                $this->flushMulti();
+                break;
+        }
+    }
+
+    /**
+     * Execute the next item in the work queue
+     */
+    private function flushSingle()
+    {
+        $command = $this->unit_of_work->getWork();
+        $this->client->executeCommand($this->getPredisCommand($command));
+    }
+
+    /**
+     * Execute all items in the work queue in a single transaction
+     */
+    private function flushMulti()
+    {
+        $multi = new MultiExec($this->client);
+        while ($command = $this->unit_of_work->getWork()) {
+            $multi->executeCommand($this->getPredisCommand($command));
+        }
+        $multi->execute();
+    }
+
+    /**
+     * Build a Predis command from a Command object
+     *
+     * @param Command $command
+     * @return CommandInterface
+     */
+    private function getPredisCommand($command)
+    {
+        $class = 'Predis\Command\\'.$command->getName();
+
+        /** @var CommandInterface $predis_command */
+        $predis_command = new $class();
+        $predis_command->setArguments($command->getArguments());
+        return $predis_command;
     }
 
     /**

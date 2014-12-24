@@ -43,7 +43,7 @@ class UnitOfWork
      *
      * @return Command|null
      */
-    public function getNextCommand()
+    public function getWork()
     {
         return array_shift($this->commands);
     }
@@ -67,5 +67,15 @@ class UnitOfWork
     public function getCommands()
     {
         return $this->commands;
+    }
+
+    /**
+     * Returns the number of commands in the queue
+     *
+     * @return int
+     */
+    public function getQueueSize()
+    {
+        return count($this->commands);
     }
 }

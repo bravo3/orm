@@ -1,5 +1,5 @@
 <?php
-namespace Bravo3\Orm\Services;
+namespace Bravo3\Orm\Mappers;
 
 interface MapperInterface
 {
