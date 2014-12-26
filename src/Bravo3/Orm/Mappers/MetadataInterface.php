@@ -12,4 +12,11 @@ interface MetadataInterface
      * @return string
      */
     public function getTableName();
+
+    /**
+     * Get the entities ID
+     *
+     * @return string
+     */
+    public function getEntityId();
 }

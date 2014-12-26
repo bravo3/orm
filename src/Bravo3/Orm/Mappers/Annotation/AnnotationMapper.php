@@ -2,6 +2,7 @@
 namespace Bravo3\Orm\Mappers\Annotation;
 
 use Bravo3\Orm\Mappers\MapperInterface;
+use Bravo3\Orm\Mappers\MetadataInterface;
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Annotations\AnnotationRegistry;
 
@@ -36,8 +37,8 @@ class AnnotationMapper implements MapperInterface
     /**
      * Get the metadata for an entity
      *
-     * @param $entity
-     * @return AnnotationMetadata
+     * @param object $entity
+     * @return MetadataInterface
      */
     public function getEntityMetadata($entity)
     {

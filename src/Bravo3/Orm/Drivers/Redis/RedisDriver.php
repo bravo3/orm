@@ -5,6 +5,8 @@ use Bravo3\Orm\Drivers\Common\Command;
 use Bravo3\Orm\Drivers\Common\UnitOfWork;
 use Bravo3\Orm\Drivers\DriverInterface;
 use Bravo3\Orm\Exceptions\NotFoundException;
+use Bravo3\Orm\KeySchemes\KeySchemeInterface;
+use Bravo3\Orm\KeySchemes\StandardKeyScheme;
 use Predis\Client;
 use Predis\Command\CommandInterface;
 use Predis\Transaction\MultiExec;
@@ -135,5 +137,15 @@ class RedisDriver implements DriverInterface
     public function purge()
     {
         $this->unit_of_work->purge();
+    }
+
+    /**
+     * Get the drivers preferred key scheme
+     *
+     * @return KeySchemeInterface
+     */
+    public function getPreferredKeyScheme()
+    {
+        return new StandardKeyScheme();
     }
 }

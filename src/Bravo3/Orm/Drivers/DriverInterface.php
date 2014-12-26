@@ -1,6 +1,8 @@
 <?php
 namespace Bravo3\Orm\Drivers;
 
+use Bravo3\Orm\KeySchemes\KeySchemeInterface;
+
 interface DriverInterface
 {
     /**
@@ -41,4 +43,11 @@ interface DriverInterface
      * @return void
      */
     public function purge();
+
+    /**
+     * Get the drivers preferred key scheme
+     *
+     * @return KeySchemeInterface
+     */
+    public function getPreferredKeyScheme();
 }
