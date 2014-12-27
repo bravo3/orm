@@ -9,7 +9,6 @@ use Eloquent\Enumeration\AbstractEnumeration;
  * @method static FieldType STRING()
  * @method static FieldType BOOL()
  * @method static FieldType DATETIME()
- * @method static FieldType ENTITY()
  */
 final class FieldType extends AbstractEnumeration
 {
@@ -18,5 +17,4 @@ final class FieldType extends AbstractEnumeration
     const STRING   = 'string';
     const BOOL     = 'bool';
     const DATETIME = 'datetime';
-    const ENTITY   = 'entity';
 }

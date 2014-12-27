@@ -23,12 +23,17 @@ class Entity
     /**
      * @var Column[]
      */
-    protected $columns;
+    protected $columns = [];
 
     /**
      * @var Column[]
      */
     protected $id_columns = null;
+
+    /**
+     * @var Relationship[]
+     */
+    protected $relationships = [];
 
     public function __construct($class_name, $table_name)
     {
@@ -113,7 +118,7 @@ class Entity
      * @param Column[] $columns
      * @return $this
      */
-    public function setColumns($columns)
+    public function setColumns(array $columns)
     {
         $this->columns = $columns;
         return $this;
@@ -147,5 +152,56 @@ class Entity
             }
         }
         return $this->id_columns;
+    }
+
+    /**
+     * Get Relationships
+     *
+     * @return Relationship[]
+     */
+    public function getRelationships()
+    {
+        return $this->relationships;
+    }
+
+    /**
+     * Set Relationships
+     *
+     * @param Relationship[] $relationships
+     * @return $this
+     */
+    public function setRelationships(array $relationships)
+    {
+        $this->relationships = $relationships;
+        return $this;
+    }
+
+    /**
+     * Add a relationship
+     *
+     * @param Relationship $relationship
+     * @return $this
+     */
+    public function addRelationship(Relationship $relationship)
+    {
+        $this->relationships[] = $relationship;
+        return $this;
+    }
+
+    /**
+     * Get a relationship by it's name, or null if no such relationship exists
+     *
+     * @param $name
+     * @return Relationship|null
+     */
+    public function getRelationshipByName($name)
+    {
+        foreach ($this->relationships as $relationship) {
+            if ($relationship->getName() == $name) {
+                return $relationship;
+            }
+        }
+
+        return null;
     }
 }

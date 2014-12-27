@@ -1,21 +1,22 @@
 <?php
 namespace Bravo3\Orm\KeySchemes;
 
+use Bravo3\Orm\Mappers\Metadata\Relationship;
+
 /**
- * Stores all keys with a configurable section delimiter which defaults to a colon (:), ideal for databases that do not
- * have any concept of folders
+ * Stores all keys with a configurable section delimiter which defaults to a colon (:)
  */
 class StandardKeyScheme implements KeySchemeInterface
 {
     const DEFAULT_DELIMITER = ':';
-    const ENTITY_NAMESPACE  = 'entity';
+    const ENTITY_NAMESPACE  = 'doc';
 
     /**
      * @var string
      */
     protected $delimiter;
 
-    function __construct($delimiter = null)
+    public function __construct($delimiter = null)
     {
         $this->delimiter = $delimiter ?: static::DEFAULT_DELIMITER;
     }
@@ -45,12 +46,28 @@ class StandardKeyScheme implements KeySchemeInterface
     /**
      * Return the key for an entity document
      *
-     * @param string $table_name
-     * @param string $id
+     * @param string $table_name Table name
+     * @param string $id         Entity ID
      * @return string
      */
     public function getEntityKey($table_name, $id)
     {
-        return static::ENTITY_NAMESPACE.':'.$table_name.':'.$id;
+        // doc:article:54624
+        return static::ENTITY_NAMESPACE.$this->delimiter.$table_name.$this->delimiter.$id;
+    }
+
+    /**
+     * Get the key for a foreign relationship
+     *
+     * @param Relationship $relationship Relationship
+     * @param string       $id           Source entity ID
+     * @return string
+     */
+    public function getRelationshipKey(Relationship $relationship, $id)
+    {
+        // otm:user-address:89726:home_address
+        return (string)$relationship->getRelationshipType()->value().$this->delimiter.
+               $relationship->getSource().'-'.$relationship->getTarget().$this->delimiter.
+               $id.$this->delimiter.$relationship->getName();
     }
 }

@@ -1,12 +1,12 @@
 <?php
-namespace Bravo3\Orm\Tests\Entities;
+namespace Bravo3\Orm\Tests\Entities\OneToOne;
 
 use Bravo3\Orm\Annotations as Orm;
 
 /**
- * @Orm\Entity(table="articles")
+ * @Orm\Entity
  */
-class Article
+class Address
 {
     /**
      * @var int
@@ -19,13 +19,13 @@ class Article
      * @var string
      * @Orm\Column(type="string")
      */
-    protected $title;
+    protected $street;
 
     /**
-     * @var string
-     * @Orm\Column(type="string")
+     * @var User
+     * @Orm\OneToOne(target="Bravo3\Orm\Tests\Entities\OneToOne\User", inversed_by="address")
      */
-    protected $body;
+    protected $user;
 
     /**
      * Get Id
@@ -50,46 +50,46 @@ class Article
     }
 
     /**
-     * Get Title
+     * Get Street
      *
      * @return string
      */
-    public function getTitle()
+    public function getStreet()
     {
-        return $this->title;
+        return $this->street;
     }
 
     /**
-     * Set Title
+     * Set Street
      *
-     * @param string $title
+     * @param string $street
      * @return $this
      */
-    public function setTitle($title)
+    public function setStreet($street)
     {
-        $this->title = $title;
+        $this->street = $street;
         return $this;
     }
 
     /**
-     * Get Body
+     * Get User
      *
-     * @return string
+     * @return User
      */
-    public function getBody()
+    public function getUser()
     {
-        return $this->body;
+        return $this->user;
     }
 
     /**
-     * Set Body
+     * Set User
      *
-     * @param string $body
+     * @param User $user
      * @return $this
      */
-    public function setBody($body)
+    public function setUser(User $user)
     {
-        $this->body = $body;
+        $this->user = $user;
         return $this;
     }
 }

@@ -1,12 +1,19 @@
 <?php
 namespace Bravo3\Orm\Mappers\Annotation;
 
-use Bravo3\Orm\Annotations\Column as ColumnAnnotion;
+use Bravo3\Orm\Annotations\AbstractRelationshipAnnotation;
+use Bravo3\Orm\Annotations\Column as ColumnAnnotation;
 use Bravo3\Orm\Annotations\Entity as EntityAnnotion;
+use Bravo3\Orm\Annotations\ManyToMany;
+use Bravo3\Orm\Annotations\ManyToOne;
+use Bravo3\Orm\Annotations\OneToMany;
+use Bravo3\Orm\Annotations\OneToOne;
 use Bravo3\Orm\Enum\FieldType;
+use Bravo3\Orm\Enum\RelationshipType;
 use Bravo3\Orm\Exceptions\InvalidEntityException;
 use Bravo3\Orm\Mappers\Metadata\Column;
 use Bravo3\Orm\Mappers\Metadata\Entity;
+use Bravo3\Orm\Mappers\Metadata\Relationship;
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Inflector\Inflector;
 
@@ -15,6 +22,10 @@ class AnnotationMetadataParser
     const ENTITY_ANNOTATION = 'Bravo3\Orm\Annotations\Entity';
     const ID_ANNOTATION     = 'Bravo3\Orm\Annotations\Id';
     const COLUMN_ANNOTATION = 'Bravo3\Orm\Annotations\Column';
+    const OTO_ANNOTATION    = 'Bravo3\Orm\Annotations\OneToOne';
+    const OTM_ANNOTATION    = 'Bravo3\Orm\Annotations\OneToMany';
+    const MTO_ANNOTATION    = 'Bravo3\Orm\Annotations\ManyToOne';
+    const MTM_ANNOTATION    = 'Bravo3\Orm\Annotations\ManyToMany';
 
     /**
      * @var AnnotationReader
@@ -72,7 +83,7 @@ class AnnotationMetadataParser
 
         $properties = $this->reflection_obj->getProperties();
         foreach ($properties as $property) {
-            /** @var ColumnAnnotion $column_annotation */
+            /** @var ColumnAnnotation $column_annotation */
             $column_annotation = $this->annotion_reader->getPropertyAnnotation($property, self::COLUMN_ANNOTATION);
             if ($column_annotation) {
                 $column = $this->parseColumnAnnotation($column_annotation, $property->getName());
@@ -89,13 +100,71 @@ class AnnotationMetadataParser
     }
 
     /**
+     * Get all relationships in the entity
+     *
+     * @return Relationship[]
+     */
+    public function getRelationships()
+    {
+        $r = [];
+
+        $properties = $this->reflection_obj->getProperties();
+        foreach ($properties as $property) {
+            /** @var OneToOne $oto */
+            $oto = $this->annotion_reader->getPropertyAnnotation($property, self::OTO_ANNOTATION);
+            if ($oto) {
+                $r[] = $this->createRelationship($property->getName(), RelationshipType::ONETOONE(), $oto);
+            }
+
+            /** @var OneToMany $otm */
+            $otm = $this->annotion_reader->getPropertyAnnotation($property, self::OTM_ANNOTATION);
+            if ($otm) {
+                $r[] = $this->createRelationship($property->getName(), RelationshipType::ONETOMANY(), $otm);
+            }
+
+            /** @var ManyToOne $mto */
+            $mto = $this->annotion_reader->getPropertyAnnotation($property, self::MTO_ANNOTATION);
+            if ($mto) {
+                $r[] = $this->createRelationship($property->getName(), RelationshipType::MANYTOONE(), $mto);
+            }
+
+            /** @var ManyToMany $mtm */
+            $mtm = $this->annotion_reader->getPropertyAnnotation($property, self::MTM_ANNOTATION);
+            if ($mtm) {
+                $r[] = $this->createRelationship($property->getName(), RelationshipType::MANYTOMANY(), $mtm);
+            }
+        }
+
+        return $r;
+    }
+
+    /**
+     * Create a relationship from an annotation
+     *
+     * @param string                         $name
+     * @param RelationshipType               $type
+     * @param AbstractRelationshipAnnotation $annotation
+     * @return Relationship
+     */
+    private function createRelationship($name, RelationshipType $type, AbstractRelationshipAnnotation $annotation)
+    {
+        $relationship = new Relationship($name, $type);
+        $relationship->setSource($this->reflection_obj->getName())
+                     ->setTarget($annotation->target)
+                     ->setGetter($annotation->getter)
+                     ->setSetter($annotation->setter)
+                     ->setInversedBy($annotation->inversed_by);
+        return $relationship;
+    }
+
+    /**
      * Parse a ColumnAnnotation and return a Column object
      *
-     * @param ColumnAnnotion $column_annotation
-     * @param string         $name
+     * @param ColumnAnnotation $column_annotation
+     * @param string           $name
      * @return Column
      */
-    private function parseColumnAnnotation(ColumnAnnotion $column_annotation, $name)
+    private function parseColumnAnnotation(ColumnAnnotation $column_annotation, $name)
     {
         $column = new Column($name);
         $column->setType(FieldType::memberByValue($column_annotation->type));
@@ -114,6 +183,7 @@ class AnnotationMetadataParser
     {
         $entity = new Entity($this->reflection_obj->getName(), $this->getTableName());
         $entity->setColumns($this->getColumns());
+        $entity->setRelationships($this->getRelationships());
         return $entity;
     }
 }

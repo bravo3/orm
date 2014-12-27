@@ -81,7 +81,7 @@ class JsonSerialiser implements SerialiserInterface
     /**
      * Assign a type-casted value to the data object
      *
-     * Entities and unknown types will not be added to the object.
+     * Fields of unknown types will not be added to the object.
      *
      * @param \stdClass $data
      * @param Column    $column
@@ -92,11 +92,10 @@ class JsonSerialiser implements SerialiserInterface
         $field_name = $column->getName();
 
         switch ($column->getType()) {
+            default:
+                break;
             case FieldType::DATETIME():
                 $data->$field_name = $this->serialiseDateTime($value);
-                break;
-            default:
-            case FieldType::ENTITY():
                 break;
             case FieldType::INT():
                 $data->$field_name = (int)$value;
@@ -143,12 +142,10 @@ class JsonSerialiser implements SerialiserInterface
             $value  = $raw[$field];
 
             switch ($column->getType()) {
+                default:
+                    break;
                 case FieldType::DATETIME():
                     $entity->$setter(new \DateTime($value));
-                    break;
-                default:
-                case FieldType::ENTITY():
-                    // This data shouldn't be here..
                     break;
                 case FieldType::INT():
                     $entity->$setter((int)$value);

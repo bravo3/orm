@@ -4,7 +4,6 @@ namespace Bravo3\Orm\Tests\Drivers\Redis;
 use Bravo3\Orm\Drivers\Common\SerialisedData;
 use Bravo3\Orm\Drivers\Redis\RedisDriver;
 use Bravo3\Orm\Exceptions\NotFoundException;
-use Bravo3\Orm\Tests\Entities\BadEntity;
 
 class RedisDriverTest extends \PHPUnit_Framework_TestCase
 {
