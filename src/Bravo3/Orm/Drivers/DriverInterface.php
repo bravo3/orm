@@ -1,6 +1,7 @@
 <?php
 namespace Bravo3\Orm\Drivers;
 
+use Bravo3\Orm\Drivers\Common\SerialisedData;
 use Bravo3\Orm\KeySchemes\KeySchemeInterface;
 
 interface DriverInterface
@@ -8,11 +9,11 @@ interface DriverInterface
     /**
      * Persist some primitive data
      *
-     * @param string $key
-     * @param string $data
+     * @param string         $key
+     * @param SerialisedData $data
      * @return void
      */
-    public function persist($key, $data);
+    public function persist($key, SerialisedData $data);
 
     /**
      * Delete a primitive document
@@ -26,7 +27,7 @@ interface DriverInterface
      * Retrieve an object
      *
      * @param string $key
-     * @return string
+     * @return SerialisedData
      */
     public function retrieve($key);
 

@@ -3,6 +3,7 @@ namespace Bravo3\Orm;
 
 use Bravo3\Orm\Drivers\DriverInterface;
 use Bravo3\Orm\KeySchemes\KeySchemeInterface;
+use Bravo3\Orm\Mappers\Io\Writer;
 use Bravo3\Orm\Mappers\MapperInterface;
 use Bravo3\Orm\Serialisers\JsonSerialiser;
 use Bravo3\Orm\Serialisers\SerialiserMap;
@@ -77,10 +78,12 @@ class EntityManager
      */
     public function persist($entity)
     {
-        $metadata = $this->mapper->getEntityMetadata($entity);
+        $metadata   = $this->mapper->getEntityMetadata(get_class($entity));
+        $serialiser = $this->getSerialiserMap()->getDefaultSerialiser();
+
         $this->driver->persist(
-            $this->key_scheme->getEntityKey($metadata->getTableName(), $metadata->getEntityId()),
-            $this->getSerialiserMap()->getDefaultSerialiser()->serialise($entity)
+            $this->key_scheme->getEntityKey($metadata->getTableName(), $serialiser->getId($metadata, $entity)),
+            $serialiser->serialise($metadata, $entity)
         );
     }
 
@@ -92,8 +95,12 @@ class EntityManager
      */
     public function delete($entity)
     {
-        $metadata = $this->mapper->getEntityMetadata($entity);
-        $this->driver->delete($this->key_scheme->getEntityKey($metadata->getTableName(), $metadata->getEntityId()));
+        $metadata   = $this->mapper->getEntityMetadata(get_class($entity));
+        $serialiser = $this->getSerialiserMap()->getDefaultSerialiser();
+
+        $this->driver->delete(
+            $this->key_scheme->getEntityKey($metadata->getTableName(), $serialiser->getId($metadata, $entity))
+        );
     }
 
     /**
@@ -105,7 +112,14 @@ class EntityManager
      */
     public function retrieve($class_name, $id)
     {
+        $metadata = $this->mapper->getEntityMetadata($class_name);
 
+        $serialised_data = $this->driver->retrieve(
+            $this->key_scheme->getEntityKey($metadata->getTableName(), $id)
+        );
+
+        $writer = new Writer($metadata, $serialised_data, $this);
+        return $writer->getProxy();
     }
 
     /**

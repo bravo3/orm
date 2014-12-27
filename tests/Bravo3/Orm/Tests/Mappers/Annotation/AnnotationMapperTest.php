@@ -1,5 +1,5 @@
 <?php
-namespace Bravo3\Orm\Tests\Services;
+namespace Bravo3\Orm\Tests\Mappers\Annotation;
 
 use Bravo3\Orm\Mappers\Annotation\AnnotationMapper;
 use Bravo3\Orm\Tests\Entities\Article;

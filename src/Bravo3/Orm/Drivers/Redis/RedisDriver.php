@@ -2,6 +2,7 @@
 namespace Bravo3\Orm\Drivers\Redis;
 
 use Bravo3\Orm\Drivers\Common\Command;
+use Bravo3\Orm\Drivers\Common\SerialisedData;
 use Bravo3\Orm\Drivers\Common\UnitOfWork;
 use Bravo3\Orm\Drivers\DriverInterface;
 use Bravo3\Orm\Exceptions\NotFoundException;
@@ -38,13 +39,13 @@ class RedisDriver implements DriverInterface
     /**
      * Persist some primitive data
      *
-     * @param string $key
-     * @param string $data
+     * @param string         $key
+     * @param SerialisedData $data
      * @return void
      */
-    public function persist($key, $data)
+    public function persist($key, SerialisedData $data)
     {
-        $this->unit_of_work->addCommand('StringSet', [$key, $data]);
+        $this->unit_of_work->addCommand('StringSet', [$key, $data->getSerialisationCode().$data->getData()]);
     }
 
     /**
@@ -62,7 +63,7 @@ class RedisDriver implements DriverInterface
      * Retrieve an object, throwing an exception if not found
      *
      * @param string $key
-     * @return string
+     * @return SerialisedData
      */
     public function retrieve($key)
     {
@@ -70,7 +71,8 @@ class RedisDriver implements DriverInterface
             throw new NotFoundException('Key "'.$key.'" does not exist');
         }
 
-        return $this->client->get($key);
+        $data = $this->client->get($key);
+        return new SerialisedData(substr($data, 0, 4), substr($data, 4));
     }
 
     /**

@@ -18,10 +18,10 @@ class SerialiserMap implements \ArrayAccess, \IteratorAggregate
 
     public function addSerialiser(SerialiserInterface $serialiser)
     {
-        $this->serialisers[$serialiser->getId()] = $serialiser;
+        $this->serialisers[$serialiser->getSerialiserCode()] = $serialiser;
 
         if (count($this->serialisers) == 1) {
-            $this->default_serialiser = $serialiser->getId();
+            $this->default_serialiser = $serialiser->getSerialiserCode();
         }
     }
 
