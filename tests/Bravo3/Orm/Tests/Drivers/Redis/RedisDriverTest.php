@@ -4,6 +4,7 @@ namespace Bravo3\Orm\Tests\Drivers\Redis;
 use Bravo3\Orm\Drivers\Common\SerialisedData;
 use Bravo3\Orm\Drivers\Redis\RedisDriver;
 use Bravo3\Orm\Exceptions\NotFoundException;
+use Bravo3\Orm\Tests\Entities\BadEntity;
 
 class RedisDriverTest extends \PHPUnit_Framework_TestCase
 {
@@ -47,18 +48,6 @@ class RedisDriverTest extends \PHPUnit_Framework_TestCase
         } catch (NotFoundException $e) {
             $this->assertContains($key, $e->getMessage());
         }
-    }
-
-    /**
-     * @expectedException \Bravo3\Orm\Exceptions\NotFoundException
-     */
-    public function testNotFound()
-    {
-        $driver = $this->getDriver();
-        $key    = 'test:not-found:'.rand(10000, 99999);
-
-        $driver->persist($key, new SerialisedData('xxxx', 'foo'));
-        $driver->retrieve($key);
     }
 
     protected function getDriver()

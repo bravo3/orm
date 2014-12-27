@@ -55,6 +55,7 @@ class Writer
         $factory = new LazyLoadingGhostFactory();
         $writer  = $this;
 
+        // Create the proxy with a Closure responsible for lazy-loading via this instance of the Writer
         $this->proxy = $factory->createProxy(
             $metadata->getClassName(),
             function (LazyLoadingInterface $proxy, $method, array $parameters, & $initializer) use ($writer) {
