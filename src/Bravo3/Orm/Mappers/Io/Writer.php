@@ -4,7 +4,9 @@ namespace Bravo3\Orm\Mappers\Io;
 use Bravo3\Orm\Drivers\Common\SerialisedData;
 use Bravo3\Orm\EntityManager;
 use Bravo3\Orm\Mappers\Metadata\Entity;
-use ProxyManager\Factory\LazyLoadingGhostFactory;
+use Bravo3\Orm\Mappers\Metadata\Relationship;
+use Bravo3\Orm\Proxy\OrmProxyFactory;
+use Bravo3\Orm\Proxy\OrmProxyInterface;
 use ProxyManager\Proxy\LazyLoadingInterface;
 
 /**
@@ -30,7 +32,7 @@ class Writer
     protected $entity_manager;
 
     /**
-     * @var LazyLoadingInterface
+     * @var OrmProxyInterface
      */
     protected $proxy;
 
@@ -52,7 +54,7 @@ class Writer
 
         // TODO: cache here -
         // https://github.com/Ocramius/ProxyManager/blob/master/docs/tuning-for-production.md
-        $factory = new LazyLoadingGhostFactory();
+        $factory = new OrmProxyFactory();
         $writer  = $this;
 
         // Create the proxy with a Closure responsible for lazy-loading via this instance of the Writer
@@ -66,7 +68,7 @@ class Writer
                 }
 
                 // Hydrate foreign relatives on request
-                $this->hydrateRelative($method);
+                $this->examineMethodForHydration($method);
 
                 return true;
             }
@@ -84,11 +86,11 @@ class Writer
     }
 
     /**
-     * Deserialise and hydrate the proxy
+     * Deserialise and hydrate all primitive data in the proxy (not relationships)
      *
      * @return $this
      */
-    protected function hydrate()
+    public function hydrate()
     {
         $serialiser = $this->entity_manager->getSerialiserMap()->getSerialiser(
             $this->serialised_data->getSerialisationCode()
@@ -106,15 +108,35 @@ class Writer
      * @param string $method
      * @return $this
      */
-    protected function hydrateRelative($method)
+    private function examineMethodForHydration($method)
     {
         if (isset($this->hydrated_methods[$method])) {
             return $this;
         }
 
-        // TODO: hydrate FK
+        $property = $this->metadata->getPropertyFor($method);
+        if ($property) {
+            $relative = $this->metadata->getRelationshipByName($property);
+            if ($relative) {
+                $this->proxy->setRelativeModified($property);
+                $this->hydrateRelative($relative);
+            }
+        }
 
         $this->hydrated_methods[$method] = true;
+        return $this;
+    }
+
+    /**
+     * Hydrate a relationship
+     *
+     * @param Relationship $relative
+     * @return $this
+     */
+    public function hydrateRelative(Relationship $relative)
+    {
+        // TODO: implement me
+
         return $this;
     }
 }

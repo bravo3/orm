@@ -35,6 +35,13 @@ class Entity
      */
     protected $relationships = [];
 
+    /**
+     * Used to lookup the property that matches a getter/setter function
+     *
+     * @var array
+     */
+    protected $property_map = null;
+
     public function __construct($class_name, $table_name)
     {
         $this->class_name = $class_name;
@@ -121,6 +128,7 @@ class Entity
     public function setColumns(array $columns)
     {
         $this->columns = $columns;
+        $this->resetMaps();
         return $this;
     }
 
@@ -133,7 +141,17 @@ class Entity
     public function addColumn(Column $column)
     {
         $this->columns[] = $column;
+        $this->resetMaps();
         return $this;
+    }
+
+    /**
+     * Clear the maps based on the columns
+     */
+    private function resetMaps()
+    {
+        $this->id_columns = null;
+        $this->property_map = null;
     }
 
     /**
@@ -173,6 +191,7 @@ class Entity
     public function setRelationships(array $relationships)
     {
         $this->relationships = $relationships;
+        $this->property_map = null;
         return $this;
     }
 
@@ -185,6 +204,7 @@ class Entity
     public function addRelationship(Relationship $relationship)
     {
         $this->relationships[] = $relationship;
+        $this->property_map = null;
         return $this;
     }
 
@@ -203,5 +223,41 @@ class Entity
         }
 
         return null;
+    }
+
+    /**
+     * Get the name of the property matching the given function
+     *
+     * @param string $fn
+     * @return string|null
+     */
+    public function getPropertyFor($fn) {
+        if ($this->property_map === null) {
+            $this->generatePropertyMap();
+        }
+
+        if (isset($this->property_map[$fn])) {
+            return $this->property_map[$fn];
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Generate a list of all getters/setters and what property they refer to
+     */
+    private function generatePropertyMap()
+    {
+        $this->property_map = [];
+
+        foreach ($this->columns as $column) {
+            $this->property_map[$column->getGetter()] = $column->getProperty();
+            $this->property_map[$column->getSetter()] = $column->getProperty();
+        }
+
+        foreach ($this->relationships as $relationship) {
+            $this->property_map[$relationship->getGetter()] = $relationship->getName();
+            $this->property_map[$relationship->getSetter()] = $relationship->getName();
+        }
     }
 }

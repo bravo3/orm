@@ -2,6 +2,7 @@
 namespace Bravo3\Orm;
 
 use Bravo3\Orm\Drivers\DriverInterface;
+use Bravo3\Orm\Enum\RelationshipType;
 use Bravo3\Orm\KeySchemes\KeySchemeInterface;
 use Bravo3\Orm\Mappers\Io\Writer;
 use Bravo3\Orm\Mappers\MapperInterface;
@@ -85,6 +86,28 @@ class EntityManager
             $this->key_scheme->getEntityKey($metadata->getTableName(), $serialiser->getId($metadata, $entity)),
             $serialiser->serialise($metadata, $entity)
         );
+
+        $relationships = $metadata->getRelationships();
+
+        if ($relationships) {
+
+        }
+
+        foreach ($relationships as $relationship) {
+            switch ($relationship->getRelationshipType()) {
+                default:
+                case RelationshipType::ONETOONE():
+                case RelationshipType::MANYTOONE():
+                    // Require a single key index
+
+                    break;
+                case RelationshipType::ONETOMANY():
+                case RelationshipType::MANYTOMANY():
+                    // Require a list index
+
+                    break;
+            }
+        }
     }
 
     /**
