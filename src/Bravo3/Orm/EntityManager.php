@@ -4,8 +4,10 @@ namespace Bravo3\Orm;
 use Bravo3\Orm\Drivers\DriverInterface;
 use Bravo3\Orm\Enum\RelationshipType;
 use Bravo3\Orm\KeySchemes\KeySchemeInterface;
+use Bravo3\Orm\Mappers\Io\Reader;
 use Bravo3\Orm\Mappers\Io\Writer;
 use Bravo3\Orm\Mappers\MapperInterface;
+use Bravo3\Orm\Proxy\OrmProxyInterface;
 use Bravo3\Orm\Serialisers\JsonSerialiser;
 use Bravo3\Orm\Serialisers\SerialiserMap;
 
@@ -81,33 +83,68 @@ class EntityManager
     {
         $metadata   = $this->mapper->getEntityMetadata(get_class($entity));
         $serialiser = $this->getSerialiserMap()->getDefaultSerialiser();
+        $reader     = new Reader($metadata, $entity);
+        $id         = $reader->getId();
 
         $this->driver->persist(
-            $this->key_scheme->getEntityKey($metadata->getTableName(), $serialiser->getId($metadata, $entity)),
+            $this->key_scheme->getEntityKey($metadata->getTableName(), $id),
             $serialiser->serialise($metadata, $entity)
         );
 
         $relationships = $metadata->getRelationships();
+        $is_proxy      = $entity instanceof OrmProxyInterface;
 
-        if ($relationships) {
-
-        }
 
         foreach ($relationships as $relationship) {
+            // If the entity is not a proxy (i.e. a new entity) we still must allow for the scenario in which a new
+            // entity is created over the top of an existing, as such, we still need to check every relationship
+            if ($is_proxy) {
+                /** @var OrmProxyInterface $entity */
+                if (!$entity->isRelativeModified($relationship->getName())) {
+                    // Only if we have a proxy object and the relationship has not been modified, can we skip the
+                    // relationship update
+                    continue;
+                }
+            }
+
+            $key = $this->key_scheme->getRelationshipKey($relationship, $id);
+
             switch ($relationship->getRelationshipType()) {
                 default:
                 case RelationshipType::ONETOONE():
                 case RelationshipType::MANYTOONE():
-                    // Require a single key index
-
+                    // Index is a single-value key
+                    $this->setSingleValueRelationship($key, $reader->getPropertyValue($relationship->getName()));
                     break;
                 case RelationshipType::ONETOMANY():
                 case RelationshipType::MANYTOMANY():
-                    // Require a list index
+                    // Index is a multi-value key (list)
 
                     break;
             }
+
+            if ($relationship->getInversedBy()) {
+                // TODO: update inverse relationship - need to know the former value
+                // Remove local entity from previous foreign entity
+                // ..
+
+                // Add local entity to new foreign entity
+                // ..
+            }
         }
+    }
+
+    private function setSingleValueRelationship($key, $foreign_entity)
+    {
+        if ($foreign_entity) {
+            $rel_metadata = $this->mapper->getEntityMetadata(get_class($foreign_entity));
+            $rel_reader   = new Reader($rel_metadata, $foreign_entity);
+            $value        = $rel_reader->getId();
+        } else {
+            $value = null;
+        }
+
+        $this->driver->setSingleValueIndex($key, $value);
     }
 
     /**
@@ -118,11 +155,11 @@ class EntityManager
      */
     public function delete($entity)
     {
-        $metadata   = $this->mapper->getEntityMetadata(get_class($entity));
-        $serialiser = $this->getSerialiserMap()->getDefaultSerialiser();
+        $metadata = $this->mapper->getEntityMetadata(get_class($entity));
+        $reader   = new Reader($metadata, $entity);
 
         $this->driver->delete(
-            $this->key_scheme->getEntityKey($metadata->getTableName(), $serialiser->getId($metadata, $entity))
+            $this->key_scheme->getEntityKey($metadata->getTableName(), $reader->getId())
         );
     }
 

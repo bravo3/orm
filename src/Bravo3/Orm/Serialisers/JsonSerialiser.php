@@ -37,29 +37,6 @@ class JsonSerialiser implements SerialiserInterface
     }
 
     /**
-     * Get an ID for the given data
-     *
-     * @param Entity $metadata
-     * @param object $entity
-     * @return string
-     */
-    public function getId(Entity $metadata, $entity)
-    {
-        $values = [];
-
-        $reader = new Reader($metadata, $entity);
-        foreach ($metadata->getIdColumns() as $column) {
-            $values[] = $reader->getPropertyValue($column->getProperty());
-        }
-
-        if (!count($values)) {
-            throw new InvalidEntityException('Entity "'.$metadata->getClassName().'" has no ID column');
-        }
-
-        return implode(Entity::ID_DELIMITER, $values);
-    }
-
-    /**
      * Serialise the entity
      *
      * @param Entity $metadata

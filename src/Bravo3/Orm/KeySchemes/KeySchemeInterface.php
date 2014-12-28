@@ -1,6 +1,8 @@
 <?php
 namespace Bravo3\Orm\KeySchemes;
 
+use Bravo3\Orm\Mappers\Metadata\Relationship;
+
 interface KeySchemeInterface
 {
     /**
@@ -11,4 +13,13 @@ interface KeySchemeInterface
      * @return string
      */
     public function getEntityKey($table_name, $id);
+
+    /**
+     * Get the key for a foreign relationship
+     *
+     * @param Relationship $relationship Relationship
+     * @param string       $id           Source entity ID
+     * @return string
+     */
+    public function getRelationshipKey(Relationship $relationship, $id);
 }

@@ -14,15 +14,6 @@ interface SerialiserInterface
     public function getSerialiserCode();
 
     /**
-     * Get an ID (document key) for the given data
-     *
-     * @param Entity $metadata
-     * @param object $entity
-     * @return string
-     */
-    public function getId(Entity $metadata, $entity);
-
-    /**
      * Serialise the entity
      *
      * @param Entity $metadata

@@ -51,4 +51,55 @@ interface DriverInterface
      * @return KeySchemeInterface
      */
     public function getPreferredKeyScheme();
+
+    /**
+     * Set a key-value index
+     *
+     * @param string $key
+     * @param string $value
+     * @return void
+     */
+    public function setSingleValueIndex($key, $value);
+
+    /**
+     * Get the value of a key-value index
+     *
+     * @param string $key
+     * @return string
+     */
+    public function getSingleValueIndex($key);
+
+    /**
+     * Clear all values from a list index
+     *
+     * @param string $key
+     * @return void
+     */
+    public function clearMultiValueIndex($key);
+
+    /**
+     * Add one or many values to a list index
+     *
+     * @param string       $key
+     * @param string|array $value
+     * @return void
+     */
+    public function addMultiValueIndex($key, $value);
+
+    /**
+     * Remove a value from a list index
+     *
+     * @param string $key
+     * @param string $value
+     * @return void
+     */
+    public function removeMultiValueIndex($key, $value);
+
+    /**
+     * Get a list of all values on a list index
+     *
+     * @param string $key
+     * @return string[]
+     */
+    public function getAllMultiValueIndex($key);
 }
