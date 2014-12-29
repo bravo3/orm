@@ -64,7 +64,6 @@ class OneToOneTest extends \PHPUnit_Framework_TestCase
 
         // Should make DB query here
         $r_address = $r_user->getAddress();
-        //$this->assertNull($r_address);
         $this->assertTrue($r_address instanceof Address);
         $this->assertTrue($r_address instanceof OrmProxyInterface);
     }
@@ -92,7 +91,6 @@ class OneToOneTest extends \PHPUnit_Framework_TestCase
 
         // Should make DB query here
         $r_address = $r_user->getAddress();
-        //$this->assertNull($r_address);
         $this->assertTrue($r_address instanceof Address);
         $this->assertTrue($r_address instanceof OrmProxyInterface);
     }

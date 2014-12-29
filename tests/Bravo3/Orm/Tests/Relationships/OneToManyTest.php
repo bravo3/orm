@@ -50,7 +50,6 @@ class OneToManyTest extends \PHPUnit_Framework_TestCase
 
         // Should make DB query here
         $r_category = $r_article->getCanonicalCategory();
-        //$this->assertNull($r_category);
         $this->assertTrue($r_category instanceof Category);
 
         // Check inverse side too -
@@ -60,7 +59,6 @@ class OneToManyTest extends \PHPUnit_Framework_TestCase
 
         // Should make DB query here
         $ir_articles = $ir_category->getArticles();
-        //$this->assertCount(0, $ir_articles);
         $this->assertCount(1, $ir_articles);
         $ir_article = $ir_articles[0];
         $this->assertTrue($ir_article instanceof Article);
@@ -90,7 +88,6 @@ class OneToManyTest extends \PHPUnit_Framework_TestCase
         // Should make DB query here
         $r_category = $r_article->getCanonicalCategory();
         $this->assertTrue($r_category instanceof Category);
-        //$this->assertNull($r_category);
 
         // Check inverse side too -
         /** @var Category|OrmProxyInterface $ir_category */
@@ -99,7 +96,6 @@ class OneToManyTest extends \PHPUnit_Framework_TestCase
 
         // Should make DB query here
         $ir_articles = $ir_category->getArticles();
-        //$this->assertCount(0, $ir_articles);
         $this->assertCount(1, $ir_articles);
         $ir_article = $ir_articles[0];
         $this->assertTrue($ir_article instanceof Article);
