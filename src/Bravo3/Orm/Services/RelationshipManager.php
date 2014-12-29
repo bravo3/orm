@@ -3,6 +3,8 @@ namespace Bravo3\Orm\Services;
 
 use Bravo3\Orm\Drivers\DriverInterface;
 use Bravo3\Orm\Enum\RelationshipType;
+use Bravo3\Orm\Exceptions\InvalidArgumentException;
+use Bravo3\Orm\Exceptions\InvalidEntityException;
 use Bravo3\Orm\KeySchemes\KeySchemeInterface;
 use Bravo3\Orm\Services\Io\Reader;
 use Bravo3\Orm\Mappers\MapperInterface;
@@ -107,11 +109,16 @@ class RelationshipManager
             $key   = $this->getKeyScheme()->getRelationshipKey($relationship, $local_id);
             $value = $reader->getPropertyValue($relationship->getName());
 
-            $this->persistRelationship($relationship, $key, $value);
+            // This test allows NEW (not a proxy) entities that have NOT set a relationship to inherit existing
+            // relationships which could be useful if the relationship was set by a foreign entity
+            // See: docs/RaceConditions.md
+            if ($is_proxy || $value) {
+                $this->persistForwardRelationship($relationship, $key, $value);
 
-            // Modify the inversed relationships
-            if ($relationship->getInversedBy()) {
-                $this->persistInversedRelationship($relationship, $key, $value, $local_id);
+                // Modify the inversed relationships
+                if ($relationship->getInversedBy()) {
+                    $this->persistInversedRelationship($relationship, $key, $value, $local_id);
+                }
             }
         }
     }
@@ -123,7 +130,7 @@ class RelationshipManager
      * @param string          $key          Relationship key
      * @param object|object[] $value        Relationship value
      */
-    private function persistRelationship(Relationship $relationship, $key, $value)
+    private function persistForwardRelationship(Relationship $relationship, $key, $value)
     {
         // Set the local relationship
         if (RelationshipType::isMultiIndex($relationship->getRelationshipType())) {
@@ -177,8 +184,21 @@ class RelationshipManager
      */
     public function invertRelationship(Relationship $relationship)
     {
+        if (!$relationship->getInversedBy()) {
+            throw new InvalidArgumentException('Relationship "'.$relationship->getName().'" is not inversed');
+        }
+
         $metadata = $this->getMapper()->getEntityMetadata($relationship->getTarget());
-        return $metadata->getRelationshipByName($relationship->getInversedBy());
+        $inverse  = $metadata->getRelationshipByName($relationship->getInversedBy());
+
+        if (!$inverse) {
+            throw new InvalidEntityException(
+                'Relationship "'.$relationship->getName().'" inverse side "'.$relationship->getInversedBy().
+                '" cannot be not found'
+            );
+        }
+
+        return $inverse;
     }
 
     /**
@@ -228,7 +248,6 @@ class RelationshipManager
                 if ($old_id) {
                     $to_remove[] = $old_id;
                 }
-
                 if ($new_id) {
                     $to_add[] = $new_id;
                 }

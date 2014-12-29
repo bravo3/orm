@@ -6,8 +6,6 @@ use Bravo3\Orm\Mappers\Annotation\AnnotationMapper;
 use Bravo3\Orm\Proxy\OrmProxyInterface;
 use Bravo3\Orm\Services\EntityManager;
 use Bravo3\Orm\Tests\Entities\BadEntity;
-use Bravo3\Orm\Tests\Entities\OneToOne\Address;
-use Bravo3\Orm\Tests\Entities\OneToOne\User;
 use Bravo3\Orm\Tests\Entities\Product;
 
 class EntityManagerTest extends \PHPUnit_Framework_TestCase
@@ -52,93 +50,6 @@ class EntityManagerTest extends \PHPUnit_Framework_TestCase
         $em         = $this->getEntityManager();
         $bad_entity = new BadEntity();
         $em->persist($bad_entity);
-    }
-
-    public function testOneToOne()
-    {
-        $user = new User();
-        $user->setId(100)->setName('Clem');
-
-        $address = new Address();
-        $address->setId(500)->setStreet('Fandango St');
-
-        $user->setAddress($address);
-
-        $em = $this->getEntityManager();
-        $em->persist($address)->persist($user)->flush();
-
-        /** @var User|OrmProxyInterface $r_user */
-        $r_user = $em->retrieve('Bravo3\Orm\Tests\Entities\OneToOne\User', 100);
-        $this->assertFalse($r_user->isProxyInitialized());
-        $this->assertEquals(100, $r_user->getId());
-        $this->assertEquals('Clem', $r_user->getName());
-
-        // Because each relationship is independently lazy-loaded, the proxy is never considered "initialised"
-        $this->assertFalse($r_user->isProxyInitialized());
-
-        // Should make DB query here
-        $r_address = $r_user->getAddress();
-        $this->assertTrue($r_address instanceof Address);
-        $this->assertTrue($r_address instanceof OrmProxyInterface);
-
-        $this->assertEquals(500, $r_address->getId());
-        $this->assertEquals('Fandango St', $r_address->getStreet());
-    }
-
-    /**
-     * By setting the relationship on the user only, then persisting the address last, the second persist call will
-     * clear the relationship
-     */
-    public function testOneToOneRaceFail()
-    {
-        $user = new User();
-        $user->setId(101)->setName('Steven');
-
-        $address = new Address();
-        $address->setId(501)->setStreet('Toast St');
-
-        $user->setAddress($address);
-
-        $em = $this->getEntityManager();
-        $em->persist($user)->flush()->persist($address)->flush();
-
-        /** @var User|OrmProxyInterface $r_user */
-        $r_user = $em->retrieve('Bravo3\Orm\Tests\Entities\OneToOne\User', 101);
-        $this->assertEquals('Steven', $r_user->getName());
-
-        // Should make DB query here
-        $r_address = $r_user->getAddress();
-        $this->assertNull($r_address);
-    }
-
-    /**
-     * As above, but when we persist both the user and the address at the same time, the address side of the
-     * relationship is new and not re-written
-     */
-    public function testOneToOneRaceSuccess()
-    {
-        $user = new User();
-        $user->setId(102)->setName('Ray');
-
-        $address = new Address();
-        $address->setId(502)->setStreet('Purchase St');
-
-        $user->setAddress($address);
-
-        $em = $this->getEntityManager();
-        $em->persist($user)->persist($address)->flush();
-
-        /** @var User|OrmProxyInterface $r_user */
-        $r_user = $em->retrieve('Bravo3\Orm\Tests\Entities\OneToOne\User', 102);
-        $this->assertEquals('Ray', $r_user->getName());
-
-        // Should make DB query here
-        $r_address = $r_user->getAddress();
-
-        // Should still retrieve, since we persisted user & address at the same time, there was no change to the
-        // address FK
-        $this->assertTrue($r_address instanceof Address);
-        $this->assertTrue($r_address instanceof OrmProxyInterface);
     }
 
     /**
