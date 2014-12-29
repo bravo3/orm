@@ -7,6 +7,22 @@ Purpose
 The purpose of this library is to blend ORM and ODM fundamentals with NoSQL database platforms, allowing you to use 
 NoSQL databases with pseudo-relationships through means of a traditional entity manager.
 
-Supported Databases
--------------------
-This library could work with any database server by adding new drivers, however the only bundled driver is **Redis**.
+Bundled Strategies
+------------------
+
+### Databases
+
+* Redis
+
+### Serialisation
+
+* JSON
+
+### Entity Metadata Mappers
+
+* Annotation
+
+### Key Schemes
+
+* Configurable delimiter, defaulting to Redis-style
+

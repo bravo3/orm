@@ -24,7 +24,7 @@ class Column
     /**
      * @var string
      */
-    protected $classname;
+    protected $class_name;
 
     /**
      * @var string
@@ -118,21 +118,20 @@ class Column
      *
      * @return string
      */
-    public function getClassname()
+    public function getClassName()
     {
-        return $this->classname;
+        return $this->class_name;
     }
 
     /**
-     * Set the related class name, doing so will force the field type to ENTITY
+     * Set the related class name
      *
-     * @param string $classname
+     * @param string $class_name
      * @return $this
      */
-    public function setClassname($classname)
+    public function setClassName($class_name)
     {
-        $this->classname = $classname;
-        $this->type      = FieldType::ENTITY();
+        $this->class_name = $class_name;
         return $this;
     }
 

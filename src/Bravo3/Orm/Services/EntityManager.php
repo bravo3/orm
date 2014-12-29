@@ -1,15 +1,13 @@
 <?php
-namespace Bravo3\Orm;
+namespace Bravo3\Orm\Services;
 
 use Bravo3\Orm\Drivers\DriverInterface;
-use Bravo3\Orm\Enum\RelationshipType;
 use Bravo3\Orm\KeySchemes\KeySchemeInterface;
-use Bravo3\Orm\Mappers\Io\Reader;
-use Bravo3\Orm\Mappers\Io\Writer;
 use Bravo3\Orm\Mappers\MapperInterface;
-use Bravo3\Orm\Proxy\OrmProxyInterface;
 use Bravo3\Orm\Serialisers\JsonSerialiser;
 use Bravo3\Orm\Serialisers\SerialiserMap;
+use Bravo3\Orm\Services\Io\Reader;
+use Bravo3\Orm\Services\Io\Writer;
 
 class EntityManager
 {
@@ -32,6 +30,11 @@ class EntityManager
      * @var KeySchemeInterface
      */
     protected $key_scheme;
+
+    /**
+     * @var RelationshipManager
+     */
+    protected $relationship_manager = null;
 
     public function __construct(
         DriverInterface $driver,
@@ -77,11 +80,11 @@ class EntityManager
      * Persist an entity
      *
      * @param object $entity
-     * @return void
+     * @return $this
      */
     public function persist($entity)
     {
-        $metadata   = $this->mapper->getEntityMetadata(get_class($entity));
+        $metadata   = $this->mapper->getEntityMetadata(Reader::getEntityClassName($entity));
         $serialiser = $this->getSerialiserMap()->getDefaultSerialiser();
         $reader     = new Reader($metadata, $entity);
         $id         = $reader->getId();
@@ -91,67 +94,16 @@ class EntityManager
             $serialiser->serialise($metadata, $entity)
         );
 
-        $relationships = $metadata->getRelationships();
-        $is_proxy      = $entity instanceof OrmProxyInterface;
+        $this->getRelationshipManager()->persistRelationships($entity, $metadata, $reader, $id);
 
-
-        foreach ($relationships as $relationship) {
-            // If the entity is not a proxy (i.e. a new entity) we still must allow for the scenario in which a new
-            // entity is created over the top of an existing, as such, we still need to check every relationship
-            if ($is_proxy) {
-                /** @var OrmProxyInterface $entity */
-                if (!$entity->isRelativeModified($relationship->getName())) {
-                    // Only if we have a proxy object and the relationship has not been modified, can we skip the
-                    // relationship update
-                    continue;
-                }
-            }
-
-            $key = $this->key_scheme->getRelationshipKey($relationship, $id);
-
-            switch ($relationship->getRelationshipType()) {
-                default:
-                case RelationshipType::ONETOONE():
-                case RelationshipType::MANYTOONE():
-                    // Index is a single-value key
-                    $this->setSingleValueRelationship($key, $reader->getPropertyValue($relationship->getName()));
-                    break;
-                case RelationshipType::ONETOMANY():
-                case RelationshipType::MANYTOMANY():
-                    // Index is a multi-value key (list)
-
-                    break;
-            }
-
-            if ($relationship->getInversedBy()) {
-                // TODO: update inverse relationship - need to know the former value
-                // Remove local entity from previous foreign entity
-                // ..
-
-                // Add local entity to new foreign entity
-                // ..
-            }
-        }
-    }
-
-    private function setSingleValueRelationship($key, $foreign_entity)
-    {
-        if ($foreign_entity) {
-            $rel_metadata = $this->mapper->getEntityMetadata(get_class($foreign_entity));
-            $rel_reader   = new Reader($rel_metadata, $foreign_entity);
-            $value        = $rel_reader->getId();
-        } else {
-            $value = null;
-        }
-
-        $this->driver->setSingleValueIndex($key, $value);
+        return $this;
     }
 
     /**
      * Delete an entity
      *
      * @param string $entity
-     * @return void
+     * @return $this
      */
     public function delete($entity)
     {
@@ -161,6 +113,8 @@ class EntityManager
         $this->driver->delete(
             $this->key_scheme->getEntityKey($metadata->getTableName(), $reader->getId())
         );
+
+        return $this;
     }
 
     /**
@@ -185,20 +139,66 @@ class EntityManager
     /**
      * Execute the current unit of work
      *
-     * @return void
+     * @return $this
      */
     public function flush()
     {
         $this->driver->flush();
+        return $this;
     }
 
     /**
      * Purge the current unit of work, clearing any unexecuted commands
      *
-     * @return void
+     * @return $this
      */
     public function purge()
     {
         $this->driver->purge();
+        return $this;
+    }
+
+    /**
+     * Get the underlying driver
+     *
+     * @return DriverInterface
+     */
+    public function getDriver()
+    {
+        return $this->driver;
+    }
+
+    /**
+     * Get the key scheme
+     *
+     * @return KeySchemeInterface
+     */
+    public function getKeyScheme()
+    {
+        return $this->key_scheme;
+    }
+
+    /**
+     * Get the entity mapper
+     *
+     * @return MapperInterface
+     */
+    public function getMapper()
+    {
+        return $this->mapper;
+    }
+
+    /**
+     * Lazy-loading relationship manager
+     *
+     * @return RelationshipManager
+     */
+    protected function getRelationshipManager()
+    {
+        if ($this->relationship_manager === null) {
+            $this->relationship_manager = new RelationshipManager($this);
+        }
+
+        return $this->relationship_manager;
     }
 }

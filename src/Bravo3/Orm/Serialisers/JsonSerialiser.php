@@ -3,8 +3,7 @@ namespace Bravo3\Orm\Serialisers;
 
 use Bravo3\Orm\Drivers\Common\SerialisedData;
 use Bravo3\Orm\Enum\FieldType;
-use Bravo3\Orm\Exceptions\InvalidEntityException;
-use Bravo3\Orm\Mappers\Io\Reader;
+use Bravo3\Orm\Services\Io\Reader;
 use Bravo3\Orm\Mappers\Metadata\Column;
 use Bravo3\Orm\Mappers\Metadata\Entity;
 

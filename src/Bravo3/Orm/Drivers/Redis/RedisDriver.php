@@ -150,4 +150,88 @@ class RedisDriver implements DriverInterface
     {
         return new StandardKeyScheme();
     }
+
+    /**
+     * Set a key-value index
+     *
+     * @param string $key
+     * @param string $value
+     * @return void
+     */
+    public function setSingleValueIndex($key, $value)
+    {
+        $this->unit_of_work->addCommand('StringSet', [$key, $value]);
+    }
+
+    /**
+     * Get the value of a key-value index
+     *
+     * If the key does not exist, null should be returned.
+     *
+     * @param string $key
+     * @return string
+     */
+    public function getSingleValueIndex($key)
+    {
+        return $this->client->get($key) ?: null;
+    }
+
+    /**
+     * Clear all values from a set index
+     *
+     * @param string $key
+     * @return void
+     */
+    public function clearMultiValueIndex($key)
+    {
+        $this->unit_of_work->addCommand('KeyDelete', [$key]);
+    }
+
+    /**
+     * Add one or many values to a set index
+     *
+     * @param string       $key
+     * @param string|array $value
+     * @return void
+     */
+    public function addMultiValueIndex($key, $value)
+    {
+        $this->unit_of_work->addCommand('SetAdd', [$key, $value]);
+    }
+
+    /**
+     * Remove one or more values from a set index
+     *
+     * @param string       $key
+     * @param string|array $value
+     * @return void
+     */
+    public function removeMultiValueIndex($key, $value)
+    {
+        $this->unit_of_work->addCommand('SetRemove', [$key, $value]);
+    }
+
+    /**
+     * Get a list of all values on a set index
+     *
+     * If the key does not exist, an empty array should be returned.
+     *
+     * @param string $key
+     * @return string[]
+     */
+    public function getMultiValueIndex($key)
+    {
+        return $this->client->smembers($key) ?: [];
+    }
+
+    /**
+     * Clear the value of a key-value index
+     *
+     * @param string $key
+     * @return string
+     */
+    public function clearSingleValueIndex($key)
+    {
+        $this->unit_of_work->addCommand('KeyDelete', [$key]);
+    }
 }

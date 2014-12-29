@@ -64,13 +64,23 @@ interface DriverInterface
     /**
      * Get the value of a key-value index
      *
+     * If the key does not exist, null should be returned
+     *
      * @param string $key
-     * @return string
+     * @return string|null
      */
     public function getSingleValueIndex($key);
 
     /**
-     * Clear all values from a list index
+     * Clear the value of a key-value index
+     *
+     * @param string $key
+     * @return string
+     */
+    public function clearSingleValueIndex($key);
+
+    /**
+     * Clear all values from a set index
      *
      * @param string $key
      * @return void
@@ -87,19 +97,21 @@ interface DriverInterface
     public function addMultiValueIndex($key, $value);
 
     /**
-     * Remove a value from a list index
+     * Remove one or more values from a set index
      *
      * @param string $key
-     * @param string $value
+     * @param string|array $value
      * @return void
      */
     public function removeMultiValueIndex($key, $value);
 
     /**
-     * Get a list of all values on a list index
+     * Get a list of all values on a set index
+     *
+     * If the key does not exist, an empty array should be returned.
      *
      * @param string $key
      * @return string[]
      */
-    public function getAllMultiValueIndex($key);
+    public function getMultiValueIndex($key);
 }

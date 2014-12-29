@@ -1,5 +1,12 @@
 Serialisers
 ===========
+Serialisers implement a strategy pattern and provide different methods of storing data. Multiple serialisers can be
+registered to the entity manager, allowing you to deserialise many different encodings, but when storing entities the
+default serialiser will be used. You can change the default serialiser by referencing the serialiser map on the entity
+manager.
+
+Examples of alternative serialisers could be to use compression, or store in a format specific to the database (e.g.
+an API server might have a specific document format). 
 
 Serialiser Code
 ---------------

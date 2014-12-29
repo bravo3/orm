@@ -1,12 +1,13 @@
 <?php
-namespace Bravo3\Orm\Mappers\Io;
+namespace Bravo3\Orm\Services\Io;
 
 use Bravo3\Orm\Drivers\Common\SerialisedData;
-use Bravo3\Orm\EntityManager;
+use Bravo3\Orm\Enum\RelationshipType;
 use Bravo3\Orm\Mappers\Metadata\Entity;
 use Bravo3\Orm\Mappers\Metadata\Relationship;
 use Bravo3\Orm\Proxy\OrmProxyFactory;
 use Bravo3\Orm\Proxy\OrmProxyInterface;
+use Bravo3\Orm\Services\EntityManager;
 use ProxyManager\Proxy\LazyLoadingInterface;
 
 /**
@@ -45,6 +46,11 @@ class Writer
      * @var array
      */
     protected $hydrated_methods = [];
+
+    /**
+     * @var Reader
+     */
+    protected $reader = null;
 
     public function __construct(Entity $metadata, SerialisedData $data, EntityManager $entity_manager)
     {
@@ -135,8 +141,37 @@ class Writer
      */
     public function hydrateRelative(Relationship $relative)
     {
-        // TODO: implement me
+        $setter = $relative->getSetter();
+        $key    = $this->entity_manager->getKeyScheme()->getRelationshipKey($relative, $this->getReader()->getId());
+
+        if (RelationshipType::isMultiIndex($relative->getRelationshipType())) {
+            $items = [];
+            $ids   = $this->entity_manager->getDriver()->getMultiValueIndex($key);
+            foreach ($ids as $id) {
+                $items[] = $this->entity_manager->retrieve($relative->getTarget(), $id);
+            }
+            $this->proxy->$setter($items);
+        } else {
+            $id = $this->entity_manager->getDriver()->getSingleValueIndex($key);
+            if ($id) {
+                $this->proxy->$setter($this->entity_manager->retrieve($relative->getTarget(), $id));
+            }
+        }
 
         return $this;
+    }
+
+    /**
+     * Lazy-loading Reader for current proxy
+     *
+     * @return Reader
+     */
+    protected function getReader()
+    {
+        if ($this->reader === null) {
+            $this->reader = new Reader($this->metadata, $this->proxy);
+        }
+
+        return $this->reader;
     }
 }

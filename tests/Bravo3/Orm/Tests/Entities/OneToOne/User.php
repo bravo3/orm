@@ -4,7 +4,7 @@ namespace Bravo3\Orm\Tests\Entities\OneToOne;
 use Bravo3\Orm\Annotations as Orm;
 
 /**
- * @Orm\Entity
+ * @Orm\Entity(table="users")
  */
 class User
 {

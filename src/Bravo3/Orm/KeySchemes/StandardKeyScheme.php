@@ -67,7 +67,7 @@ class StandardKeyScheme implements KeySchemeInterface
     {
         // otm:user-address:89726:home_address
         return (string)$relationship->getRelationshipType()->value().$this->delimiter.
-               $relationship->getSource().'-'.$relationship->getTarget().$this->delimiter.
+               $relationship->getSourceTable().'-'.$relationship->getTargetTable().$this->delimiter.
                $id.$this->delimiter.$relationship->getName();
     }
 }

@@ -3,7 +3,7 @@ namespace Bravo3\Orm\Mappers\Annotation;
 
 use Bravo3\Orm\Annotations\AbstractRelationshipAnnotation;
 use Bravo3\Orm\Annotations\Column as ColumnAnnotation;
-use Bravo3\Orm\Annotations\Entity as EntityAnnotion;
+use Bravo3\Orm\Annotations\Entity as EntityAnnotation;
 use Bravo3\Orm\Annotations\ManyToMany;
 use Bravo3\Orm\Annotations\ManyToOne;
 use Bravo3\Orm\Annotations\OneToMany;
@@ -50,7 +50,7 @@ class AnnotationMetadataParser
      */
     public function getTableName()
     {
-        /** @var EntityAnnotion $entity */
+        /** @var EntityAnnotation $entity */
         $entity = $this->annotion_reader->getClassAnnotation($this->reflection_obj, self::ENTITY_ANNOTATION);
 
         if (!$entity) {
@@ -148,12 +148,17 @@ class AnnotationMetadataParser
      */
     private function createRelationship($name, RelationshipType $type, AbstractRelationshipAnnotation $annotation)
     {
+        $target       = new AnnotationMetadataParser($annotation->target);
         $relationship = new Relationship($name, $type);
+
         $relationship->setSource($this->reflection_obj->getName())
                      ->setTarget($annotation->target)
+                     ->setSourceTable($this->getTableName())
+                     ->setTargetTable($target->getTableName())
                      ->setGetter($annotation->getter)
                      ->setSetter($annotation->setter)
                      ->setInversedBy($annotation->inversed_by);
+
         return $relationship;
     }
 
@@ -179,7 +184,7 @@ class AnnotationMetadataParser
      *
      * @return Entity
      */
-    public function getEntityMetdata()
+    public function getEntityMetadata()
     {
         $entity = new Entity($this->reflection_obj->getName(), $this->getTableName());
         $entity->setColumns($this->getColumns());

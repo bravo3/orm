@@ -2,7 +2,6 @@
 namespace Bravo3\Orm\Serialisers;
 
 use Bravo3\Orm\Exceptions\OutOfBoundsException;
-use Traversable;
 
 class SerialiserMap implements \ArrayAccess, \IteratorAggregate
 {
@@ -139,7 +138,7 @@ class SerialiserMap implements \ArrayAccess, \IteratorAggregate
     }
 
     /**
-     * Retrieve an interator for all serialisers in the map
+     * Retrieve an iterator for all serialisers in the map
      *
      * @return \Traversable
      */

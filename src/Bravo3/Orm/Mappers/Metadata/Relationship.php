@@ -2,6 +2,7 @@
 namespace Bravo3\Orm\Mappers\Metadata;
 
 use Bravo3\Orm\Enum\RelationshipType;
+use Doctrine\Common\Inflector\Inflector;
 
 class Relationship
 {
@@ -28,6 +29,16 @@ class Relationship
     /**
      * @var string
      */
+    protected $source_table;
+
+    /**
+     * @var string
+     */
+    protected $target_table;
+
+    /**
+     * @var string
+     */
     protected $inversed_by;
 
     /**
@@ -40,12 +51,11 @@ class Relationship
      */
     protected $setter;
 
-    function __construct($name, RelationshipType $relationship_type)
+    public function __construct($name, RelationshipType $relationship_type)
     {
         $this->name              = $name;
         $this->relationship_type = $relationship_type;
     }
-
 
     /**
      * Get Name
@@ -136,6 +146,50 @@ class Relationship
     }
 
     /**
+     * Get source table name
+     *
+     * @return string
+     */
+    public function getSourceTable()
+    {
+        return $this->source_table;
+    }
+
+    /**
+     * Set source table name
+     *
+     * @param string $source_table
+     * @return $this
+     */
+    public function setSourceTable($source_table)
+    {
+        $this->source_table = $source_table;
+        return $this;
+    }
+
+    /**
+     * Get target table name
+     *
+     * @return string
+     */
+    public function getTargetTable()
+    {
+        return $this->target_table;
+    }
+
+    /**
+     * Set target table name
+     *
+     * @param string $target_table
+     * @return $this
+     */
+    public function setTargetTable($target_table)
+    {
+        $this->target_table = $target_table;
+        return $this;
+    }
+
+    /**
      * Get inversed by field name
      *
      * @return string
@@ -164,7 +218,7 @@ class Relationship
      */
     public function getGetter()
     {
-        return $this->getter;
+        return $this->getter ?: 'get'.Inflector::classify($this->getName());
     }
 
     /**
@@ -186,7 +240,7 @@ class Relationship
      */
     public function getSetter()
     {
-        return $this->setter;
+        return $this->setter ?: 'set'.Inflector::classify($this->getName());
     }
 
     /**
