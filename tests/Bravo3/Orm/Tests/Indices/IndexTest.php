@@ -1,12 +1,15 @@
 <?php
 namespace Bravo3\Orm\Tests\Indices;
 
+use Bravo3\Orm\Exceptions\NotFoundException;
 use Bravo3\Orm\Services\Io\Reader;
 use Bravo3\Orm\Tests\AbstractOrmTest;
 use Bravo3\Orm\Tests\Entities\Indexed\IndexedEntity;
 
 class IndexTest extends AbstractOrmTest
 {
+    const INDEXED_ENTITY = 'Bravo3\Orm\Tests\Entities\Indexed\IndexedEntity';
+
     public function testIndex()
     {
         $em = $this->getEntityManager();
@@ -43,10 +46,22 @@ class IndexTest extends AbstractOrmTest
         $em->persist($entity)->flush();
 
         /** @var IndexedEntity $retrieved */
-        $retrieved = $em->retrieve('Bravo3\Orm\Tests\Entities\Indexed\IndexedEntity', '100.id2');
+        $retrieved = $em->retrieve(self::INDEXED_ENTITY, '100.id2');
         $retrieved->setAlpha('omega')->setId1(101);
-
         $em->persist($retrieved)->flush();
 
+        try {
+            $em->retrieveByIndex(self::INDEXED_ENTITY, 'ab', 'alpha.200');
+            $this->fail("Former index was found");
+        } catch (NotFoundException $e) {
+        }
+
+        /** @var IndexedEntity $retrieved_by_index */
+        $retrieved_by_index = $em->retrieveByIndex(self::INDEXED_ENTITY, 'ab', 'omega.200');
+        $this->assertEquals(101, $retrieved_by_index->getId1());
+        $this->assertEquals('id2', $retrieved_by_index->getId2());
+        $this->assertSame('omega', $retrieved_by_index->getAlpha());
+        $this->assertSame(200, $retrieved_by_index->getBravo());
+        $this->assertSame(true, $retrieved_by_index->getCharlie());
     }
 }

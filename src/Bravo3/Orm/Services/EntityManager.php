@@ -2,6 +2,7 @@
 namespace Bravo3\Orm\Services;
 
 use Bravo3\Orm\Drivers\DriverInterface;
+use Bravo3\Orm\Exceptions\NotFoundException;
 use Bravo3\Orm\KeySchemes\KeySchemeInterface;
 use Bravo3\Orm\Mappers\MapperInterface;
 use Bravo3\Orm\Serialisers\JsonSerialiser;
@@ -199,6 +200,27 @@ class EntityManager
         $entity = $writer->getProxy();
 
         return $entity;
+    }
+
+    /**
+     * Retrieve an entity
+     *
+     * @param string $class_name
+     * @param string $index_name
+     * @param string $index_key
+     * @return object
+     */
+    public function retrieveByIndex($class_name, $index_name, $index_key)
+    {
+        $metadata = $this->mapper->getEntityMetadata($class_name);
+        $index    = $metadata->getIndexByName($index_name);
+        $id       = $this->driver->getSingleValueIndex($this->key_scheme->getIndexKey($index, $index_key));
+
+        if (!$id) {
+            throw new NotFoundException('Index "'.$index_key.'" not found');
+        }
+
+        return $this->retrieve($class_name, $id);
     }
 
     /**
