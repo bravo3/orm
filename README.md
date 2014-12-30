@@ -19,7 +19,7 @@ Table of Contents
 
 Detailed Examples
 -----------------
-* [Auto-updating Time Stamps](docs/ModifyTime.md)
+* [Auto-updating Time Stamps](docs/Examples/ModifyTime.md)
 
 Example
 -------
