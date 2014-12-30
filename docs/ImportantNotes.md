@@ -1,6 +1,12 @@
 Important Notes
 ===============
 
+Serialisation
+-------------
+* You can use only primitive data-types (int, decimal, string, bool) and \DateTime ("datetime") objects for columns
+* ID columns cannot be 'datetime' fields
+* Boolean fields are converted to integers when used in an index
+
 Lazy-loading
 ------------
 * Primitive entity data is not deserialised until you first access it
@@ -15,3 +21,9 @@ Relationship Columns
 * Relationships are not serialised in the main entity, they are handled by auxiliary indices
 * You cannot reference relationships in entity's indices 
 * Adding inverse relationships to existing relationships will not hydrate the inverse index, you will have a desychronised index
+
+Multi-Column IDs
+----------------
+* ID's and indices are concatenated in the order they appear
+* ID/index concatenation is delimited by a period (.)
+* e.g. "id1.id2"

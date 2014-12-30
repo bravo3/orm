@@ -18,12 +18,21 @@ Table of Contents
 * [Race Conditions](docs/RaceConditions.md)
 * [Serialisers](docs/Serialisers.md)
 
-Detailed Examples
------------------
+Further Examples
+----------------
 * [Auto-updating Time Stamps](docs/Examples/ModifyTime.md)
+* [Getters and Setters](docs/Examples/GettersSetters.md)
+* [Lookup Indices](docs/Examples/Index.md)
+* [Multi-Column IDs](docs/Examples/MultiColumnId.md)
 
 Example
 -------
+If you intend to use Redis, please include Predis in your `composer.json`:
+
+    "require": {
+        "predis/predis": "~1.0"
+    }
+
 Creating an entity manager for a Redis database with annotation mappings:
 
     $em = new EntityManager(
@@ -146,7 +155,7 @@ Example entity files:
         /**
          * Set users
          *
-         * @param User $user
+         * @param User[] $users
          * @return $this
          */
         public function setUsers(array $users)
@@ -163,7 +172,7 @@ Example entity files:
          */
         public function addUser(User $user)
         {
-            $this->users[] $user;
+            $this->users[] = $user;
             return $this;
         }
     }
@@ -186,7 +195,6 @@ Bundled Strategies
 Major Planned Additions
 -----------------------
 * YAML metadata mapper
-* Lookup indices
 * Sorted indices
 * Entity caching pool
 * Proxy caching
