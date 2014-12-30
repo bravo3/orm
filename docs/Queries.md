@@ -37,9 +37,17 @@ Assume the following entity:
         protected $slug;
     }
 
-You can now create queries on the two indices we have:
+You can now create queries on any of the indices we have:
 
-    $result = $em->query(new Query('SluggedArticle', ['slug' => 'stuff*']));
+    $result = $em->query(new Query('SluggedArticle', ['slug' => 'hello*']));
+    
+If you specify multiple indices in the Query, the result will be an intersection of both indices (i.e. the entity must
+match both index values):
+
+    $query = new Query('SluggedArticle', [
+        'slug' => 'hello*',
+        'name' => '*world',
+    ]);
     
 The QueryResult object will only contain a list of ID's on return. When you request an entity, either directly by
 asking for it or using it in a loop, the entities will be retrieved on demand.
