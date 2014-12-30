@@ -2,10 +2,10 @@
 namespace Bravo3\Orm\Tests\Drivers\Redis;
 
 use Bravo3\Orm\Drivers\Common\SerialisedData;
-use Bravo3\Orm\Drivers\Redis\RedisDriver;
 use Bravo3\Orm\Exceptions\NotFoundException;
+use Bravo3\Orm\Tests\AbstractOrmTest;
 
-class RedisDriverTest extends \PHPUnit_Framework_TestCase
+class RedisDriverTest extends AbstractOrmTest
 {
     public function testMultiSet()
     {
@@ -47,10 +47,5 @@ class RedisDriverTest extends \PHPUnit_Framework_TestCase
         } catch (NotFoundException $e) {
             $this->assertContains($key, $e->getMessage());
         }
-    }
-
-    protected function getDriver()
-    {
-        return new RedisDriver(['host' => 'localhost', 'database' => 1]);
     }
 }

@@ -24,11 +24,6 @@ class Column
     /**
      * @var string
      */
-    protected $class_name;
-
-    /**
-     * @var string
-     */
     protected $getter;
 
     /**
@@ -110,28 +105,6 @@ class Column
     public function setType(FieldType $type)
     {
         $this->type = $type;
-        return $this;
-    }
-
-    /**
-     * Get the related class name
-     *
-     * @return string
-     */
-    public function getClassName()
-    {
-        return $this->class_name;
-    }
-
-    /**
-     * Set the related class name
-     *
-     * @param string $class_name
-     * @return $this
-     */
-    public function setClassName($class_name)
-    {
-        $this->class_name = $class_name;
         return $this;
     }
 

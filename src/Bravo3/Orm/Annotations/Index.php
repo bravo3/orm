@@ -3,17 +3,17 @@ namespace Bravo3\Orm\Annotations;
 
 /**
  * @Annotation
- * @Target("CLASS")
+ * @Target("ANNOTATION")
  */
-class Entity
+class Index
 {
     /**
      * @var string
      */
-    public $table;
+    public $name;
 
     /**
      * @var array
      */
-    public $indices = [];
+    public $columns;
 }

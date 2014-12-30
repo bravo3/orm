@@ -152,6 +152,17 @@ class RedisDriver implements DriverInterface
     }
 
     /**
+     * Clear the value of a key-value index
+     *
+     * @param string $key
+     * @return string
+     */
+    public function clearSingleValueIndex($key)
+    {
+        $this->unit_of_work->addCommand('KeyDelete', [$key]);
+    }
+
+    /**
      * Set a key-value index
      *
      * @param string $key
@@ -222,16 +233,5 @@ class RedisDriver implements DriverInterface
     public function getMultiValueIndex($key)
     {
         return $this->client->smembers($key) ?: [];
-    }
-
-    /**
-     * Clear the value of a key-value index
-     *
-     * @param string $key
-     * @return string
-     */
-    public function clearSingleValueIndex($key)
-    {
-        $this->unit_of_work->addCommand('KeyDelete', [$key]);
     }
 }

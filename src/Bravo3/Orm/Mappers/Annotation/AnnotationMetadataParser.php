@@ -4,6 +4,7 @@ namespace Bravo3\Orm\Mappers\Annotation;
 use Bravo3\Orm\Annotations\AbstractRelationshipAnnotation;
 use Bravo3\Orm\Annotations\Column as ColumnAnnotation;
 use Bravo3\Orm\Annotations\Entity as EntityAnnotation;
+use Bravo3\Orm\Annotations\Index as IndexAnnotation;
 use Bravo3\Orm\Annotations\ManyToMany;
 use Bravo3\Orm\Annotations\ManyToOne;
 use Bravo3\Orm\Annotations\OneToMany;
@@ -13,6 +14,7 @@ use Bravo3\Orm\Enum\RelationshipType;
 use Bravo3\Orm\Exceptions\InvalidEntityException;
 use Bravo3\Orm\Mappers\Metadata\Column;
 use Bravo3\Orm\Mappers\Metadata\Entity;
+use Bravo3\Orm\Mappers\Metadata\Index;
 use Bravo3\Orm\Mappers\Metadata\Relationship;
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Inflector\Inflector;
@@ -30,17 +32,22 @@ class AnnotationMetadataParser
     /**
      * @var AnnotationReader
      */
-    protected $annotion_reader;
+    protected $annotation_reader;
 
     /**
      * @var \ReflectionClass
      */
     protected $reflection_obj;
 
+    /**
+     * @var EntityAnnotation
+     */
+    protected $entity_annotation = null;
+
     public function __construct($entity)
     {
-        $this->annotion_reader = new AnnotationReader();
-        $this->reflection_obj  = new \ReflectionClass($entity);
+        $this->annotation_reader = new AnnotationReader();
+        $this->reflection_obj    = new \ReflectionClass($entity);
     }
 
     /**
@@ -50,16 +57,7 @@ class AnnotationMetadataParser
      */
     public function getTableName()
     {
-        /** @var EntityAnnotation $entity */
-        $entity = $this->annotion_reader->getClassAnnotation($this->reflection_obj, self::ENTITY_ANNOTATION);
-
-        if (!$entity) {
-            throw new InvalidEntityException(
-                'Entity "'.$this->reflection_obj->getName().'" does not contain an @Entity annotation'
-            );
-        }
-
-        return $entity->table ?: $this->getOrganicTableName();
+        return $this->getEntityAnnotation()->table ?: $this->getOrganicTableName();
     }
 
     /**
@@ -84,11 +82,11 @@ class AnnotationMetadataParser
         $properties = $this->reflection_obj->getProperties();
         foreach ($properties as $property) {
             /** @var ColumnAnnotation $column_annotation */
-            $column_annotation = $this->annotion_reader->getPropertyAnnotation($property, self::COLUMN_ANNOTATION);
+            $column_annotation = $this->annotation_reader->getPropertyAnnotation($property, self::COLUMN_ANNOTATION);
             if ($column_annotation) {
                 $column = $this->parseColumnAnnotation($column_annotation, $property->getName());
 
-                if ($this->annotion_reader->getPropertyAnnotation($property, self::ID_ANNOTATION)) {
+                if ($this->annotation_reader->getPropertyAnnotation($property, self::ID_ANNOTATION)) {
                     $column->setId(true);
                 }
 
@@ -111,25 +109,25 @@ class AnnotationMetadataParser
         $properties = $this->reflection_obj->getProperties();
         foreach ($properties as $property) {
             /** @var OneToOne $oto */
-            $oto = $this->annotion_reader->getPropertyAnnotation($property, self::OTO_ANNOTATION);
+            $oto = $this->annotation_reader->getPropertyAnnotation($property, self::OTO_ANNOTATION);
             if ($oto) {
                 $r[] = $this->createRelationship($property->getName(), RelationshipType::ONETOONE(), $oto);
             }
 
             /** @var OneToMany $otm */
-            $otm = $this->annotion_reader->getPropertyAnnotation($property, self::OTM_ANNOTATION);
+            $otm = $this->annotation_reader->getPropertyAnnotation($property, self::OTM_ANNOTATION);
             if ($otm) {
                 $r[] = $this->createRelationship($property->getName(), RelationshipType::ONETOMANY(), $otm);
             }
 
             /** @var ManyToOne $mto */
-            $mto = $this->annotion_reader->getPropertyAnnotation($property, self::MTO_ANNOTATION);
+            $mto = $this->annotation_reader->getPropertyAnnotation($property, self::MTO_ANNOTATION);
             if ($mto) {
                 $r[] = $this->createRelationship($property->getName(), RelationshipType::MANYTOONE(), $mto);
             }
 
             /** @var ManyToMany $mtm */
-            $mtm = $this->annotion_reader->getPropertyAnnotation($property, self::MTM_ANNOTATION);
+            $mtm = $this->annotation_reader->getPropertyAnnotation($property, self::MTM_ANNOTATION);
             if ($mtm) {
                 $r[] = $this->createRelationship($property->getName(), RelationshipType::MANYTOMANY(), $mtm);
             }
@@ -180,6 +178,27 @@ class AnnotationMetadataParser
     }
 
     /**
+     * Get all indices on the entity
+     *
+     * @return Index[]
+     */
+    public function getIndices()
+    {
+        $indices            = [];
+        $annotation_indices = $this->getEntityAnnotation()->indices;
+        $table_name         = $this->getTableName();
+
+        /** @var IndexAnnotation $annotation_index */
+        foreach ($annotation_indices as $annotation_index) {
+            $index = new Index($table_name, $annotation_index->name);
+            $index->setColumns($annotation_index->columns);
+            $indices[] = $index;
+        }
+
+        return $indices;
+    }
+
+    /**
      * Get the Entity metadata object
      *
      * @return Entity
@@ -189,6 +208,29 @@ class AnnotationMetadataParser
         $entity = new Entity($this->reflection_obj->getName(), $this->getTableName());
         $entity->setColumns($this->getColumns());
         $entity->setRelationships($this->getRelationships());
+        $entity->setIndices($this->getIndices());
         return $entity;
+    }
+
+    /**
+     * Lazy-load @Entity annotation
+     *
+     * @return EntityAnnotation
+     */
+    public function getEntityAnnotation()
+    {
+        if ($this->entity_annotation === null) {
+            /** @var EntityAnnotation $entity */
+            $this->entity_annotation =
+                $this->annotation_reader->getClassAnnotation($this->reflection_obj, self::ENTITY_ANNOTATION);
+
+            if (!$this->entity_annotation) {
+                throw new InvalidEntityException(
+                    'Entity "'.$this->reflection_obj->getName().'" does not contain an @Entity annotation'
+                );
+            }
+        }
+
+        return $this->entity_annotation;
     }
 }

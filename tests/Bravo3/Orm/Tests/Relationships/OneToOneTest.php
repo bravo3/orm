@@ -1,14 +1,12 @@
 <?php
 namespace Bravo3\Orm\Tests\Relationships;
 
-use Bravo3\Orm\Drivers\Redis\RedisDriver;
-use Bravo3\Orm\Mappers\Annotation\AnnotationMapper;
 use Bravo3\Orm\Proxy\OrmProxyInterface;
-use Bravo3\Orm\Services\EntityManager;
+use Bravo3\Orm\Tests\AbstractOrmTest;
 use Bravo3\Orm\Tests\Entities\OneToOne\Address;
 use Bravo3\Orm\Tests\Entities\OneToOne\User;
 
-class OneToOneTest extends \PHPUnit_Framework_TestCase
+class OneToOneTest extends AbstractOrmTest
 {
     public function testOneToOne()
     {
@@ -93,20 +91,5 @@ class OneToOneTest extends \PHPUnit_Framework_TestCase
         $r_address = $r_user->getAddress();
         $this->assertTrue($r_address instanceof Address);
         $this->assertTrue($r_address instanceof OrmProxyInterface);
-    }
-
-    /**
-     * @return EntityManager
-     */
-    protected function getEntityManager()
-    {
-        $driver = $this->getDriver();
-        $mapper = new AnnotationMapper();
-        return EntityManager::build($driver, $mapper);
-    }
-
-    protected function getDriver()
-    {
-        return new RedisDriver(['host' => 'localhost', 'database' => 2]);
     }
 }

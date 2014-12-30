@@ -1,14 +1,12 @@
 <?php
 namespace Bravo3\Orm\Tests\Relationships;
 
-use Bravo3\Orm\Drivers\Redis\RedisDriver;
-use Bravo3\Orm\Mappers\Annotation\AnnotationMapper;
 use Bravo3\Orm\Proxy\OrmProxyInterface;
-use Bravo3\Orm\Services\EntityManager;
+use Bravo3\Orm\Tests\AbstractOrmTest;
 use Bravo3\Orm\Tests\Entities\OneToMany\Article;
 use Bravo3\Orm\Tests\Entities\OneToMany\Category;
 
-class OneToManyTest extends \PHPUnit_Framework_TestCase
+class OneToManyTest extends AbstractOrmTest
 {
     public function testOneToMany()
     {
@@ -99,20 +97,5 @@ class OneToManyTest extends \PHPUnit_Framework_TestCase
         $this->assertCount(1, $ir_articles);
         $ir_article = $ir_articles[0];
         $this->assertTrue($ir_article instanceof Article);
-    }
-
-    /**
-     * @return EntityManager
-     */
-    protected function getEntityManager()
-    {
-        $driver = $this->getDriver();
-        $mapper = new AnnotationMapper();
-        return EntityManager::build($driver, $mapper);
-    }
-
-    protected function getDriver()
-    {
-        return new RedisDriver(['host' => 'localhost', 'database' => 2]);
     }
 }

@@ -3,10 +3,11 @@ namespace Bravo3\Orm\Tests\Mappers\Annotation;
 
 use Bravo3\Orm\Mappers\Annotation\AnnotationMapper;
 use Bravo3\Orm\Services\Io\Reader;
+use Bravo3\Orm\Tests\AbstractOrmTest;
 use Bravo3\Orm\Tests\Entities\BadEntity;
 use Bravo3\Orm\Tests\Entities\Product;
 
-class AnnotationMapperTest extends \PHPUnit_Framework_TestCase
+class AnnotationMapperTest extends AbstractOrmTest
 {
     public function testStuff()
     {

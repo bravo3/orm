@@ -41,6 +41,11 @@ class EntityManager
     protected $relationship_manager = null;
 
     /**
+     * @var IndexManager
+     */
+    protected $index_manager = null;
+
+    /**
      * @var EventDispatcher
      */
     protected $dispatcher = null;
@@ -152,6 +157,8 @@ class EntityManager
         );
 
         $this->getRelationshipManager()->persistRelationships($entity, $metadata, $reader, $id);
+        $this->getIndexManager()->persistIndices($entity, $metadata, $reader, $id);
+
         return $this;
     }
 
@@ -258,6 +265,20 @@ class EntityManager
         }
 
         return $this->relationship_manager;
+    }
+
+    /**
+     * Lazy-loading index manager
+     *
+     * @return IndexManager
+     */
+    public function getIndexManager()
+    {
+        if ($this->index_manager === null) {
+            $this->index_manager = new IndexManager($this);
+        }
+
+        return $this->index_manager;
     }
 
     /**

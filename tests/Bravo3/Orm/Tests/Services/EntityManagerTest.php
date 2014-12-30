@@ -1,19 +1,16 @@
 <?php
 namespace Bravo3\Orm\Tests;
 
-use Bravo3\Orm\Drivers\Redis\RedisDriver;
 use Bravo3\Orm\Enum\Event;
 use Bravo3\Orm\Events\PersistEvent;
 use Bravo3\Orm\Events\RetrieveEvent;
-use Bravo3\Orm\Mappers\Annotation\AnnotationMapper;
 use Bravo3\Orm\Proxy\OrmProxyInterface;
-use Bravo3\Orm\Services\EntityManager;
 use Bravo3\Orm\Tests\Entities\BadEntity;
 use Bravo3\Orm\Tests\Entities\ModifiedEntity;
 use Bravo3\Orm\Tests\Entities\OneToMany\Article;
 use Bravo3\Orm\Tests\Entities\Product;
 
-class EntityManagerTest extends \PHPUnit_Framework_TestCase
+class EntityManagerTest extends AbstractOrmTest
 {
     public function testIo()
     {
@@ -108,20 +105,5 @@ class EntityManagerTest extends \PHPUnit_Framework_TestCase
         $em         = $this->getEntityManager();
         $bad_entity = new BadEntity();
         $em->persist($bad_entity);
-    }
-
-    /**
-     * @return EntityManager
-     */
-    protected function getEntityManager()
-    {
-        $driver = $this->getDriver();
-        $mapper = new AnnotationMapper();
-        return EntityManager::build($driver, $mapper);
-    }
-
-    protected function getDriver()
-    {
-        return new RedisDriver(['host' => 'localhost', 'database' => 2]);
     }
 }

@@ -102,7 +102,17 @@ class Writer
             $this->serialised_data->getSerialisationCode()
         );
 
-        $serialiser->deserialise($this->metadata, $this->serialised_data, $this->getProxy());
+        /** @var OrmProxyInterface $proxy */
+        $proxy = $this->getProxy();
+
+        // Deserialise and hydrate the entity
+        $serialiser->deserialise($this->metadata, $this->serialised_data, $proxy);
+
+        // Save the original state of all indices so we can compare on consequent persist calls
+        $proxy->setOriginalId($this->getReader()->getId());
+        foreach ($this->metadata->getIndices() as $index) {
+            $proxy->setIndexOriginalValue($index->getName(), $this->getReader()->getIndexValue($index));
+        }
 
         $this->is_hydrated = true;
         return $this;

@@ -20,4 +20,36 @@ interface OrmProxyInterface extends LazyLoadingInterface
      * @return bool
      */
     public function isRelativeModified($name);
+
+    /**
+     * Set an indexes original value
+     *
+     * @param string $name
+     * @param string $value
+     * @return $this
+     */
+    public function setIndexOriginalValue($name, $value);
+
+    /**
+     * Get an indexes original value
+     *
+     * @param string $name
+     * @return string
+     */
+    public function getIndexOriginalValue($name);
+
+    /**
+     * Set the original ID
+     *
+     * @param string $value
+     * @return $this
+     */
+    public function setOriginalId($value);
+
+    /**
+     * Get the original ID
+     *
+     * @return string
+     */
+    public function getOriginalId();
 }

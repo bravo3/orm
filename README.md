@@ -1,5 +1,5 @@
-Bravo3 Document Object Relational Mapper
-========================================
+Document Object Relational Mapper
+=================================
 
 Purpose
 -------
@@ -11,6 +11,7 @@ Table of Contents
 * [Drivers](docs/Drivers.md)
 * [Entity Mapping Definitions](docs/EntityDefinitions.md)
 * [Events](docs/Events.md)
+* [Important Notes](docs/ImportantNotes.md)
 * [Index Types](docs/IndexTypes.md)
 * [Key Schemes](docs/KeySchemes.md)
 * [Project Structure](docs/ProjectStructure.md)
@@ -170,7 +171,6 @@ Example entity files:
 
 Bundled Strategies
 ------------------
-
 ### Databases
 * Redis
 

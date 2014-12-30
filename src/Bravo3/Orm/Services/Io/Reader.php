@@ -4,6 +4,7 @@ namespace Bravo3\Orm\Services\Io;
 use Bravo3\Orm\Exceptions\InvalidArgumentException;
 use Bravo3\Orm\Exceptions\InvalidEntityException;
 use Bravo3\Orm\Mappers\Metadata\Entity;
+use Bravo3\Orm\Mappers\Metadata\Index;
 use Bravo3\Orm\Proxy\OrmProxyInterface;
 
 /**
@@ -11,6 +12,12 @@ use Bravo3\Orm\Proxy\OrmProxyInterface;
  */
 class Reader
 {
+    /**
+     * Use this string to join all ID columns in a table to return a single string key.
+     * This string is not configurable and must never change!
+     */
+    const ID_DELIMITER = '.';
+
     /**
      * @var Entity
      */
@@ -51,6 +58,22 @@ class Reader
     }
 
     /**
+     * Get the value of an index
+     *
+     * @param Index $index
+     * @return string
+     */
+    public function getIndexValue(Index $index)
+    {
+        $values = [];
+        foreach ($index->getColumns() as $column) {
+            $values[] = $this->getPropertyValue($column);
+        }
+
+        return implode(self::ID_DELIMITER, $values);
+    }
+
+    /**
      * Get an ID for the given data
      *
      * @return string
@@ -67,7 +90,7 @@ class Reader
             throw new InvalidEntityException('Entity "'.$this->metadata->getClassName().'" has no ID column');
         }
 
-        return implode(Entity::ID_DELIMITER, $values);
+        return implode(self::ID_DELIMITER, $values);
     }
 
     /**

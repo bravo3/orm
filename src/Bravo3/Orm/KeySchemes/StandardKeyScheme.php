@@ -1,6 +1,7 @@
 <?php
 namespace Bravo3\Orm\KeySchemes;
 
+use Bravo3\Orm\Mappers\Metadata\Index;
 use Bravo3\Orm\Mappers\Metadata\Relationship;
 
 /**
@@ -10,6 +11,7 @@ class StandardKeyScheme implements KeySchemeInterface
 {
     const DEFAULT_DELIMITER = ':';
     const ENTITY_NAMESPACE  = 'doc';
+    const INDEX_NAMESPACE   = 'idx';
 
     /**
      * @var string
@@ -69,5 +71,19 @@ class StandardKeyScheme implements KeySchemeInterface
         return (string)$relationship->getRelationshipType()->value().$this->delimiter.
                $relationship->getSourceTable().'-'.$relationship->getTargetTable().$this->delimiter.
                $id.$this->delimiter.$relationship->getName();
+    }
+
+    /**
+     * Get the key for an standard index
+     *
+     * @param Index  $index Index belonging to entity
+     * @param string $key   Index key
+     * @return string
+     */
+    public function getIndexKey(Index $index, $key)
+    {
+        // idx:article:slug:some-slug
+        return static::INDEX_NAMESPACE.$this->delimiter.$index->getTableName().$this->delimiter.$index->getName().
+               $this->delimiter.$key;
     }
 }

@@ -4,13 +4,6 @@ namespace Bravo3\Orm\Mappers\Metadata;
 class Entity
 {
     /**
-     * Use this string to join all ID columns in a table to return a single string key
-     *
-     * This string is not configurable and must never change!
-     */
-    const ID_DELIMITER = ':';
-
-    /**
      * @var string
      */
     protected $class_name;
@@ -34,6 +27,11 @@ class Entity
      * @var Relationship[]
      */
     protected $relationships = [];
+
+    /**
+     * @var Index[]
+     */
+    protected $indices = [];
 
     /**
      * Used to lookup the property that matches a getter/setter function
@@ -93,7 +91,7 @@ class Entity
     }
 
     /**
-     * Get Columns
+     * Get columns
      *
      * @return Column[]
      */
@@ -103,7 +101,7 @@ class Entity
     }
 
     /**
-     * Get a column by it's property name, or null if no such column exists
+     * Get a column by its property name, or null if no such column exists
      *
      * @param $name
      * @return Column|null
@@ -120,7 +118,7 @@ class Entity
     }
 
     /**
-     * Set Columns
+     * Set columns
      *
      * @param Column[] $columns
      * @return $this
@@ -173,7 +171,7 @@ class Entity
     }
 
     /**
-     * Get Relationships
+     * Get relationships
      *
      * @return Relationship[]
      */
@@ -183,7 +181,7 @@ class Entity
     }
 
     /**
-     * Set Relationships
+     * Set relationships
      *
      * @param Relationship[] $relationships
      * @return $this
@@ -209,9 +207,9 @@ class Entity
     }
 
     /**
-     * Get a relationship by it's name, or null if no such relationship exists
+     * Get a relationship by its name, or null if no such relationship exists
      *
-     * @param $name
+     * @param string $name
      * @return Relationship|null
      */
     public function getRelationshipByName($name)
@@ -259,5 +257,55 @@ class Entity
             $this->property_map[$relationship->getGetter()] = $relationship->getName();
             $this->property_map[$relationship->getSetter()] = $relationship->getName();
         }
+    }
+
+    /**
+     * Get indices
+     *
+     * @return Index[]
+     */
+    public function getIndices()
+    {
+        return $this->indices;
+    }
+
+    /**
+     * Set indices
+     *
+     * @param Index[] $indices
+     * @return $this
+     */
+    public function setIndices(array $indices)
+    {
+        $this->indices = $indices;
+        return $this;
+    }
+
+    /**
+     * Add an index
+     *
+     * @param Index $index
+     * @return $this
+     */
+    public function addIndex(Index $index) {
+        $this->indices[] = $index;
+        return $this;
+    }
+
+    /**
+     * Get an index by its name, or null if no such index exists
+     *
+     * @param string $name
+     * @return Index|null
+     */
+    public function getIndexByName($name)
+    {
+        foreach ($this->indices as $index) {
+            if ($index->getName() == $name) {
+                return $index;
+            }
+        }
+
+        return null;
     }
 }

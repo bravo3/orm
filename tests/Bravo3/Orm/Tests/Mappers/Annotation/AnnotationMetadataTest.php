@@ -3,11 +3,12 @@ namespace Bravo3\Orm\Tests\Mappers\Annotation;
 
 use Bravo3\Orm\Enum\RelationshipType;
 use Bravo3\Orm\Mappers\Annotation\AnnotationMapper;
+use Bravo3\Orm\Tests\AbstractOrmTest;
 use Bravo3\Orm\Tests\Entities\NotAnEntity;
 use Bravo3\Orm\Tests\Entities\OneToOne\User;
 use Bravo3\Orm\Tests\Entities\Product;
 
-class AnnotationMetadataTest extends \PHPUnit_Framework_TestCase
+class AnnotationMetadataTest extends AbstractOrmTest
 {
     public function testPrimitives()
     {

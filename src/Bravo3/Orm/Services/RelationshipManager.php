@@ -1,58 +1,18 @@
 <?php
 namespace Bravo3\Orm\Services;
 
-use Bravo3\Orm\Drivers\DriverInterface;
 use Bravo3\Orm\Enum\RelationshipType;
 use Bravo3\Orm\Exceptions\InvalidArgumentException;
 use Bravo3\Orm\Exceptions\InvalidEntityException;
-use Bravo3\Orm\KeySchemes\KeySchemeInterface;
-use Bravo3\Orm\Services\Io\Reader;
-use Bravo3\Orm\Mappers\MapperInterface;
 use Bravo3\Orm\Mappers\Metadata\Entity;
 use Bravo3\Orm\Mappers\Metadata\Relationship;
 use Bravo3\Orm\Proxy\OrmProxyInterface;
+use Bravo3\Orm\Services\Io\Reader;
+use Bravo3\Orm\Traits\EntityManagerAwareTrait;
 
 class RelationshipManager
 {
-    /**
-     * @var EntityManager
-     */
-    protected $entity_manager;
-
-    public function __construct(EntityManager $entity_manager)
-    {
-        $this->entity_manager = $entity_manager;
-    }
-
-    /**
-     * Get the driver belonging to the entity manager
-     *
-     * @return DriverInterface
-     */
-    protected function getDriver()
-    {
-        return $this->entity_manager->getDriver();
-    }
-
-    /**
-     * Get the key scheme belonging to the entity manager
-     *
-     * @return KeySchemeInterface
-     */
-    protected function getKeyScheme()
-    {
-        return $this->entity_manager->getKeyScheme();
-    }
-
-    /**
-     * Get the mapper belonging to the entity manager
-     *
-     * @return MapperInterface
-     */
-    protected function getMapper()
-    {
-        return $this->entity_manager->getMapper();
-    }
+    use EntityManagerAwareTrait;
 
     /**
      * Persist entity relationships
@@ -86,7 +46,6 @@ class RelationshipManager
      * @param object         $entity
      * @param Reader         $reader
      * @param string         $local_id
-     * @internal param bool $is_proxy
      */
     private function traverseRelationships(array $relationships, $entity, Reader $reader, $local_id)
     {
