@@ -59,3 +59,18 @@ It is also an ArrayAccess implementation, you can request entities by ID:
     $entity = $result['104'];
     echo $entity->getName()."\n";
     
+Wildcards
+---------
+Queries can basic glob-style wildcards -
+ 
+    *  - match any value 
+    ?  - match any single character
+    [] - match a set
+    
+To escape special characters, use the backslash (e.g. "hello\?")
+
+Examples:
+
+    h?llo matches hello, hallo and hxllo
+    h*llo matches hllo and heeeello
+    h[ae]llo matches hello and hallo, but not hillo
