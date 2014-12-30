@@ -3,6 +3,7 @@ namespace Bravo3\Orm\Drivers;
 
 use Bravo3\Orm\Drivers\Common\SerialisedData;
 use Bravo3\Orm\KeySchemes\KeySchemeInterface;
+use Bravo3\Orm\Query\Query;
 
 interface DriverInterface
 {
@@ -44,6 +45,14 @@ interface DriverInterface
      * @return void
      */
     public function purge();
+
+    /**
+     * Scan key-value indices and return the value of all matching keys
+     *
+     * @param string $key
+     * @return string[]
+     */
+    public function scan($key);
 
     /**
      * Get the drivers preferred key scheme

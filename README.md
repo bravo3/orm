@@ -15,6 +15,7 @@ Table of Contents
 * [Index Types](docs/IndexTypes.md)
 * [Key Schemes](docs/KeySchemes.md)
 * [Project Structure](docs/ProjectStructure.md)
+* [Queries](docs/Queries.md)
 * [Race Conditions](docs/RaceConditions.md)
 * [Serialisers](docs/Serialisers.md)
 
@@ -194,7 +195,7 @@ Bundled Strategies
 
 Major Planned Additions
 -----------------------
+* Sorted relationship indices
 * YAML metadata mapper
-* Sorted indices
-* Entity caching pool
 * Proxy caching
+* Entity caching pool

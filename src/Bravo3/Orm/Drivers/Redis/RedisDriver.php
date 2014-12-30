@@ -8,6 +8,7 @@ use Bravo3\Orm\Drivers\DriverInterface;
 use Bravo3\Orm\Exceptions\NotFoundException;
 use Bravo3\Orm\KeySchemes\KeySchemeInterface;
 use Bravo3\Orm\KeySchemes\StandardKeyScheme;
+use Bravo3\Orm\Query\Query;
 use Predis\Client;
 use Predis\Command\CommandInterface;
 use Predis\Transaction\MultiExec;
@@ -233,5 +234,24 @@ class RedisDriver implements DriverInterface
     public function getMultiValueIndex($key)
     {
         return $this->client->smembers($key) ?: [];
+    }
+
+    /**
+     * Scan key-value indices and return the value of all matching keys
+     *
+     * @param string $key
+     * @return string[]
+     */
+    public function scan($key)
+    {
+        $cursor  = 0;
+        $results = [];
+        do {
+            $set    = $this->client->scan($cursor, ['MATCH' => $key]);
+            $cursor = $set[0];
+            $results = array_merge($results, $set[1]);
+        } while ($cursor != 0);
+
+        return $results;
     }
 }

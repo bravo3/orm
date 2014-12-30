@@ -2,9 +2,12 @@
 namespace Bravo3\Orm\Services;
 
 use Bravo3\Orm\Drivers\DriverInterface;
+use Bravo3\Orm\Exceptions\InvalidArgumentException;
 use Bravo3\Orm\Exceptions\NotFoundException;
 use Bravo3\Orm\KeySchemes\KeySchemeInterface;
 use Bravo3\Orm\Mappers\MapperInterface;
+use Bravo3\Orm\Query\Query;
+use Bravo3\Orm\Query\QueryResult;
 use Bravo3\Orm\Serialisers\JsonSerialiser;
 use Bravo3\Orm\Serialisers\SerialiserMap;
 use Bravo3\Orm\Services\Aspect\CreateModifySubscriber;
@@ -221,6 +224,41 @@ class EntityManager
         }
 
         return $this->retrieve($class_name, $id);
+    }
+
+    /**
+     * Create a query against a table matching one or more indices
+     *
+     * @param Query $query
+     * @return QueryResult
+     */
+    public function query(Query $query)
+    {
+        $metadata = $this->mapper->getEntityMetadata($query->getClassName());
+
+        $master_list = null;
+        foreach ($query->getIndices() as $index_name => $index_key) {
+            $index = $metadata->getIndexByName($index_name);
+            if (!$index) {
+                throw new InvalidArgumentException('Index "'.$index_name.'" does not exist in query table');
+            }
+
+            $key = $this->key_scheme->getIndexKey($index, $index_key);
+            $set = $this->driver->scan($key);
+
+            $results = [];
+            foreach ($set as $key) {
+                $results[] = $this->driver->getSingleValueIndex($key);
+            }
+
+            if ($master_list === null) {
+                $master_list = $results;
+            } else {
+                $master_list = array_intersect($master_list, $results);
+            }
+        }
+
+        return new QueryResult($this, $query, array_values($master_list));
     }
 
     /**
