@@ -108,7 +108,7 @@ class OneToManyTest extends \PHPUnit_Framework_TestCase
     {
         $driver = $this->getDriver();
         $mapper = new AnnotationMapper();
-        return new EntityManager($driver, $mapper);
+        return EntityManager::build($driver, $mapper);
     }
 
     protected function getDriver()

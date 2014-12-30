@@ -6,6 +6,21 @@ Purpose
 The purpose of this library is to blend ORM and ODM fundamentals with NoSQL database platforms, allowing you to use 
 NoSQL databases with pseudo-relationships through means of a traditional entity manager.
 
+Table of Contents
+-----------------
+* [Drivers](docs/Drivers.md)
+* [Entity Mapping Definitions](docs/EntityDefinitions.md)
+* [Events](docs/Events.md)
+* [Index Types](docs/IndexTypes.md)
+* [Key Schemes](docs/KeySchemes.md)
+* [Project Structure](docs/ProjectStructure.md)
+* [Race Conditions](docs/RaceConditions.md)
+* [Serialisers](docs/Serialisers.md)
+
+Detailed Examples
+-----------------
+* [Auto-updating Time Stamps](docs/ModifyTime.md)
+
 Example
 -------
 Creating an entity manager for a Redis database with annotation mappings:
@@ -157,18 +172,21 @@ Bundled Strategies
 ------------------
 
 ### Databases
-
 * Redis
 
 ### Serialisation
-
 * JSON
 
 ### Entity Metadata Mappers
-
 * Annotation
 
 ### Key Schemes
-
 * Configurable delimiter, defaulting to Redis-style
 
+Major Planned Additions
+-----------------------
+* YAML metadata mapper
+* Lookup indices
+* Sorted indices
+* Entity caching pool
+* Proxy caching

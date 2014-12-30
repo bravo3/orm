@@ -61,7 +61,6 @@ class RelationshipManager
      * @param Entity $metadata Optionally provide entity metadata to prevent recalculation
      * @param Reader $reader   Optionally provide the entity reader
      * @param string $local_id Optionally provide the local entity ID to prevent recalculation
-     * @internal param null $id
      */
     public function persistRelationships($entity, Entity $metadata = null, Reader $reader = null, $local_id = null)
     {

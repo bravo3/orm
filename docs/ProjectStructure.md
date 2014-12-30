@@ -10,6 +10,9 @@ A strategy pattern approach to implementing database drivers.
 ### Enum
 Enumeration classes, all enumeration class should extend the `eloquent/enumeration` library.
 
+### Events
+Event classes for the entity managers event dispatcher
+
 ### Exceptions
 All exceptions in the project implement the OrmException, and extend an SPL exception.
 
@@ -31,3 +34,9 @@ Strategies for different serialisation techniques, such as JSON (the default ser
 
 ### Services
 All primary services
+
+* Services/Aspect: AOP services and interceptor factories
+* Services/Io: Entity I/O classes responsible for ghost proxy generation and value resolution 
+
+### Traits
+Utility traits useful for entity management

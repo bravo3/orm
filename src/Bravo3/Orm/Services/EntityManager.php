@@ -6,8 +6,12 @@ use Bravo3\Orm\KeySchemes\KeySchemeInterface;
 use Bravo3\Orm\Mappers\MapperInterface;
 use Bravo3\Orm\Serialisers\JsonSerialiser;
 use Bravo3\Orm\Serialisers\SerialiserMap;
+use Bravo3\Orm\Services\Aspect\CreateModifySubscriber;
+use Bravo3\Orm\Services\Aspect\EntityManagerInterceptorFactory;
 use Bravo3\Orm\Services\Io\Reader;
 use Bravo3\Orm\Services\Io\Writer;
+use ProxyManager\Factory\AccessInterceptorValueHolderFactory;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 
 class EntityManager
 {
@@ -36,7 +40,25 @@ class EntityManager
      */
     protected $relationship_manager = null;
 
-    public function __construct(
+    /**
+     * @var EventDispatcher
+     */
+    protected $dispatcher = null;
+
+    /**
+     * Create a raw entity manager
+     *
+     * Do not construct an entity manager directly or it will lack access interceptors which are responsible for
+     * caching and event dispatching.
+     *
+     * @see EntityManager::build()
+     *
+     * @param DriverInterface    $driver
+     * @param MapperInterface    $mapper
+     * @param SerialiserMap      $serialiser_map
+     * @param KeySchemeInterface $key_scheme
+     */
+    protected function __construct(
         DriverInterface $driver,
         MapperInterface $mapper,
         SerialiserMap $serialiser_map = null,
@@ -52,6 +74,41 @@ class EntityManager
             $this->serialiser_map = new SerialiserMap();
             $this->serialiser_map->addSerialiser(new JsonSerialiser());
         }
+
+        $this->registerDefaultSubscribers();
+    }
+
+    /**
+     * Register default event subscribers
+     */
+    protected function registerDefaultSubscribers()
+    {
+        $this->getDispatcher()->addSubscriber(new CreateModifySubscriber());
+    }
+
+    /**
+     * Create a new entity manager
+     *
+     * @param DriverInterface    $driver
+     * @param MapperInterface    $mapper
+     * @param SerialiserMap      $serialiser_map
+     * @param KeySchemeInterface $key_scheme
+     * @return EntityManager
+     */
+    public static function build(
+        DriverInterface $driver,
+        MapperInterface $mapper,
+        SerialiserMap $serialiser_map = null,
+        KeySchemeInterface $key_scheme = null
+    ) {
+        $proxy_factory      = new AccessInterceptorValueHolderFactory();
+        $interceptor_factor = new EntityManagerInterceptorFactory();
+
+        return $proxy_factory->createProxy(
+            new self($driver, $mapper, $serialiser_map, $key_scheme),
+            $interceptor_factor->getPrefixInterceptors(),
+            $interceptor_factor->getSuffixInterceptors()
+        );
     }
 
     /**
@@ -95,7 +152,6 @@ class EntityManager
         );
 
         $this->getRelationshipManager()->persistRelationships($entity, $metadata, $reader, $id);
-
         return $this;
     }
 
@@ -133,7 +189,9 @@ class EntityManager
         );
 
         $writer = new Writer($metadata, $serialised_data, $this);
-        return $writer->getProxy();
+        $entity = $writer->getProxy();
+
+        return $entity;
     }
 
     /**
@@ -200,5 +258,19 @@ class EntityManager
         }
 
         return $this->relationship_manager;
+    }
+
+    /**
+     * Get the event dispatcher, lazy-loading
+     *
+     * @return EventDispatcher
+     */
+    public function getDispatcher()
+    {
+        if ($this->dispatcher === null) {
+            $this->dispatcher = new EventDispatcher();
+        }
+
+        return $this->dispatcher;
     }
 }

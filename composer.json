@@ -18,7 +18,7 @@
         "php": ">=5.5.0",
         "psr/log": "~1.0",
         "eloquent/enumeration": "~5.1",
-        "symfony/event-dispatcher": "~2.4",
+        "symfony/event-dispatcher": "~2.6",
         "doctrine/annotations": "~1.2",
         "doctrine/inflector": "~1.0",
         "ocramius/proxy-manager": "~1.0"
