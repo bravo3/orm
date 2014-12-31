@@ -79,6 +79,10 @@ class Writer
                 return true;
             }
         );
+
+        if (!$this->proxy) {
+            throw new \RuntimeException("Unable to create proxy object of entity");
+        }
     }
 
     /**

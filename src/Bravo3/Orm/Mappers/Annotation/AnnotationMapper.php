@@ -27,7 +27,7 @@ class AnnotationMapper implements MapperInterface
     /**
      * Get the metadata for an entity, including column information
      *
-     * @param string $entity Class name of the entity
+     * @param string|object $entity Entity or class name of the entity
      * @return Entity
      */
     public function getEntityMetadata($entity)

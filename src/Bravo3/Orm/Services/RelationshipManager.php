@@ -72,6 +72,9 @@ class RelationshipManager
             // See: docs/RaceConditions.md
             if ($is_proxy || $value) {
                 $this->persistForwardRelationship($relationship, $key, $value);
+                if (count($relationship->getSortableBy())) {
+                    $this->persistForwardSortIndices($relationship, $local_id, $value);
+                }
 
                 // Modify the inversed relationships
                 if ($relationship->getInversedBy()) {
@@ -95,6 +98,33 @@ class RelationshipManager
             $this->setMultiValueRelationship($key, $value);
         } else {
             $this->setSingleValueRelationship($key, $value);
+        }
+    }
+
+    /**
+     * Persist forward sorted indices
+     *
+     * @param Relationship    $relationship
+     * @param string          $local_id
+     * @param object|object[] $value
+     */
+    private function persistForwardSortIndices(Relationship $relationship, $local_id, $value)
+    {
+        if (!is_array($value)) {
+            $value = [$value];
+        }
+
+        foreach ($relationship->getSortableBy() as $sort_property) {
+            $key = $this->getKeyScheme()->getSortIndexKey($relationship, $sort_property, $local_id);
+            $this->getDriver()->clearSortedIndex($key);
+
+            foreach ($value as $entity) {
+                $metadata   = $this->getMapper()->getEntityMetadata($entity);
+                $reader     = new Reader($metadata, $entity);
+                $foreign_id = $reader->getId();
+                $score      = $reader->getPropertyValue($sort_property);
+                $this->getDriver()->addSortedIndex($key, $score, $foreign_id);
+            }
         }
     }
 

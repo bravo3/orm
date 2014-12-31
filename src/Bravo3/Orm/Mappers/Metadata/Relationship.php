@@ -51,6 +51,11 @@ class Relationship
      */
     protected $setter;
 
+    /**
+     * @var string[]
+     */
+    protected $sortable_by = [];
+
     public function __construct($name, RelationshipType $relationship_type)
     {
         $this->name              = $name;
@@ -252,6 +257,40 @@ class Relationship
     public function setSetter($setter)
     {
         $this->setter = $setter;
+        return $this;
+    }
+
+    /**
+     * Get list of relative properties that this relationship can be sorted by
+     *
+     * @return string[]
+     */
+    public function getSortableBy()
+    {
+        return $this->sortable_by;
+    }
+
+    /**
+     * Set list of relative properties that this relationship can be sorted by
+     *
+     * @param string[] $sortable_by
+     * @return $this
+     */
+    public function setSortableBy($sortable_by)
+    {
+        $this->sortable_by = $sortable_by;
+        return $this;
+    }
+
+    /**
+     * Add a property to be sortable by
+     *
+     * @param string $property_name
+     * @return $this
+     */
+    public function addSortableBy($property_name)
+    {
+        $this->sortable_by[] = $property_name;
         return $this;
     }
 }

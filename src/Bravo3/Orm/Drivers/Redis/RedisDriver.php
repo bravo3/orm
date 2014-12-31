@@ -247,11 +247,88 @@ class RedisDriver implements DriverInterface
         $cursor  = 0;
         $results = [];
         do {
-            $set    = $this->client->scan($cursor, ['MATCH' => $key]);
-            $cursor = $set[0];
+            $set     = $this->client->scan($cursor, ['MATCH' => $key]);
+            $cursor  = $set[0];
             $results = array_merge($results, $set[1]);
         } while ($cursor != 0);
 
         return $results;
+    }
+
+    /**
+     * Clear an entire sorted index
+     *
+     * @param string $key
+     * @return void
+     */
+    public function clearSortedIndex($key)
+    {
+        $this->unit_of_work->addCommand('KeyDelete', [$key]);
+    }
+
+    /**
+     * Add an item to a sorted index
+     *
+     * @param string $key
+     * @param mixed  $score
+     * @param string $value
+     * @return void
+     */
+    public function addSortedIndex($key, $score, $value)
+    {
+        $this->unit_of_work->addCommand('ZSetAdd', [$key, $this->normaliseScore($score), $value]);
+    }
+
+    /**
+     * Remove an item from a sorted index
+     *
+     * @param string $key
+     * @param string $value
+     * @return void
+     */
+    public function removeSortedIndex($key, $value)
+    {
+        $this->unit_of_work->addCommand('ZSetRemove', [$key, $value]);
+    }
+
+    /**
+     * Get a range values in a sorted index
+     *
+     * If $min/$max are null then they are assumed to be the started/end of the entire set
+     *
+     * @param string $key
+     * @param bool   $reverse
+     * @param int    $min
+     * @param int    $max
+     * @return string[]
+     */
+    public function getSortedIndex($key, $reverse = false, $min = null, $max = null)
+    {
+        if ($reverse) {
+            return $this->client->zrevrange($key, $min === null ? 0 : $min, $max === null ? -1 : $max);
+        } else {
+            return $this->client->zrange($key, $min === null ? 0 : $min, $max === null ? -1 : $max);
+        }
+    }
+
+    /**
+     * Get the normalised value of a score
+     *
+     * @param mixed $score
+     * @return float
+     */
+    protected function normaliseScore($score)
+    {
+        if ($score instanceof \DateTime) {
+            return (float)$score->format('U');
+        } elseif (is_string($score)) {
+            // We can't handle strings
+            return 0.0;
+        } elseif (is_object($score) || is_array($score)) {
+            // Should never have received an object/array
+            return 0.0;
+        } else {
+            return (float)$score;
+        }
     }
 }

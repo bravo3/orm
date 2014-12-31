@@ -12,6 +12,7 @@ class StandardKeyScheme implements KeySchemeInterface
     const DEFAULT_DELIMITER = ':';
     const ENTITY_NAMESPACE  = 'doc';
     const INDEX_NAMESPACE   = 'idx';
+    const SORT_NAMESPACE    = 'srt';
 
     /**
      * @var string
@@ -85,5 +86,21 @@ class StandardKeyScheme implements KeySchemeInterface
         // idx:article:slug:some-slug
         return static::INDEX_NAMESPACE.$this->delimiter.$index->getTableName().$this->delimiter.$index->getName().
                $this->delimiter.$key;
+    }
+
+    /**
+     * Get the key for a sort index on a relationship
+     *
+     * @param Relationship $relationship Relationship
+     * @param string       $sort_key     Property name on the inverse entity
+     * @param string       $id           Local ID
+     * @return string
+     */
+    public function getSortIndexKey(Relationship $relationship, $sort_key, $id)
+    {
+        // srt:category-article:89726:title
+        return static::SORT_NAMESPACE.$this->delimiter.
+               $relationship->getSourceTable().'-'.$relationship->getTargetTable().$this->delimiter.
+               $id.$this->delimiter.$sort_key;
     }
 }

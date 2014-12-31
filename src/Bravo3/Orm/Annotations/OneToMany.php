@@ -5,6 +5,6 @@ namespace Bravo3\Orm\Annotations;
  * @Annotation
  * @Target("PROPERTY")
  */
-class OneToMany extends AbstractRelationshipAnnotation
+class OneToMany extends AbstractSortableRelationshipAnnotation
 {
 }

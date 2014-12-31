@@ -10,11 +10,13 @@ class OneToManyTest extends AbstractOrmTest
 {
     public function testOneToMany()
     {
+        $time = new \DateTime();
+
         $article1 = new Article();
-        $article1->setId(101)->setTitle('Article 101');
+        $article1->setId(101)->setTitle('Article 101')->setTimeCreated($time)->setLastModified($time);
 
         $article2 = new Article();
-        $article2->setId(102)->setTitle('Article 102');
+        $article2->setId(102)->setTitle('Article 102')->setTimeCreated($time)->setLastModified($time);
 
         $category1 = new Category();
         $category1->setId(101)->setName('Category 101');
@@ -27,12 +29,15 @@ class OneToManyTest extends AbstractOrmTest
 
     /**
      * Testing race conditions of new entities, with a flush after persisting the first entity
+     *
      * @see: docs/RaceConditions.md
      */
     public function testOneToManyRaceFlush()
     {
+        $time = new \DateTime();
+
         $article1 = new Article();
-        $article1->setId(201)->setTitle('Article 201');
+        $article1->setId(201)->setTitle('Article 201')->setTimeCreated($time)->setLastModified($time);
 
         $category1 = new Category();
         $category1->setId(201)->setName('Category 201');
@@ -64,12 +69,15 @@ class OneToManyTest extends AbstractOrmTest
 
     /**
      * Testing race conditions of new entities, without a flush between persist calls
+     *
      * @see: docs/RaceConditions.md
      */
     public function testOneToManyRaceNoFlush()
     {
+        $time = new \DateTime();
+
         $article1 = new Article();
-        $article1->setId(201)->setTitle('Article 201');
+        $article1->setId(201)->setTitle('Article 201')->setTimeCreated($time)->setLastModified($time);
 
         $category1 = new Category();
         $category1->setId(201)->setName('Category 201');

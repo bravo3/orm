@@ -23,7 +23,11 @@ class Category
 
     /**
      * @var Article[]
-     * @Orm\OneToMany(target="Bravo3\Orm\Tests\Entities\OneToMany\Article", inversed_by="canonical_category")
+     * @Orm\OneToMany(
+     *      target="Bravo3\Orm\Tests\Entities\OneToMany\Article",
+     *      inversed_by="canonical_category",
+     *      sortable_by={"title", "last_modified"}
+     * )
      */
     protected $articles;
 

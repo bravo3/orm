@@ -108,7 +108,7 @@ interface DriverInterface
     /**
      * Remove one or more values from a set index
      *
-     * @param string $key
+     * @param string       $key
      * @param string|array $value
      * @return void
      */
@@ -123,4 +123,44 @@ interface DriverInterface
      * @return string[]
      */
     public function getMultiValueIndex($key);
+
+    /**
+     * Clear an entire sorted index
+     *
+     * @param string $key
+     * @return void
+     */
+    public function clearSortedIndex($key);
+
+    /**
+     * Add an item to a sorted index
+     *
+     * @param string $key
+     * @param mixed  $score
+     * @param string $value
+     * @return void
+     */
+    public function addSortedIndex($key, $score, $value);
+
+    /**
+     * Remove an item from a sorted index
+     *
+     * @param string $key
+     * @param string $value
+     * @return void
+     */
+    public function removeSortedIndex($key, $value);
+
+    /**
+     * Get a range values in a sorted index
+     *
+     * If $min/$max are === null, they are assumed to be the started/end of the entire set
+     *
+     * @param string $key
+     * @param bool   $reverse
+     * @param int    $min
+     * @param int    $max
+     * @return string[]
+     */
+    public function getSortedIndex($key, $reverse = false, $min = null, $max = null);
 }

@@ -199,3 +199,8 @@ Major Planned Additions
 * YAML metadata mapper
 * Proxy caching
 * Entity caching pool
+
+Known Issues
+------------
+* Using traits in entities may cause issues with proxies when attempting to retrieve the entity
+    * Caused by Zend MethodReflection claiming a comment is unterminated

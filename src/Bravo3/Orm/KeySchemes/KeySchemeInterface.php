@@ -32,4 +32,14 @@ interface KeySchemeInterface
      * @return string
      */
     public function getIndexKey(Index $index, $key);
+
+    /**
+     * Get the key for a sort index on a relationship
+     *
+     * @param Relationship $relationship Relationship
+     * @param string       $sort_key     Property name on the inverse entity
+     * @param string       $id           Local ID
+     * @return string
+     */
+    public function getSortIndexKey(Relationship $relationship, $sort_key, $id);
 }

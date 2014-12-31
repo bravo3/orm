@@ -2,6 +2,7 @@
 namespace Bravo3\Orm\Mappers\Annotation;
 
 use Bravo3\Orm\Annotations\AbstractRelationshipAnnotation;
+use Bravo3\Orm\Annotations\AbstractSortableRelationshipAnnotation;
 use Bravo3\Orm\Annotations\Column as ColumnAnnotation;
 use Bravo3\Orm\Annotations\Entity as EntityAnnotation;
 use Bravo3\Orm\Annotations\Index as IndexAnnotation;
@@ -156,6 +157,10 @@ class AnnotationMetadataParser
                      ->setGetter($annotation->getter)
                      ->setSetter($annotation->setter)
                      ->setInversedBy($annotation->inversed_by);
+
+        if ($annotation instanceof AbstractSortableRelationshipAnnotation) {
+            $relationship->setSortableBy($annotation->sortable_by);
+        }
 
         return $relationship;
     }

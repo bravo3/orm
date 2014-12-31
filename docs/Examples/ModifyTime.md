@@ -5,16 +5,13 @@ subscribers to the pre-persist event.
 
 Native Support
 --------------
-To use the built-in functionality you need to implement the `CreateModifyInterface` on your entity class. An 
-implementation of this is included in the `CreateModifyTrait` -
+To use the built-in functionality you need to implement the `CreateModifyInterface` on your entity class:
 
     /**
      * @Orm\Entity
      */
     class SomeEntity implements CreateModifyInterface
     {
-        use CreateModifyTrait;
-        
         // ..
     }
 
