@@ -77,10 +77,6 @@ class QueryResult implements \Countable, \Iterator, \ArrayAccess
      */
     public function getEntityById($id)
     {
-        if (!$this->offsetExists($id)) {
-            throw new OutOfBoundsException("ID is not in result set");
-        }
-
         if (!array_key_exists($id, $this->entities)) {
             $this->hydrateEntity($id);
         }
@@ -149,30 +145,30 @@ class QueryResult implements \Countable, \Iterator, \ArrayAccess
     /**
      * Check if an ID is in the result set
      *
-     * @param string $offset
+     * @param int $offset
      * @return bool
      */
     public function offsetExists($offset)
     {
-        return in_array($offset, $this->id_list);
+        return array_key_exists($offset, $this->id_list);
     }
 
     /**
-     * Retrieve an entity by ID
+     * Retrieve the entity at position $offset
      *
-     * @param string $offset
+     * @param int $offset
      * @return object
      */
     public function offsetGet($offset)
     {
-        return $this->getEntityById($offset);
+        return $this->getEntityById($this->id_list[$offset]);
     }
 
     /**
      * You cannot set query elements, calling this function will throw a \LogicException
      *
-     * @param void $offset
-     * @param void $value
+     * @param int   $offset
+     * @param mixed $value
      */
     public function offsetSet($offset, $value)
     {
@@ -180,12 +176,12 @@ class QueryResult implements \Countable, \Iterator, \ArrayAccess
     }
 
     /**
-     * Dehydrate an entity
+     * You cannot unset query elements, calling this function will throw a \LogicException
      *
-     * @param string $offset
+     * @param int $offset
      */
     public function offsetUnset($offset)
     {
-        unset($this->entities[$offset]);
+        throw new \LogicException("You cannot unset a query result item");
     }
 }

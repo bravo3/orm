@@ -30,8 +30,11 @@ class QueryTest extends AbstractOrmTest
         $this->assertCount(2, $result);
 
         /** @var SluggedArticle $entity */
-        $entity = $result['4'];
+        $entity = $result[0];
         $this->assertEquals('Document D', $entity->getName());
+
+        $entity = $result[1];
+        $this->assertEquals('Article A', $entity->getName());
 
         $names = ['Article A', 'Document D'];
         $count = 0;

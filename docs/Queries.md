@@ -58,13 +58,13 @@ asking for it or using it in a loop, the entities will be retrieved on demand.
         echo $entity->getName()."\n";
     }
 
-It is also an ArrayAccess implementation, you can request entities by ID:
+It is also an ArrayAccess implementation, you can request entities by index:
 
     // Array of ID's in the query result
     var_dump($result->getIdList());
     
-    // Get an individual entity, without making database calls to retrieve any other entities:
-    $entity = $result['104'];
+    // Get an individual entity at index 2, without making database calls to retrieve any other entities:
+    $entity = $result[2];
     echo $entity->getName()."\n";
     
 Wildcards
