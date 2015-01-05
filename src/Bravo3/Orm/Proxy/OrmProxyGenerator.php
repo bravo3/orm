@@ -4,6 +4,7 @@ namespace Bravo3\Orm\Proxy;
 use Bravo3\Orm\Proxy\Methods\getIndexOriginalValue;
 use Bravo3\Orm\Proxy\Methods\getOriginalId;
 use Bravo3\Orm\Proxy\Methods\isRelativeModified;
+use Bravo3\Orm\Proxy\Methods\setEntityPersisted;
 use Bravo3\Orm\Proxy\Methods\setIndexOriginalValue;
 use Bravo3\Orm\Proxy\Methods\setOriginalId;
 use Bravo3\Orm\Proxy\Methods\setRelativeModified;
@@ -29,6 +30,7 @@ class OrmProxyGenerator extends LazyLoadingGhostGenerator
         $classGenerator->addProperty('_original_id', null, PropertyGenerator::FLAG_PRIVATE);
         $classGenerator->addMethodFromGenerator(new setRelativeModified());
         $classGenerator->addMethodFromGenerator(new isRelativeModified());
+        $classGenerator->addMethodFromGenerator(new setEntityPersisted());
         $classGenerator->addMethodFromGenerator(new setIndexOriginalValue());
         $classGenerator->addMethodFromGenerator(new getIndexOriginalValue());
         $classGenerator->addMethodFromGenerator(new setOriginalId());

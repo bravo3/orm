@@ -6,6 +6,7 @@ use Bravo3\Orm\Exceptions\InvalidArgumentException;
 use Bravo3\Orm\Exceptions\NotFoundException;
 use Bravo3\Orm\KeySchemes\KeySchemeInterface;
 use Bravo3\Orm\Mappers\MapperInterface;
+use Bravo3\Orm\Proxy\OrmProxyInterface;
 use Bravo3\Orm\Query\Query;
 use Bravo3\Orm\Query\QueryResult;
 use Bravo3\Orm\Serialisers\JsonSerialiser;
@@ -155,6 +156,8 @@ class EntityManager
         $reader     = new Reader($metadata, $entity);
         $id         = $reader->getId();
 
+        $this->driver->debugLog("Persisting ".$metadata->getTableName().' '.$id);
+
         $this->driver->persist(
             $this->key_scheme->getEntityKey($metadata->getTableName(), $id),
             $serialiser->serialise($metadata, $entity)
@@ -162,6 +165,10 @@ class EntityManager
 
         $this->getRelationshipManager()->persistRelationships($entity, $metadata, $reader, $id);
         $this->getIndexManager()->persistIndices($entity, $metadata, $reader, $id);
+
+        if ($entity instanceof OrmProxyInterface) {
+            $entity->setEntityPersisted($id);
+        }
 
         return $this;
     }

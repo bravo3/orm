@@ -2,6 +2,7 @@
 namespace Bravo3\Orm\Tests\Entities\OneToMany;
 
 use Bravo3\Orm\Annotations as Orm;
+use Bravo3\Orm\Services\ListManager;
 
 /**
  * @Orm\Entity()
@@ -105,7 +106,19 @@ class Category
      */
     public function addArticle(Article $article)
     {
-        $this->articles[] = $article;
+        ListManager::add($this, 'articles', $article);
+        return $this;
+    }
+
+    /**
+     * Remove an article from the category
+     *
+     * @param Article $article
+     * @return $this
+     */
+    public function removeArticle(Article $article)
+    {
+        ListManager::remove($this, 'articles', $article, ['getId']);
         return $this;
     }
 }

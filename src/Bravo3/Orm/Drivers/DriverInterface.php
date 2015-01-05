@@ -4,8 +4,9 @@ namespace Bravo3\Orm\Drivers;
 use Bravo3\Orm\Drivers\Common\SerialisedData;
 use Bravo3\Orm\KeySchemes\KeySchemeInterface;
 use Bravo3\Orm\Query\Query;
+use Bravo3\Orm\Traits\DebugInterface;
 
-interface DriverInterface
+interface DriverInterface extends DebugInterface
 {
     /**
      * Persist some primitive data
@@ -133,7 +134,7 @@ interface DriverInterface
     public function clearSortedIndex($key);
 
     /**
-     * Add an item to a sorted index
+     * Add or update an item in a sorted index
      *
      * @param string $key
      * @param mixed  $score

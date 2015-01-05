@@ -17,6 +17,7 @@ use Bravo3\Orm\Mappers\Metadata\Column;
 use Bravo3\Orm\Mappers\Metadata\Entity;
 use Bravo3\Orm\Mappers\Metadata\Index;
 use Bravo3\Orm\Mappers\Metadata\Relationship;
+use Bravo3\Orm\Services\Io\Reader;
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Inflector\Inflector;
 
@@ -45,10 +46,16 @@ class AnnotationMetadataParser
      */
     protected $entity_annotation = null;
 
-    public function __construct($entity)
+    /**
+     * @var string
+     */
+    protected $class_name;
+
+    public function __construct($class_name)
     {
+        $this->class_name        = $class_name;
         $this->annotation_reader = new AnnotationReader();
-        $this->reflection_obj    = new \ReflectionClass($entity);
+        $this->reflection_obj    = new \ReflectionClass($this->class_name);
     }
 
     /**
@@ -231,7 +238,7 @@ class AnnotationMetadataParser
 
             if (!$this->entity_annotation) {
                 throw new InvalidEntityException(
-                    'Entity "'.$this->reflection_obj->getName().'" does not contain an @Entity annotation'
+                    'Entity "'.$this->class_name.'" does not contain an @Entity annotation'
                 );
             }
         }

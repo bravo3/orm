@@ -130,20 +130,23 @@ class Writer
      */
     private function examineMethodForHydration($method)
     {
-        if (isset($this->hydrated_methods[$method])) {
-            return $this;
-        }
-
         $property = $this->metadata->getPropertyFor($method);
         if ($property) {
             $relative = $this->metadata->getRelationshipByName($property);
+
             if ($relative) {
-                $this->proxy->setRelativeModified($property);
-                $this->hydrateRelative($relative);
+                if ($relative->getSetter() == $method) {
+                    $this->proxy->setRelativeModified($property);
+                    $this->hydrated_methods[$method] = true;
+                } elseif ($relative->getGetter() == $method) {
+                    if (!isset($this->hydrated_methods[$method])) {
+                        $this->hydrateRelative($relative);
+                        $this->hydrated_methods[$method] = true;
+                    }
+                }
             }
         }
 
-        $this->hydrated_methods[$method] = true;
         return $this;
     }
 
@@ -155,6 +158,11 @@ class Writer
      */
     public function hydrateRelative(Relationship $relative)
     {
+        $this->entity_manager->getDriver()->debugLog(
+            "Hydrating relative for ".$this->metadata->getTableName()."[".$this->getReader()->getId()."]::".
+            $relative->getName()
+        );
+
         $setter = $relative->getSetter();
         $key    = $this->entity_manager->getKeyScheme()->getRelationshipKey($relative, $this->getReader()->getId());
 

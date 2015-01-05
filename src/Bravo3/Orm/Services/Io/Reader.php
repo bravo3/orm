@@ -103,8 +103,12 @@ class Reader
     {
         if ($entity instanceof OrmProxyInterface) {
             return get_parent_class($entity);
-        } else {
+        } elseif (is_object($entity)) {
             return get_class($entity);
+        } elseif (is_string($entity)) {
+            return $entity;
+        } else {
+            return null;
         }
     }
 }

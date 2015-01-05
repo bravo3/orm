@@ -32,7 +32,7 @@ class AnnotationMapper implements MapperInterface
      */
     public function getEntityMetadata($entity)
     {
-        $class_name = is_object($entity) ? Reader::getEntityClassName($entity) : $entity;
+        $class_name = Reader::getEntityClassName($entity);
 
         if (!isset($this->metadata_cache[$class_name])) {
             $parser                            = new AnnotationMetadataParser($class_name);

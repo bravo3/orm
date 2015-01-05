@@ -25,7 +25,7 @@ class RelationshipManager
     public function persistRelationships($entity, Entity $metadata = null, Reader $reader = null, $local_id = null)
     {
         if (!$metadata) {
-            $metadata = $this->getMapper()->getEntityMetadata(Reader::getEntityClassName($entity));
+            $metadata = $this->getMapper()->getEntityMetadata($entity);
         }
 
         if (!$reader) {
@@ -78,7 +78,7 @@ class RelationshipManager
 
                 // Modify the inversed relationships
                 if ($relationship->getInversedBy()) {
-                    $this->persistInversedRelationship($relationship, $key, $value, $local_id);
+                    $this->persistInversedRelationship($relationship, $key, $value, $local_id, $reader);
                 }
             }
         }
@@ -94,6 +94,7 @@ class RelationshipManager
     private function persistForwardRelationship(Relationship $relationship, $key, $value)
     {
         // Set the local relationship
+        $this->getDriver()->debugLog('@Setting forward relationship: '.$key);
         if (RelationshipType::isMultiIndex($relationship->getRelationshipType())) {
             $this->setMultiValueRelationship($key, $value);
         } else {
@@ -110,10 +111,13 @@ class RelationshipManager
      */
     private function persistForwardSortIndices(Relationship $relationship, $local_id, $value)
     {
-        if (!is_array($value)) {
+        if ($value === null) {
+            $value = [];
+        } elseif (!is_array($value)) {
             $value = [$value];
         }
 
+        $this->getDriver()->debugLog('@Setting forward sort indices for "'.$local_id.'"');
         foreach ($relationship->getSortableBy() as $sort_property) {
             $key = $this->getKeyScheme()->getSortIndexKey($relationship, $sort_property, $local_id);
             $this->getDriver()->clearSortedIndex($key);
@@ -135,11 +139,14 @@ class RelationshipManager
      * @param string          $key          Forward relationship key
      * @param object|object[] $value        Forward relationship value
      * @param string          $local_id     ID of local entity
+     * @param Reader          $reader       Local entity reader, used for sorted indices
      */
-    private function persistInversedRelationship(Relationship $relationship, $key, $value, $local_id)
+    private function persistInversedRelationship(Relationship $relationship, $key, $value, $local_id, Reader $reader)
     {
         $inverse_relationship = $this->invertRelationship($relationship);
         list($to_remove, $to_add) = $this->getRelationshipDeltas($key, $relationship, $value);
+
+        $this->getDriver()->debugLog('@Setting inverse relationship: '.$key);
 
         // Remove local from all foreigners no longer in the relationship
         foreach ($to_remove as $foreign_id) {
@@ -150,6 +157,14 @@ class RelationshipManager
             } else {
                 $this->getDriver()->clearSingleValueIndex($inverse_key);
             }
+
+            // If the inverted relationship has sorting, remove the local from the sorted index
+            foreach ($inverse_relationship->getSortableBy() as $sort_property) {
+                $this->getDriver()->removeSortedIndex(
+                    $this->getKeyScheme()->getSortIndexKey($inverse_relationship, $sort_property, $foreign_id),
+                    $local_id
+                );
+            }
         }
 
         // Add local to all foreigners now added to the relationship
@@ -159,8 +174,57 @@ class RelationshipManager
             if (RelationshipType::isMultiIndex($inverse_relationship->getRelationshipType())) {
                 $this->getDriver()->addMultiValueIndex($inverse_key, $local_id);
             } else {
+                $this->breakFormerRelationship($inverse_relationship, $foreign_id);
                 $this->getDriver()->setSingleValueIndex($inverse_key, $local_id);
             }
+
+            foreach ($inverse_relationship->getSortableBy() as $sort_property) {
+                $this->getDriver()->addSortedIndex(
+                    $this->getKeyScheme()->getSortIndexKey($inverse_relationship, $sort_property, $foreign_id),
+                    $reader->getPropertyValue($sort_property),
+                    $local_id
+                );
+            }
+        }
+    }
+
+    /**
+     * When adding an entity on a one-to-many relationship, the foreign entity might have had a pre-existing entity
+     * assigned in the inverted 'to-one' index. If it had a value, we now need to break that existing relationship as
+     * we have inadvertently removed it by assigning it to a new local entity.
+     *
+     * This operation should only ever be applied to 'to-one' relationships, which should be the inverse of a 'to-many'
+     * relationship. Other use is illogical.
+     *
+     * This call will remove only the inverse of the relationship provided (which would be the former forward of the
+     * relationship that triggered this), breaking the forward relationship is assumed when overwriting the new
+     * relationship.
+     *
+     * @param Relationship $relationship
+     * @param string       $source_id
+     */
+    private function breakFormerRelationship(Relationship $relationship, $source_id)
+    {
+        $key = $this->getKeyScheme()->getRelationshipKey($relationship, $source_id);
+        $this->getDriver()->debugLog('Checking for breakable former relationship: '.$key);
+        $old_value = $this->getDriver()->getSingleValueIndex($key);
+
+        if (!$old_value) {
+            // No former relationship to break
+            return;
+        }
+
+        $inverse_relationship = $this->invertRelationship($relationship);
+
+        // Relationship keys
+        $inverse_key = $this->getKeyScheme()->getRelationshipKey($inverse_relationship, $old_value);
+        $this->getDriver()->debugLog('@Breaking former relationship: '.$inverse_key);
+        $this->getDriver()->removeMultiValueIndex($inverse_key, $source_id);
+
+        // Sorted index keys
+        foreach ($inverse_relationship->getSortableBy() as $sort_field) {
+            $sort_key = $this->getKeyScheme()->getSortIndexKey($inverse_relationship, $sort_field, $old_value);
+            $this->getDriver()->removeSortedIndex($sort_key, $source_id);
         }
     }
 
@@ -213,9 +277,12 @@ class RelationshipManager
      */
     private function getRelationshipDeltas($key, Relationship $relationship, $new_value)
     {
+        $this->getDriver()->debugLog('Getting inverse relationship deltas: '.$key);
+
         // Work out what needs to be added, and what needs to be removed
         if (RelationshipType::isMultiIndex($relationship->getRelationshipType())) {
             $old_ids = $this->getDriver()->getMultiValueIndex($key);
+
             $new_ids = [];
             if ($new_value) {
                 foreach ($new_value as $item) {
@@ -245,7 +312,6 @@ class RelationshipManager
         return [$to_remove, $to_add];
     }
 
-
     /**
      * Set a single-key relationship index
      *
@@ -255,7 +321,7 @@ class RelationshipManager
     private function setSingleValueRelationship($key, $foreign_entity)
     {
         if ($foreign_entity) {
-            $rel_metadata = $this->getMapper()->getEntityMetadata(get_class($foreign_entity));
+            $rel_metadata = $this->getMapper()->getEntityMetadata($foreign_entity);
             $rel_reader   = new Reader($rel_metadata, $foreign_entity);
             $value        = $rel_reader->getId();
         } else {
@@ -280,8 +346,8 @@ class RelationshipManager
      *
      * Consider: perhaps ideally, a combination of both strategies might be useful.
      *
-     * @param string $key
-     * @param object $foreign_entities
+     * @param string        $key
+     * @param object[]|null $foreign_entities
      */
     private function setMultiValueRelationship($key, $foreign_entities)
     {
@@ -290,7 +356,7 @@ class RelationshipManager
         if ($foreign_entities) {
             $values = [];
             foreach ($foreign_entities as $entity) {
-                $rel_metadata = $this->getMapper()->getEntityMetadata(get_class($entity));
+                $rel_metadata = $this->getMapper()->getEntityMetadata($entity);
                 $rel_reader   = new Reader($rel_metadata, $entity);
                 $values[]     = $rel_reader->getId();
             }

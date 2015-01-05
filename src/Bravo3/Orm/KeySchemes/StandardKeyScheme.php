@@ -92,15 +92,15 @@ class StandardKeyScheme implements KeySchemeInterface
      * Get the key for a sort index on a relationship
      *
      * @param Relationship $relationship Relationship
-     * @param string       $sort_key     Property name on the inverse entity
+     * @param string       $sort_field   Property name on the inverse entity
      * @param string       $id           Local ID
      * @return string
      */
-    public function getSortIndexKey(Relationship $relationship, $sort_key, $id)
+    public function getSortIndexKey(Relationship $relationship, $sort_field, $id)
     {
         // srt:category-article:89726:title
         return static::SORT_NAMESPACE.$this->delimiter.
                $relationship->getSourceTable().'-'.$relationship->getTargetTable().$this->delimiter.
-               $id.$this->delimiter.$sort_key;
+               $id.$this->delimiter.$sort_field;
     }
 }

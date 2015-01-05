@@ -13,6 +13,7 @@ abstract class AbstractOrmTest extends \PHPUnit_Framework_TestCase
     protected function getEntityManager()
     {
         $driver = $this->getDriver();
+        $driver->setDebugMode(true);
         $mapper = new AnnotationMapper();
         return EntityManager::build($driver, $mapper);
     }

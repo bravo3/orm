@@ -31,6 +31,16 @@ interface OrmProxyInterface extends LazyLoadingInterface
     public function setIndexOriginalValue($name, $value);
 
     /**
+     * Sets the entity to a persisted state
+     *
+     * Clears all modification flags and updates the original ID marker, as if the entity was freshly retrieved.
+     *
+     * @param string $id
+     * @return $this
+     */
+    public function setEntityPersisted($id);
+
+    /**
      * Get an indexes original value
      *
      * @param string $name

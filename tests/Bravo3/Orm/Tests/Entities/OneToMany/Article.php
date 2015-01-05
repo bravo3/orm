@@ -88,7 +88,7 @@ class Article implements CreateModifyInterface
      * @param Category $canonical_category
      * @return $this
      */
-    public function setCanonicalCategory(Category $canonical_category)
+    public function setCanonicalCategory(Category $canonical_category = null)
     {
         $this->canonical_category = $canonical_category;
         return $this;

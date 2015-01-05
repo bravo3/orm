@@ -8,13 +8,15 @@ use Bravo3\Orm\Drivers\DriverInterface;
 use Bravo3\Orm\Exceptions\NotFoundException;
 use Bravo3\Orm\KeySchemes\KeySchemeInterface;
 use Bravo3\Orm\KeySchemes\StandardKeyScheme;
-use Bravo3\Orm\Query\Query;
+use Bravo3\Orm\Traits\DebugTrait;
 use Predis\Client;
 use Predis\Command\CommandInterface;
 use Predis\Transaction\MultiExec;
 
 class RedisDriver implements DriverInterface
 {
+    use DebugTrait;
+
     /**
      * @var UnitOfWork
      */
@@ -267,7 +269,7 @@ class RedisDriver implements DriverInterface
     }
 
     /**
-     * Add an item to a sorted index
+     * Add or update an item in a sorted index
      *
      * @param string $key
      * @param mixed  $score
@@ -329,6 +331,25 @@ class RedisDriver implements DriverInterface
             return 0.0;
         } else {
             return (float)$score;
+        }
+    }
+
+    /**
+     * Create a debug log
+     *
+     * @param string $msg
+     * @return void
+     */
+    public function debugLog($msg)
+    {
+        if (!$this->getDebugMode() || !$msg) {
+            return;
+        }
+
+        if ($msg{0} == '@') {
+            $this->unit_of_work->addCommand('ConnectionEcho', [substr($msg, 1)]);
+        } else {
+            $this->client->echo($msg);
         }
     }
 }
