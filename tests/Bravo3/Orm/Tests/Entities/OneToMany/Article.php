@@ -29,6 +29,18 @@ class Article implements CreateModifyInterface
     protected $canonical_category;
 
     /**
+     * @var \DateTime
+     * @Orm\Column(type="datetime")
+     */
+    private $time_created;
+
+    /**
+     * @var \DateTime
+     * @Orm\Column(type="datetime")
+     */
+    private $last_modified;
+
+    /**
      * Get Id
      *
      * @return int
@@ -93,18 +105,6 @@ class Article implements CreateModifyInterface
         $this->canonical_category = $canonical_category;
         return $this;
     }
-
-    /**
-     * @var \DateTime
-     * @Orm\Column(type="datetime")
-     */
-    private $time_created;
-
-    /**
-     * @var \DateTime
-     * @Orm\Column(type="datetime")
-     */
-    private $last_modified;
 
     /**
      * Get the time the entity was created

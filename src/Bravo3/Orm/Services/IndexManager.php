@@ -5,12 +5,9 @@ use Bravo3\Orm\Mappers\Metadata\Entity;
 use Bravo3\Orm\Mappers\Metadata\Index;
 use Bravo3\Orm\Proxy\OrmProxyInterface;
 use Bravo3\Orm\Services\Io\Reader;
-use Bravo3\Orm\Traits\EntityManagerAwareTrait;
 
-class IndexManager
+class IndexManager extends AbstractManagerUtility
 {
-    use EntityManagerAwareTrait;
-
     /**
      * Persist entity indices
      *
@@ -18,22 +15,31 @@ class IndexManager
      * @param Entity $metadata Optionally provide entity metadata to prevent recalculation
      * @param Reader $reader   Optionally provide the entity reader
      * @param string $local_id Optionally provide the local entity ID to prevent recalculation
+     * @return $this
      */
     public function persistIndices($entity, Entity $metadata = null, Reader $reader = null, $local_id = null)
     {
-        if (!$metadata) {
-            $metadata = $this->getMapper()->getEntityMetadata(Reader::getEntityClassName($entity));
-        }
+        /** @var $metadata Entity */
+        list($metadata, $reader, $local_id) = $this->buildPrerequisites($entity, $metadata, $reader, $local_id);
+        $this->traversePersistIndices($metadata->getIndices(), $entity, $reader, $local_id);
+        return $this;
+    }
 
-        if (!$reader) {
-            $reader = new Reader($metadata, $entity);
-        }
-
-        if (!$local_id) {
-            $local_id = $reader->getId();
-        }
-
-        $this->traverseIndices($metadata->getIndices(), $entity, $reader, $local_id);
+    /**
+     * Delete all indices associated with an entity
+     *
+     * @param object $entity   Local entity object
+     * @param Entity $metadata Optionally provide entity metadata to prevent recalculation
+     * @param Reader $reader   Optionally provide the entity reader
+     * @param string $local_id Optionally provide the local entity ID to prevent recalculation
+     * @return $this
+     */
+    public function deleteIndices($entity, Entity $metadata = null, Reader $reader = null, $local_id = null)
+    {
+        /** @var $metadata Entity */
+        list($metadata, $reader, $local_id) = $this->buildPrerequisites($entity, $metadata, $reader, $local_id);
+        $this->traverseDeleteIndices($metadata->getIndices(), $entity, $reader, $local_id);
+        return $this;
     }
 
     /**
@@ -44,7 +50,7 @@ class IndexManager
      * @param Reader  $reader
      * @param string  $local_id
      */
-    private function traverseIndices(array $indices, $entity, Reader $reader, $local_id)
+    private function traversePersistIndices(array $indices, $entity, Reader $reader, $local_id)
     {
         $is_proxy = $entity instanceof OrmProxyInterface;
 
@@ -74,5 +80,32 @@ class IndexManager
             $value = $local_id;
             $this->getDriver()->setSingleValueIndex($key, $value);
         }
+    }
+
+    /**
+     * Traverse an array of indices and persist them
+     *
+     * @param Index[] $indices
+     * @param object  $entity
+     * @param Reader  $reader
+     * @param string  $local_id
+     */
+    private function traverseDeleteIndices(array $indices, $entity, Reader $reader, $local_id)
+    {
+        $is_proxy = $entity instanceof OrmProxyInterface;
+
+        foreach ($indices as $index) {
+            if ($is_proxy) {
+                /** @var OrmProxyInterface $entity */
+                $index_value = $entity->getIndexOriginalValue($index->getName());
+            } else {
+                $index_value = $reader->getIndexValue($index);
+            }
+
+            $this->getDriver()->clearSingleValueIndex(
+                $this->getKeyScheme()->getIndexKey($index, $index_value)
+            );
+        }
+
     }
 }

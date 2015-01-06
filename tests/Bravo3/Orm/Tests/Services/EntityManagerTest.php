@@ -6,12 +6,17 @@ use Bravo3\Orm\Events\PersistEvent;
 use Bravo3\Orm\Events\RetrieveEvent;
 use Bravo3\Orm\Proxy\OrmProxyInterface;
 use Bravo3\Orm\Tests\Entities\BadEntity;
+use Bravo3\Orm\Tests\Entities\Indexed\SluggedArticle;
 use Bravo3\Orm\Tests\Entities\ModifiedEntity;
 use Bravo3\Orm\Tests\Entities\OneToMany\Article;
+use Bravo3\Orm\Tests\Entities\OneToMany\Category;
 use Bravo3\Orm\Tests\Entities\Product;
 
 class EntityManagerTest extends AbstractOrmTest
 {
+    const ENTITY_ARTICLE = 'Bravo3\Orm\Tests\Entities\OneToMany\Article';
+    const ENTITY_PRODUCT = 'Bravo3\Orm\Tests\Entities\Product';
+
     public function testIo()
     {
         $em = $this->getEntityManager();
@@ -26,7 +31,7 @@ class EntityManagerTest extends AbstractOrmTest
         $em->flush();
 
         /** @var Product|OrmProxyInterface $retrieved */
-        $retrieved = $em->retrieve('Bravo3\Orm\Tests\Entities\Product', 123);
+        $retrieved = $em->retrieve(self::ENTITY_PRODUCT, 123);
         $this->validateProxyInterface($retrieved);
 
         $this->assertEquals($product->getId(), $retrieved->getId());
@@ -35,6 +40,56 @@ class EntityManagerTest extends AbstractOrmTest
         $this->assertEquals('01/01/2015 12:15:03', $retrieved->getCreateTime()->format('d/m/Y H:i:s'));
         $this->assertSame(12.45, $retrieved->getPrice());
         $this->assertTrue($retrieved->getActive());
+    }
+
+    public function testDeleteRelationships()
+    {
+        $em     = $this->getEntityManager();
+        $client = $this->getRawRedisClient();
+
+        $article1 = new Article();
+        $article1->setId(301)->setTitle('Article 301');
+
+        $article2 = new Article();
+        $article2->setId(302)->setTitle('Article 302');
+
+        $category1 = new Category();
+        $category1->setId(351)->setName('Category 351');
+
+        $category1->addArticle($article1)->addArticle($article2);
+
+        $em->persist($category1)->persist($article1)->persist($article2)->flush();
+
+        $this->assertTrue($client->exists('doc:article:301'));
+        $this->assertEquals('351', $client->get('mto:article-category:301:canonical_category'));
+
+        /** @var Article $article */
+        $article = $em->retrieve(self::ENTITY_ARTICLE, 301);
+        $article->setId(399);
+
+        $em->delete($article)->flush();
+
+        $this->assertFalse($client->exists('doc:article:301'));
+        $this->assertFalse($client->exists('mto:article-category:301:canonical_category'));
+    }
+
+    public function testDeleteIndices()
+    {
+        $em     = $this->getEntityManager();
+        $client = $this->getRawRedisClient();
+
+        $article = new SluggedArticle();
+        $article->setId(401)->setName('slugged article')->setSlug('some-slug');
+
+        $em->persist($article)->flush();
+        $this->assertTrue($client->exists('doc:slugged_article:401'));
+        $this->assertEquals('401', $client->get('idx:slugged_article:slug:some-slug'));
+        $this->assertEquals('401', $client->get('idx:slugged_article:name:slugged article'));
+
+        $em->delete($article)->flush();
+        $this->assertFalse($client->exists('doc:slugged_article:401'));
+        $this->assertFalse($client->exists('idx:slugged_article:slug:some-slug'));
+        $this->assertFalse($client->exists('idx:slugged_article:name:slugged article'));
     }
 
     public function testIntercepts()
@@ -68,7 +123,7 @@ class EntityManagerTest extends AbstractOrmTest
 
         $this->assertEquals('Persisted Product', $product->getName());
 
-        $retrieved = $em->retrieve('Bravo3\Orm\Tests\Entities\Product', 111);
+        $retrieved = $em->retrieve(self::ENTITY_PRODUCT, 111);
         $this->assertTrue($retrieved instanceof Article);
     }
 

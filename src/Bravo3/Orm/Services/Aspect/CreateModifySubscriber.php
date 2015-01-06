@@ -26,7 +26,6 @@ class CreateModifySubscriber implements EventSubscriberInterface
     public function updateTimeStamps(PersistEvent $event)
     {
         $entity = $event->getEntity();
-
         if (!($entity instanceof CreateModifyInterface)) {
             return;
         }

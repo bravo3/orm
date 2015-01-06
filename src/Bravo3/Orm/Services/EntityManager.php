@@ -56,6 +56,11 @@ class EntityManager
     protected $dispatcher = null;
 
     /**
+     * @var EntityManager
+     */
+    protected $proxy;
+
+    /**
      * Create a raw entity manager
      *
      * Do not construct an entity manager directly or it will lack access interceptors which are responsible for
@@ -114,11 +119,15 @@ class EntityManager
         $proxy_factory      = new AccessInterceptorValueHolderFactory();
         $interceptor_factor = new EntityManagerInterceptorFactory();
 
-        return $proxy_factory->createProxy(
-            new self($driver, $mapper, $serialiser_map, $key_scheme),
+        $em    = new self($driver, $mapper, $serialiser_map, $key_scheme);
+        $proxy = $proxy_factory->createProxy(
+            $em,
             $interceptor_factor->getPrefixInterceptors(),
             $interceptor_factor->getSuffixInterceptors()
         );
+
+        $em->setProxy($proxy);
+        return $proxy;
     }
 
     /**
@@ -140,7 +149,7 @@ class EntityManager
     public function setSerialiserMap($serialiser_map)
     {
         $this->serialiser_map = $serialiser_map;
-        return $this;
+        return $this->getProxy();
     }
 
     /**
@@ -170,25 +179,42 @@ class EntityManager
             $entity->setEntityPersisted($id);
         }
 
-        return $this;
+        return $this->getProxy();
     }
 
     /**
      * Delete an entity
+     *
+     * Any modifications to the entity will be ignored; the persisted state (ID, relationships) of the entity will be
+     * deleted.
+     *
+     * If a new entity is passed to this function, any persisted entity with matching ID & class will be deleted. No
+     * error will be raised if a persisted entity is not matched.
      *
      * @param string $entity
      * @return $this
      */
     public function delete($entity)
     {
-        $metadata = $this->mapper->getEntityMetadata(get_class($entity));
+        $metadata = $this->mapper->getEntityMetadata($entity);
         $reader   = new Reader($metadata, $entity);
 
+        if ($entity instanceof OrmProxyInterface) {
+            $local_id = $entity->getOriginalId();
+        } else {
+            $local_id = $reader->getId();
+        }
+
+        // Delete document
         $this->driver->delete(
-            $this->key_scheme->getEntityKey($metadata->getTableName(), $reader->getId())
+            $this->key_scheme->getEntityKey($metadata->getTableName(), $local_id)
         );
 
-        return $this;
+        // Delete relationships & indices
+        $this->getRelationshipManager()->deleteRelationships($entity, $metadata, $reader, $local_id);
+        $this->getIndexManager()->deleteIndices($entity, $metadata, $reader, $local_id);
+
+        return $this->getProxy();
     }
 
     /**
@@ -207,9 +233,7 @@ class EntityManager
         );
 
         $writer = new Writer($metadata, $serialised_data, $this);
-        $entity = $writer->getProxy();
-
-        return $entity;
+        return $writer->getProxy();
     }
 
     /**
@@ -276,7 +300,7 @@ class EntityManager
     public function flush()
     {
         $this->driver->flush();
-        return $this;
+        return $this->getProxy();
     }
 
     /**
@@ -287,7 +311,7 @@ class EntityManager
     public function purge()
     {
         $this->driver->purge();
-        return $this;
+        return $this->getProxy();
     }
 
     /**
@@ -360,5 +384,26 @@ class EntityManager
         }
 
         return $this->dispatcher;
+    }
+
+
+    /**
+     * Get proxy object
+     *
+     * @return EntityManager
+     */
+    protected function getProxy()
+    {
+        return $this->proxy;
+    }
+
+    /**
+     * Set proxy object
+     *
+     * @param object $proxy
+     */
+    protected function setProxy($proxy)
+    {
+        $this->proxy = $proxy;
     }
 }

@@ -8,12 +8,9 @@ use Bravo3\Orm\Mappers\Metadata\Entity;
 use Bravo3\Orm\Mappers\Metadata\Relationship;
 use Bravo3\Orm\Proxy\OrmProxyInterface;
 use Bravo3\Orm\Services\Io\Reader;
-use Bravo3\Orm\Traits\EntityManagerAwareTrait;
 
-class RelationshipManager
+class RelationshipManager extends AbstractManagerUtility
 {
-    use EntityManagerAwareTrait;
-
     /**
      * Persist entity relationships
      *
@@ -21,22 +18,108 @@ class RelationshipManager
      * @param Entity $metadata Optionally provide entity metadata to prevent recalculation
      * @param Reader $reader   Optionally provide the entity reader
      * @param string $local_id Optionally provide the local entity ID to prevent recalculation
+     * @return $this
      */
     public function persistRelationships($entity, Entity $metadata = null, Reader $reader = null, $local_id = null)
     {
-        if (!$metadata) {
-            $metadata = $this->getMapper()->getEntityMetadata($entity);
+        /** @var $metadata Entity */
+        list($metadata, $reader, $local_id) = $this->buildPrerequisites($entity, $metadata, $reader, $local_id);
+        $this->persistRelationshipsTraversal($metadata->getRelationships(), $entity, $reader, $local_id);
+        return $this;
+    }
+
+    /**
+     * Delete relationship & sort indices
+     *
+     * @param object $entity   Local entity object
+     * @param Entity $metadata Optionally provide entity metadata to prevent recalculation
+     * @param Reader $reader   Optionally provide the entity reader
+     * @param string $local_id Optionally provide the local entity ID to prevent recalculation
+     * @return $this
+     */
+    public function deleteRelationships($entity, Entity $metadata = null, Reader $reader = null, $local_id = null)
+    {
+        /** @var $metadata Entity */
+        list($metadata, , $local_id) = $this->buildPrerequisites($entity, $metadata, $reader, $local_id);
+        $this->deleteRelationshipsTraversal($metadata->getRelationships(), $entity, $local_id);
+        return $this;
+    }
+
+    /**
+     * Traverse the given list of relationships and delete them
+     *
+     * @param array  $relationships
+     * @param object $entity
+     * @param string $local_id
+     */
+    private function deleteRelationshipsTraversal(array $relationships, $entity, $local_id)
+    {
+        $is_proxy = $entity instanceof OrmProxyInterface;
+
+        // If we're a proxy and modified the ID, get the un-modified ID else the result could be unexpected
+        if ($is_proxy) {
+            /** @var OrmProxyInterface $entity */
+            $local_id = $entity->getOriginalId();
         }
 
-        if (!$reader) {
-            $reader = new Reader($metadata, $entity);
+        /** @var Relationship $relationship */
+        foreach ($relationships as $relationship) {
+            $inverse_relationship = $this->invertRelationship($relationship);
+            $forward_key          = $this->getKeyScheme()->getRelationshipKey($relationship, $local_id);
+
+            // Delete relationship keys
+            if (RelationshipType::isMultiIndex($relationship->getRelationshipType())) {
+                // Delete to-many forward
+                $this->getDriver()->clearMultiValueIndex($forward_key);
+
+                // Get all foreign ID's to remove local
+                if ($relationship->getInversedBy()) {
+                    $foreign_ids = $this->getDriver()->getMultiValueIndex($forward_key);
+                    foreach ($foreign_ids as $foreign_id) {
+                        $this->deleteInvertedRelationship($inverse_relationship, $foreign_id, $local_id);
+                    }
+                }
+            } else {
+                // Delete to-one forward
+                $this->getDriver()->clearSingleValueIndex($forward_key);
+
+                // Get the foreign ID to remove local
+                if ($relationship->getInversedBy()) {
+                    $foreign_id = $this->getDriver()->getSingleValueIndex($forward_key);
+                    $this->deleteInvertedRelationship($inverse_relationship, $foreign_id, $local_id);
+                }
+            }
+
+            // Delete forward sort keys (inverse keys deleted in #deleteInvertedRelationship())
+            foreach ($relationship->getSortableBy() as $sort_field) {
+                $forward_sort_key = $this->getKeyScheme()->getSortIndexKey($relationship, $sort_field, $local_id);
+                $this->getDriver()->clearSortedIndex($forward_sort_key);
+            }
+        }
+    }
+
+    /**
+     * Remove the local ID from an inverse relationships and sort indices
+     *
+     * @param Relationship $inverse_relationship
+     * @param string       $foreign_id
+     * @param string       $local_id
+     */
+    private function deleteInvertedRelationship(Relationship $inverse_relationship, $foreign_id, $local_id)
+    {
+        $inverse_key = $this->getKeyScheme()->getRelationshipKey($inverse_relationship, $foreign_id);
+        if (RelationshipType::isMultiIndex($inverse_relationship->getRelationshipType())) {
+            // Delete to-many inverse
+            $this->getDriver()->removeMultiValueIndex($inverse_key, $local_id);
+        } else {
+            // Delete to-one inverse
+            $this->getDriver()->clearSingleValueIndex($inverse_key);
         }
 
-        if (!$local_id) {
-            $local_id = $reader->getId();
+        foreach ($inverse_relationship->getSortableBy() as $sort_field) {
+            $sort_key = $this->getKeyScheme()->getSortIndexKey($inverse_relationship, $sort_field, $foreign_id);
+            $this->getDriver()->removeSortedIndex($sort_key, $local_id);
         }
-
-        $this->traverseRelationships($metadata->getRelationships(), $entity, $reader, $local_id);
     }
 
     /**
@@ -47,7 +130,7 @@ class RelationshipManager
      * @param Reader         $reader
      * @param string         $local_id
      */
-    private function traverseRelationships(array $relationships, $entity, Reader $reader, $local_id)
+    private function persistRelationshipsTraversal(array $relationships, $entity, Reader $reader, $local_id)
     {
         $is_proxy = $entity instanceof OrmProxyInterface;
 
@@ -254,19 +337,6 @@ class RelationshipManager
     }
 
     /**
-     * Get the full ID of an entity
-     *
-     * @param object $entity
-     * @return string
-     */
-    private function getEntityId($entity)
-    {
-        $metadata = $this->getMapper()->getEntityMetadata(Reader::getEntityClassName($entity));
-        $reader   = new Reader($metadata, $entity);
-        return $reader->getId();
-    }
-
-    /**
      * Get an array containing an array of foreign entities to remove the local entity from, and an array of foreign
      * entities to add the local entity to
      *
@@ -332,19 +402,12 @@ class RelationshipManager
     }
 
     /**
-     * Set a multi-value relationship index
+     * Set a forward multi-value relationship index
      *
-     * The strategy used here is to reset (clear and re-add) the entire index, the advantages of this are:
-     * - Simple and straight-forward
-     * - Forces the index to be synchronised every time the relationship is persisted
+     * When setting forward indices the set is always cleared and re-added. This will fully synchronise the list and
+     * there is no need to calculate a delta, however it may be slow on large sets.
      *
-     * Disadvantages of this are:
-     * - Possible performance loss for large sets
-     *
-     * Other strategies would be to work out removed elements and delete them from the index. This could resolve the
-     * performance hit for large lists, but also allows for possible desynchronisation of the index.
-     *
-     * Consider: perhaps ideally, a combination of both strategies might be useful.
+     * Inverse relationships should always be updated via a delta operation.
      *
      * @param string        $key
      * @param object[]|null $foreign_entities
