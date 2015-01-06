@@ -34,6 +34,10 @@ class Reader
      */
     public function __construct(Entity $metadata, $entity)
     {
+        if (!$entity || !is_object($entity)) {
+            throw new InvalidArgumentException("Entity is not an object");
+        }
+
         $this->metadata = $metadata;
         $this->entity   = $entity;
     }

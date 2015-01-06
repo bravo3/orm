@@ -25,6 +25,7 @@ Further Examples
 * [Getters and Setters](docs/Examples/GettersSetters.md)
 * [Lookup Indices](docs/Examples/Index.md)
 * [Multi-Column IDs](docs/Examples/MultiColumnId.md)
+* [Sorted Relationships](docs/Queries.md)
 
 Example
 -------
@@ -195,7 +196,6 @@ Bundled Strategies
 
 Major Planned Additions
 -----------------------
-* Sorted relationship indices
 * YAML metadata mapper
 * Proxy caching
 * Entity caching pool

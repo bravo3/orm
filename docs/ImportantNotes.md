@@ -6,6 +6,7 @@ Serialisation
 * You can use only primitive data-types (int, decimal, string, bool) and \DateTime ("datetime") objects for columns
 * ID columns cannot be 'datetime' fields
 * Boolean fields are converted to integers when used in an index
+* Lexicographic sort indices are scored by serialising to a float, thus have a 7-char printable ASCII character limit
 
 Lazy-loading
 ------------

@@ -1,44 +1,21 @@
 <?php
 namespace Bravo3\Orm\Query;
 
-class Query
+class IndexedQuery extends AbstractQuery implements QueryInterface
 {
-    /**
-     * @var string
-     */
-    protected $class_name;
-
     /**
      * @var array
      */
     protected $indices;
 
+    /**
+     * @param object|string $class_name
+     * @param string[]      $indices
+     */
     public function __construct($class_name, array $indices = [])
     {
-        $this->class_name = $class_name;
-        $this->indices    = $indices;
-    }
-
-    /**
-     * Get entity class name
-     *
-     * @return string
-     */
-    public function getClassName()
-    {
-        return $this->class_name;
-    }
-
-    /**
-     * Set entity class name
-     *
-     * @param string $class_name
-     * @return $this
-     */
-    public function setClassName($class_name)
-    {
-        $this->class_name = $class_name;
-        return $this;
+        parent::__construct($class_name);
+        $this->indices = $indices;
     }
 
     /**

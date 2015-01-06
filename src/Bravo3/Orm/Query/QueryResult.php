@@ -1,9 +1,11 @@
 <?php
 namespace Bravo3\Orm\Query;
 
-use Bravo3\Orm\Exceptions\OutOfBoundsException;
 use Bravo3\Orm\Services\EntityManager;
 
+/**
+ * QueryResult objects are a traversable lazy-loading entity holder
+ */
 class QueryResult implements \Countable, \Iterator, \ArrayAccess
 {
     /**
@@ -17,7 +19,7 @@ class QueryResult implements \Countable, \Iterator, \ArrayAccess
     protected $entities = [];
 
     /**
-     * @var Query
+     * @var QueryInterface
      */
     protected $query;
 
@@ -31,7 +33,7 @@ class QueryResult implements \Countable, \Iterator, \ArrayAccess
      */
     protected $iterator;
 
-    public function __construct(EntityManager $entity_manager, Query $query, array $results)
+    public function __construct(EntityManager $entity_manager, QueryInterface $query, array $results)
     {
         $this->entity_manager = $entity_manager;
         $this->query          = $query;
@@ -62,7 +64,7 @@ class QueryResult implements \Countable, \Iterator, \ArrayAccess
     /**
      * Get the search query
      *
-     * @return Query
+     * @return QueryInterface
      */
     public function getQuery()
     {

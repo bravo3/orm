@@ -1,11 +1,56 @@
 Queries
 =======
+
+Sorted Queries
+--------------
+The sorted query is the most efficient way to perform a query. Sorted queries work on a z-index and can be sorted in
+ascending or descending order, as well as efficiently select a range for the query.
+
+Sorted queries however must work on a numeric score for sorting, thus only the following field types can be properly
+sorted:
+
+* int
+* decimal
+* datetime (converted to a unix timestamp)
+
+Lexicographical sorting is not natively supported, however it can be pseudo-sorted by serialising the string in the
+form of a decimal number. As the bit length of a decimal is finite, only 7 characters of a limited character-set 
+can be encoded (printable ASCII only).
+
+    /**
+     * @var Article[]
+     * @Orm\OneToMany(
+     *      target="Article",
+     *      inversed_by="category",
+     *      sortable_by={"title", "last_modified"}
+     * )
+     */
+    protected $articles;
+
+Sort columns can only be applied to 'to-many' relationships, all you need to do is add a 'sortable_by' clause to the
+relationship metadata.
+
+    $results = $em->sortedQuery(
+            new SortedQuery($category, 'articles', 'last_modified', Direction::DESC(), 5, -6)
+    );
+
+The above will cut off the first and last 5 results from the entire set and result a QueryResult object.
+
+The QueryResult object is a zero-indexed traversable, countable and an ArrayAccess implementation. It is a 
+lazy-loading entity holder, entities will only be hydrated when you retrieve them.
+
+    // Get the 3rd result:
+    $entity = $result[2];   // database query to get entity here
+
+
+Indexed Queries
+---------------
 You can perform simple search queries on indexed fields to yield results similar to traditional SELECT SQL queries.
 You can only do this on *indices*, not field values themselves, as field values are serialised and would require a lot
 more effort to perform the query.
 
-Queries are not ideal for performance and subtracts from the benefits of a document model database. Use only as a last
-resort.
+Indexed Queries are not ideal for performance and subtracts from the benefits of a document model database. Use only 
+as a last resort - these queries are KEY SCANS.
 
 Assume the following entity:
 
@@ -39,12 +84,12 @@ Assume the following entity:
 
 You can now create queries on any of the indices we have:
 
-    $result = $em->query(new Query('SluggedArticle', ['slug' => 'hello*']));
+    $result = $em->query(new IndexQuery('SluggedArticle', ['slug' => 'hello*']));
     
 If you specify multiple indices in the Query, the result will be an intersection of both indices (i.e. the entity must
 match both index values):
 
-    $query = new Query('SluggedArticle', [
+    $query = new IndexQuery('SluggedArticle', [
         'slug' => 'hello*',
         'name' => '*world',
     ]);

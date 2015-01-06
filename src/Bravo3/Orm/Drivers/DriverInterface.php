@@ -3,7 +3,7 @@ namespace Bravo3\Orm\Drivers;
 
 use Bravo3\Orm\Drivers\Common\SerialisedData;
 use Bravo3\Orm\KeySchemes\KeySchemeInterface;
-use Bravo3\Orm\Query\Query;
+use Bravo3\Orm\Query\IndexedQuery;
 use Bravo3\Orm\Traits\DebugInterface;
 
 interface DriverInterface extends DebugInterface
@@ -155,13 +155,13 @@ interface DriverInterface extends DebugInterface
     /**
      * Get a range values in a sorted index
      *
-     * If $min/$max are === null, they are assumed to be the started/end of the entire set
+     * If $start/$stop are === null, they are assumed to be the start/end of the entire set
      *
      * @param string $key
      * @param bool   $reverse
-     * @param int    $min
-     * @param int    $max
+     * @param int    $start
+     * @param int    $stop
      * @return string[]
      */
-    public function getSortedIndex($key, $reverse = false, $min = null, $max = null);
+    public function getSortedIndex($key, $reverse = false, $start = null, $stop = null);
 }

@@ -8,6 +8,7 @@ use Bravo3\Orm\Drivers\DriverInterface;
 use Bravo3\Orm\Exceptions\NotFoundException;
 use Bravo3\Orm\KeySchemes\KeySchemeInterface;
 use Bravo3\Orm\KeySchemes\StandardKeyScheme;
+use Bravo3\Orm\Services\ScoreNormaliser;
 use Bravo3\Orm\Traits\DebugTrait;
 use Predis\Client;
 use Predis\Command\CommandInterface;
@@ -26,6 +27,11 @@ class RedisDriver implements DriverInterface
      * @var Client
      */
     protected $client;
+
+    /**
+     * @var ScoreNormaliser
+     */
+    protected $score_normaliser = null;
 
     /**
      * Create a new Redis driver
@@ -278,7 +284,7 @@ class RedisDriver implements DriverInterface
      */
     public function addSortedIndex($key, $score, $value)
     {
-        $this->unit_of_work->addCommand('ZSetAdd', [$key, $this->normaliseScore($score), $value]);
+        $this->unit_of_work->addCommand('ZSetAdd', [$key, $this->getScoreNormaliser()->score($score), $value]);
     }
 
     /**
@@ -296,41 +302,20 @@ class RedisDriver implements DriverInterface
     /**
      * Get a range values in a sorted index
      *
-     * If $min/$max are null then they are assumed to be the started/end of the entire set
+     * If $start/$stop are null then they are assumed to be the start/end of the entire set
      *
      * @param string $key
      * @param bool   $reverse
-     * @param int    $min
-     * @param int    $max
+     * @param int    $start
+     * @param int    $stop
      * @return string[]
      */
-    public function getSortedIndex($key, $reverse = false, $min = null, $max = null)
+    public function getSortedIndex($key, $reverse = false, $start = null, $stop = null)
     {
         if ($reverse) {
-            return $this->client->zrevrange($key, $min === null ? 0 : $min, $max === null ? -1 : $max);
+            return $this->client->zrevrange($key, $start === null ? 0 : $start, $stop === null ? -1 : $stop);
         } else {
-            return $this->client->zrange($key, $min === null ? 0 : $min, $max === null ? -1 : $max);
-        }
-    }
-
-    /**
-     * Get the normalised value of a score
-     *
-     * @param mixed $score
-     * @return float
-     */
-    protected function normaliseScore($score)
-    {
-        if ($score instanceof \DateTime) {
-            return (float)$score->format('U');
-        } elseif (is_string($score)) {
-            // We can't handle strings
-            return 0.0;
-        } elseif (is_object($score) || is_array($score)) {
-            // Should never have received an object/array
-            return 0.0;
-        } else {
-            return (float)$score;
+            return $this->client->zrange($key, $start === null ? 0 : $start, $stop === null ? -1 : $stop);
         }
     }
 
@@ -351,5 +336,19 @@ class RedisDriver implements DriverInterface
         } else {
             $this->client->echo($msg);
         }
+    }
+
+    /**
+     * Lazy-loading score normaliser
+     *
+     * @return ScoreNormaliser
+     */
+    protected function getScoreNormaliser()
+    {
+        if ($this->score_normaliser === null) {
+            $this->score_normaliser = new ScoreNormaliser();
+        }
+
+        return $this->score_normaliser;
     }
 }

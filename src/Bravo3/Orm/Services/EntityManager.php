@@ -2,24 +2,27 @@
 namespace Bravo3\Orm\Services;
 
 use Bravo3\Orm\Drivers\DriverInterface;
-use Bravo3\Orm\Exceptions\InvalidArgumentException;
 use Bravo3\Orm\Exceptions\NotFoundException;
 use Bravo3\Orm\KeySchemes\KeySchemeInterface;
 use Bravo3\Orm\Mappers\MapperInterface;
 use Bravo3\Orm\Proxy\OrmProxyInterface;
-use Bravo3\Orm\Query\Query;
+use Bravo3\Orm\Query\IndexedQuery;
 use Bravo3\Orm\Query\QueryResult;
+use Bravo3\Orm\Query\SortedQuery;
 use Bravo3\Orm\Serialisers\JsonSerialiser;
 use Bravo3\Orm\Serialisers\SerialiserMap;
 use Bravo3\Orm\Services\Aspect\CreateModifySubscriber;
 use Bravo3\Orm\Services\Aspect\EntityManagerInterceptorFactory;
 use Bravo3\Orm\Services\Io\Reader;
 use Bravo3\Orm\Services\Io\Writer;
+use Bravo3\Orm\Traits\ProxyAwareTrait;
 use ProxyManager\Factory\AccessInterceptorValueHolderFactory;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 
 class EntityManager
 {
+    use ProxyAwareTrait;
+
     /**
      * @var DriverInterface
      */
@@ -51,14 +54,14 @@ class EntityManager
     protected $index_manager = null;
 
     /**
+     * @var QueryManager
+     */
+    protected $query_manager = null;
+
+    /**
      * @var EventDispatcher
      */
     protected $dispatcher = null;
-
-    /**
-     * @var EntityManager
-     */
-    protected $proxy;
 
     /**
      * Create a raw entity manager
@@ -260,36 +263,23 @@ class EntityManager
     /**
      * Create a query against a table matching one or more indices
      *
-     * @param Query $query
+     * @param IndexedQuery $query
      * @return QueryResult
      */
-    public function query(Query $query)
+    public function indexedQuery(IndexedQuery $query)
     {
-        $metadata = $this->mapper->getEntityMetadata($query->getClassName());
+        return $this->getQueryManager()->indexedQuery($query);
+    }
 
-        $master_list = null;
-        foreach ($query->getIndices() as $index_name => $index_key) {
-            $index = $metadata->getIndexByName($index_name);
-            if (!$index) {
-                throw new InvalidArgumentException('Index "'.$index_name.'" does not exist in query table');
-            }
-
-            $key = $this->key_scheme->getIndexKey($index, $index_key);
-            $set = $this->driver->scan($key);
-
-            $results = [];
-            foreach ($set as $key) {
-                $results[] = $this->driver->getSingleValueIndex($key);
-            }
-
-            if ($master_list === null) {
-                $master_list = $results;
-            } else {
-                $master_list = array_intersect($master_list, $results);
-            }
-        }
-
-        return new QueryResult($this, $query, array_values($master_list));
+    /**
+     * Get all foreign entities ordered by a sort column
+     *
+     * @param SortedQuery $query
+     * @return QueryResult
+     */
+    public function sortedQuery(SortedQuery $query)
+    {
+        return $this->getQueryManager()->sortedQuery($query);
     }
 
     /**
@@ -363,13 +353,27 @@ class EntityManager
      *
      * @return IndexManager
      */
-    public function getIndexManager()
+    protected function getIndexManager()
     {
         if ($this->index_manager === null) {
             $this->index_manager = new IndexManager($this);
         }
 
         return $this->index_manager;
+    }
+
+    /**
+     * Lazy-loading query manager
+     *
+     * @return QueryManager
+     */
+    protected function getQueryManager()
+    {
+        if ($this->query_manager === null) {
+            $this->query_manager = new QueryManager($this);
+        }
+
+        return $this->query_manager;
     }
 
     /**
@@ -384,26 +388,5 @@ class EntityManager
         }
 
         return $this->dispatcher;
-    }
-
-
-    /**
-     * Get proxy object
-     *
-     * @return EntityManager
-     */
-    protected function getProxy()
-    {
-        return $this->proxy;
-    }
-
-    /**
-     * Set proxy object
-     *
-     * @param object $proxy
-     */
-    protected function setProxy($proxy)
-    {
-        $this->proxy = $proxy;
     }
 }

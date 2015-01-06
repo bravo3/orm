@@ -1,11 +1,11 @@
 <?php
 namespace Bravo3\Orm\Tests\Indices;
 
-use Bravo3\Orm\Query\Query;
+use Bravo3\Orm\Query\IndexedQuery;
 use Bravo3\Orm\Tests\AbstractOrmTest;
 use Bravo3\Orm\Tests\Entities\Indexed\SluggedArticle;
 
-class QueryTest extends AbstractOrmTest
+class IndexedQueryTest extends AbstractOrmTest
 {
     const TEST_ENTITY = 'Bravo3\Orm\Tests\Entities\Indexed\SluggedArticle';
 
@@ -26,7 +26,7 @@ class QueryTest extends AbstractOrmTest
         $em = $this->getEntityManager();
         $em->persist($a)->persist($b)->persist($c)->persist($d)->flush();
 
-        $result = $em->query(new Query(self::TEST_ENTITY, ['slug' => 'article-al*']));
+        $result = $em->indexedQuery(new IndexedQuery(self::TEST_ENTITY, ['slug' => 'article-al*']));
         $this->assertCount(2, $result);
 
         /** @var SluggedArticle $entity */
@@ -44,7 +44,7 @@ class QueryTest extends AbstractOrmTest
         }
         $this->assertEquals(2, $count);
 
-        $result = $em->query(new Query(self::TEST_ENTITY, ['slug' => 'article-al*', 'name' => 'Docu*']));
+        $result = $em->indexedQuery(new IndexedQuery(self::TEST_ENTITY, ['slug' => 'article-al*', 'name' => 'Docu*']));
         $this->assertCount(1, $result);
         $ids = $result->getIdList();
         $this->assertCount(1, $ids);
