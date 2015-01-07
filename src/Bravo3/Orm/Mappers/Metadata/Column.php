@@ -36,6 +36,11 @@ class Column
      */
     protected $is_id = false;
 
+    /**
+     * @var string
+     */
+    protected $class_name;
+
     public function __construct($property)
     {
         $this->property = $property;
@@ -171,6 +176,28 @@ class Column
     public function setId($is_id)
     {
         $this->is_id = (bool)$is_id;
+        return $this;
+    }
+
+    /**
+     * Get object class name
+     *
+     * @return string
+     */
+    public function getClassName()
+    {
+        return $this->class_name;
+    }
+
+    /**
+     * Set object class name
+     *
+     * @param string $class_name
+     * @return $this
+     */
+    public function setClassName($class_name)
+    {
+        $this->class_name = $class_name;
         return $this;
     }
 }

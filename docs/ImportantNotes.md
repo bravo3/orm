@@ -3,10 +3,14 @@ Important Notes
 
 Serialisation
 -------------
-* You can use only primitive data-types (int, decimal, string, bool) and \DateTime ("datetime") objects for columns
-* ID columns cannot be 'datetime' fields
+* Supported primitive data-types are 'int', 'decimal', 'string' and 'bool'
+* \DateTime objects are supported as 'datetime'
+* Objects are supported as 'object' so long as they implement `\Serializable` or `SerialisableInterface`
+* Arrays are supported as 'set' so long as they contain primitive data-types only
+* ID columns can only be primitive data-types
 * Boolean fields are converted to integers when used in an index
 * Lexicographic sort indices are scored by serialising to a float, thus have a 7-char printable ASCII character limit
+* Nullable object fields must have a default value of null in the setter, else the deserialiser will not be able to set a null value
 
 Lazy-loading
 ------------
@@ -21,7 +25,7 @@ Relationship Columns
 * Relationships are not columns, you cannot mix a @Column annotation with a @OneToMany (or similar) annotation
 * Relationships are not serialised in the main entity, they are handled by auxiliary indices
 * You cannot reference relationships in entity's indices 
-* Adding inverse relationships to existing relationships with data will not hydrate the inverse index, you will have a desychronised index
+* Adding inverse relationships to existing relationships with data will not hydrate the inverse index, you will have a desynchronised index
 
 Multi-Column IDs
 ----------------

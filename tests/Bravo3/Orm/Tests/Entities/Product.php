@@ -2,6 +2,7 @@
 namespace Bravo3\Orm\Tests\Entities;
 
 use Bravo3\Orm\Annotations as Orm;
+use Bravo3\Orm\Tests\Resources\Enum;
 
 /**
  * @Orm\Entity(table="products")
@@ -44,6 +45,23 @@ class Product
      * @Orm\Column(type="datetime")
      */
     protected $create_time;
+
+    /**
+     * @var Enum
+     * @Orm\Column(type="object", class_name="Bravo3\Orm\Tests\Resources\Enum")
+     */
+    protected $enum;
+
+    /**
+     * @var array
+     * @Orm\Column(type="set")
+     */
+    protected $list = [];
+
+    public function __construct()
+    {
+        $this->enum = Enum::ALPHA();
+    }
 
     /**
      * Get Id
@@ -171,11 +189,53 @@ class Product
      * @param \DateTime $create_time
      * @return $this
      */
-    public function setCreateTime(\DateTime $create_time)
+    public function setCreateTime(\DateTime $create_time = null)
     {
         $this->create_time = $create_time;
         return $this;
     }
 
+    /**
+     * Get Enum
+     *
+     * @return Enum
+     */
+    public function getEnum()
+    {
+        return $this->enum;
+    }
 
+    /**
+     * Set Enum
+     *
+     * @param Enum $enum
+     * @return $this
+     */
+    public function setEnum(Enum $enum = null)
+    {
+        $this->enum = $enum;
+        return $this;
+    }
+
+    /**
+     * Get List
+     *
+     * @return array
+     */
+    public function getList()
+    {
+        return $this->list;
+    }
+
+    /**
+     * Set List
+     *
+     * @param array $list
+     * @return $this
+     */
+    public function setList(array $list)
+    {
+        $this->list = $list;
+        return $this;
+    }
 }

@@ -11,6 +11,7 @@ use Bravo3\Orm\Tests\Entities\ModifiedEntity;
 use Bravo3\Orm\Tests\Entities\OneToMany\Article;
 use Bravo3\Orm\Tests\Entities\OneToMany\Category;
 use Bravo3\Orm\Tests\Entities\Product;
+use Bravo3\Orm\Tests\Resources\Enum;
 
 class EntityManagerTest extends AbstractOrmTest
 {
@@ -160,5 +161,34 @@ class EntityManagerTest extends AbstractOrmTest
         $em         = $this->getEntityManager();
         $bad_entity = new BadEntity();
         $em->persist($bad_entity);
+    }
+
+    public function testSerialisation()
+    {
+        $em = $this->getEntityManager();
+
+        $product = new Product();
+        $product->setId(700)->setEnum(Enum::BRAVO())->setList(['a', 'b', 'c']);
+        $em->persist($product)->flush();
+
+        /** @var Product $r_product */
+        $r_product = $em->retrieve(self::ENTITY_PRODUCT, '700');
+        $this->assertEquals(Enum::BRAVO(), $r_product->getEnum());
+        $this->assertCount(3, $r_product->getList());
+        $this->assertEquals('a', $r_product->getList()[0]);
+        $this->assertEquals('c', $r_product->getList()[2]);
+    }
+
+    public function testNullObjectSerialisation()
+    {
+        $em = $this->getEntityManager();
+
+        $product = new Product();
+        $product->setId(701)->setEnum(null);
+        $em->persist($product)->flush();
+
+        /** @var Product $r_product */
+        $r_product = $em->retrieve(self::ENTITY_PRODUCT, '701');
+        $this->assertNull($r_product->getEnum());
     }
 }
