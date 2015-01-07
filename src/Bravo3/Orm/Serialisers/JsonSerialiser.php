@@ -3,9 +3,11 @@ namespace Bravo3\Orm\Serialisers;
 
 use Bravo3\Orm\Drivers\Common\SerialisedData;
 use Bravo3\Orm\Enum\FieldType;
+use Bravo3\Orm\Exceptions\InvalidArgumentException;
 use Bravo3\Orm\Services\Io\Reader;
 use Bravo3\Orm\Mappers\Metadata\Column;
 use Bravo3\Orm\Mappers\Metadata\Entity;
+use Bravo3\Orm\Traits\SerialisableInterface;
 
 class JsonSerialiser implements SerialiserInterface
 {
@@ -85,18 +87,79 @@ class JsonSerialiser implements SerialiserInterface
             case FieldType::BOOL():
                 $data->$field_name = (bool)$value;
                 break;
+            case FieldType::SET():
+                $data->$field_name = json_encode($value);
+                break;
+            case FieldType::OBJECT():
+                $data->$field_name = $this->serialiseObject($value);
+                break;
         }
     }
 
     /**
-     * Format the DateTime object appropritately for raw output
+     * Serialise an object
+     *
+     * @param object $value
+     * @return string
+     */
+    private function serialiseObject($value)
+    {
+        if ($value === null) {
+            return null;
+        } elseif ($value instanceof \Serializable) {
+            return $value->serialize();
+        } elseif ($value instanceof SerialisableInterface) {
+            return $value->serialise();
+        } else {
+            throw new InvalidArgumentException("Object is not serialisable");
+        }
+    }
+
+    /**
+     * Deserialise an object
+     *
+     * @param string $value
+     * @param string $class_name
+     * @return object
+     */
+    private function deserialiseObject($value, $class_name)
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $ref = new \ReflectionClass($class_name);
+        if ($ref->implementsInterface('\Serializable')) {
+            $obj = $ref->newInstanceWithoutConstructor();
+            $obj->unserialize($value);
+            return $obj;
+        } elseif ($ref->implementsInterface('Bravo3\Orm\Traits\SerialisableInterface')) {
+            return call_user_func($class_name.'::deserialise', $value);
+        } else {
+            throw new InvalidArgumentException("Object is not serialisable");
+        }
+    }
+
+    /**
+     * Format the DateTime object appropriately for raw output
      *
      * @param \DateTime $value
      * @return string
      */
-    private function serialiseDateTime(\DateTime $value)
+    private function serialiseDateTime(\DateTime $value = null)
     {
-        return $value->format('c');
+        return $value ? $value->format('c') : null;
+    }
+
+    /**
+     * Format the DateTime object appropriately for raw output
+     *
+     * @param string $value
+     * @return \DateTime
+     */
+    private function deserialiseDateTime($value)
+    {
+        return $value ? new \DateTime($value) : null;
     }
 
     /**
@@ -121,7 +184,7 @@ class JsonSerialiser implements SerialiserInterface
                 default:
                     break;
                 case FieldType::DATETIME():
-                    $entity->$setter(new \DateTime($value));
+                    $entity->$setter($this->deserialiseDateTime($value));
                     break;
                 case FieldType::INT():
                     $entity->$setter((int)$value);
@@ -134,6 +197,12 @@ class JsonSerialiser implements SerialiserInterface
                     break;
                 case FieldType::BOOL():
                     $entity->$setter((bool)$value);
+                    break;
+                case FieldType::SET():
+                    $entity->$setter(json_decode($value, true));
+                    break;
+                case FieldType::OBJECT():
+                    $entity->$setter($this->deserialiseObject($value, $column->getClassName()));
                     break;
             }
         }

@@ -20,6 +20,11 @@ class Column
     /**
      * @var string
      */
+    public $class_name;
+
+    /**
+     * @var string
+     */
     public $getter;
 
     /**

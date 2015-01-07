@@ -186,6 +186,7 @@ class AnnotationMetadataParser
         $column->setName($column_annotation->name);
         $column->setGetter($column_annotation->getter);
         $column->setSetter($column_annotation->setter);
+        $column->setClassName($column_annotation->class_name);
         return $column;
     }
 
