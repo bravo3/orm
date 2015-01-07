@@ -1,4 +1,4 @@
 parameters:
-    redis_host:
-    redis_port:
-    redis_database:
+    redis_host: localhost
+    redis_port: 6379
+    redis_database: 0
