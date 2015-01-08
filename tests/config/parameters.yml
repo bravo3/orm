@@ -1,5 +1,0 @@
-# This file is auto-generated during the composer install
-parameters:
-    redis_host: null
-    redis_port: null
-    redis_database: null
