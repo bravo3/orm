@@ -29,13 +29,6 @@ class IndexedQueryTest extends AbstractOrmTest
         $result = $em->indexedQuery(new IndexedQuery(self::TEST_ENTITY, ['slug' => 'article-al*']));
         $this->assertCount(2, $result);
 
-        /** @var SluggedArticle $entity */
-        $entity = $result[0];
-        $this->assertEquals('Document D', $entity->getName());
-
-        $entity = $result[1];
-        $this->assertEquals('Article A', $entity->getName());
-
         $names = ['Article A', 'Document D'];
         $count = 0;
         foreach ($result as $entity) {
