@@ -111,7 +111,11 @@ class JsonSerialiser implements SerialiserInterface
         } elseif ($value instanceof SerialisableInterface) {
             return $value->serialise();
         } else {
-            throw new InvalidArgumentException("Object is not serialisable");
+            if (is_object($value)) {
+                throw new InvalidArgumentException(get_class($value) . " is not serialisable");
+            } else {
+                throw new InvalidArgumentException("Value is not serialisable");
+            }
         }
     }
 
@@ -136,7 +140,11 @@ class JsonSerialiser implements SerialiserInterface
         } elseif ($ref->implementsInterface('Bravo3\Orm\Traits\SerialisableInterface')) {
             return call_user_func($class_name.'::deserialise', $value);
         } else {
-            throw new InvalidArgumentException("Object is not serialisable");
+            if (is_object($value)) {
+                throw new InvalidArgumentException(get_class($value) . " is not serialisable");
+            } else {
+                throw new InvalidArgumentException("Value is not serialisable");
+            }
         }
     }
 
