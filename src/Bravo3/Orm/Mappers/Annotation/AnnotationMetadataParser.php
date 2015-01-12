@@ -165,7 +165,7 @@ class AnnotationMetadataParser
                      ->setSetter($annotation->setter)
                      ->setInversedBy($annotation->inversed_by);
 
-        if ($annotation instanceof AbstractSortableRelationshipAnnotation) {
+        if (($annotation instanceof AbstractSortableRelationshipAnnotation) && $annotation->sortable_by) {
             $relationship->setSortableBy($annotation->sortable_by);
         }
 

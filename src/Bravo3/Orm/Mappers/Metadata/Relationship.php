@@ -276,7 +276,7 @@ class Relationship
      * @param string[] $sortable_by
      * @return $this
      */
-    public function setSortableBy($sortable_by)
+    public function setSortableBy(array $sortable_by)
     {
         $this->sortable_by = $sortable_by;
         return $this;

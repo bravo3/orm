@@ -6,5 +6,5 @@ abstract class AbstractSortableRelationshipAnnotation extends AbstractRelationsh
     /**
      * @var array
      */
-    public $sortable_by;
+    public $sortable_by = [];
 }
