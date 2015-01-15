@@ -120,18 +120,20 @@ class EntityManager
      * @param MapperInterface    $mapper
      * @param SerialiserMap      $serialiser_map
      * @param KeySchemeInterface $key_scheme
+     * @param Configuration      $configuration
      * @return EntityManager
      */
     public static function build(
         DriverInterface $driver,
         MapperInterface $mapper,
         SerialiserMap $serialiser_map = null,
-        KeySchemeInterface $key_scheme = null
+        KeySchemeInterface $key_scheme = null,
+        Configuration $configuration = null
     ) {
         $proxy_factory      = new AccessInterceptorValueHolderFactory();
         $interceptor_factor = new EntityManagerInterceptorFactory();
 
-        $em    = new self($driver, $mapper, $serialiser_map, $key_scheme);
+        $em    = new self($driver, $mapper, $serialiser_map, $key_scheme, $configuration ?: new Configuration());
         $proxy = $proxy_factory->createProxy(
             $em,
             $interceptor_factor->getPrefixInterceptors(),
