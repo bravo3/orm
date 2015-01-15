@@ -130,10 +130,15 @@ class EntityManager
         KeySchemeInterface $key_scheme = null,
         Configuration $configuration = null
     ) {
-        $proxy_factory      = new AccessInterceptorValueHolderFactory();
+        $em_conf    = $configuration ?: new Configuration();
+        $proxy_conf = new \ProxyManager\Configuration();
+        $proxy_conf->setProxiesTargetDir($em_conf->getCacheDir());
+        $proxy_conf->setProxiesNamespace(Writer::PROXY_NAMESPACE);
+
+        $proxy_factory      = new AccessInterceptorValueHolderFactory($proxy_conf);
         $interceptor_factor = new EntityManagerInterceptorFactory();
 
-        $em    = new self($driver, $mapper, $serialiser_map, $key_scheme, $configuration ?: new Configuration());
+        $em    = new self($driver, $mapper, $serialiser_map, $key_scheme, $em_conf);
         $proxy = $proxy_factory->createProxy(
             $em,
             $interceptor_factor->getPrefixInterceptors(),
