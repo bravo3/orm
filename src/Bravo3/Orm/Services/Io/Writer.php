@@ -8,6 +8,7 @@ use Bravo3\Orm\Mappers\Metadata\Relationship;
 use Bravo3\Orm\Proxy\OrmProxyFactory;
 use Bravo3\Orm\Proxy\OrmProxyInterface;
 use Bravo3\Orm\Services\EntityManager;
+use ProxyManager\Configuration;
 use ProxyManager\Proxy\LazyLoadingInterface;
 
 /**
@@ -17,6 +18,8 @@ use ProxyManager\Proxy\LazyLoadingInterface;
  */
 class Writer
 {
+    const PROXY_NAMESPACE = 'Bravo3OrmProxy';
+
     /**
      * @var Entity
      */
@@ -58,9 +61,11 @@ class Writer
         $this->serialised_data = $data;
         $this->entity_manager  = $entity_manager;
 
-        // TODO: cache here -
-        // https://github.com/Ocramius/ProxyManager/blob/master/docs/tuning-for-production.md
-        $factory = new OrmProxyFactory();
+        $conf = new Configuration();
+        $conf->setProxiesTargetDir($entity_manager->getConfig()->getCacheDir());
+        $conf->setProxiesNamespace(self::PROXY_NAMESPACE);
+
+        $factory = new OrmProxyFactory($conf);
         $writer  = $this;
 
         // Create the proxy with a Closure responsible for lazy-loading via this instance of the Writer

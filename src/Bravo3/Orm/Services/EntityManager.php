@@ -1,6 +1,7 @@
 <?php
 namespace Bravo3\Orm\Services;
 
+use Bravo3\Orm\Config\Configuration;
 use Bravo3\Orm\Drivers\DriverInterface;
 use Bravo3\Orm\Exceptions\NotFoundException;
 use Bravo3\Orm\KeySchemes\KeySchemeInterface;
@@ -64,6 +65,11 @@ class EntityManager
     protected $dispatcher = null;
 
     /**
+     * @var Configuration
+     */
+    protected $config;
+
+    /**
      * Create a raw entity manager
      *
      * Do not construct an entity manager directly or it will lack access interceptors which are responsible for
@@ -75,16 +81,19 @@ class EntityManager
      * @param MapperInterface    $mapper
      * @param SerialiserMap      $serialiser_map
      * @param KeySchemeInterface $key_scheme
+     * @param Configuration      $configuration
      */
     protected function __construct(
         DriverInterface $driver,
         MapperInterface $mapper,
         SerialiserMap $serialiser_map = null,
-        KeySchemeInterface $key_scheme = null
+        KeySchemeInterface $key_scheme = null,
+        Configuration $configuration = null
     ) {
         $this->driver     = $driver;
         $this->mapper     = $mapper;
         $this->key_scheme = $key_scheme ?: $driver->getPreferredKeyScheme();
+        $this->config     = $configuration ?: new Configuration();
 
         if ($serialiser_map) {
             $this->serialiser_map = $serialiser_map;
@@ -388,5 +397,27 @@ class EntityManager
         }
 
         return $this->dispatcher;
+    }
+
+    /**
+     * Get Config
+     *
+     * @return Configuration
+     */
+    public function getConfig()
+    {
+        return $this->config;
+    }
+
+    /**
+     * Set Config
+     *
+     * @param Configuration $config
+     * @return $this
+     */
+    public function setConfig($config)
+    {
+        $this->config = $config;
+        return $this;
     }
 }

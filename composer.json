@@ -11,7 +11,12 @@
     ],
     "autoload": {
         "psr-4": {
-            "": ["src/","tests/"]
+            "": ["src/"]
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "": ["tests/"]
         }
     },
     "require": {
