@@ -13,9 +13,10 @@ interface DriverInterface extends DebugInterface
      *
      * @param string         $key
      * @param SerialisedData $data
+     * @param int            $ttl
      * @return void
      */
-    public function persist($key, SerialisedData $data);
+    public function persist($key, SerialisedData $data, $ttl = null);
 
     /**
      * Delete a primitive document

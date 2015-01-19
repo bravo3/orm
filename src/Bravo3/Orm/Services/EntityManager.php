@@ -174,21 +174,27 @@ class EntityManager
     /**
      * Persist an entity
      *
-     * @param object $entity
+     * @param object $entity Entity object to persist
+     * @param int    $ttl    Optional TTL if the driver supports it, seconds past current time
      * @return $this
      */
-    public function persist($entity)
+    public function persist($entity, $ttl = null)
     {
         $metadata   = $this->mapper->getEntityMetadata(Reader::getEntityClassName($entity));
         $serialiser = $this->getSerialiserMap()->getDefaultSerialiser();
         $reader     = new Reader($metadata, $entity);
         $id         = $reader->getId();
 
-        $this->driver->debugLog("Persisting ".$metadata->getTableName().' '.$id);
+        if ($ttl) {
+            $this->driver->debugLog("Caching ".$metadata->getTableName().' '.$id.' (TTL: '.$ttl.')');
+        } else {
+            $this->driver->debugLog("Persisting ".$metadata->getTableName().' '.$id);
+        }
 
         $this->driver->persist(
             $this->key_scheme->getEntityKey($metadata->getTableName(), $id),
-            $serialiser->serialise($metadata, $entity)
+            $serialiser->serialise($metadata, $entity),
+            $ttl
         );
 
         $this->getRelationshipManager()->persistRelationships($entity, $metadata, $reader, $id);

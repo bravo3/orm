@@ -27,5 +27,10 @@
             </exclude>
         </whitelist>
     </filter>
-
+    
+    <groups>
+        <exclude>
+            <group>integration</group>
+        </exclude>
+    </groups>
 </phpunit>

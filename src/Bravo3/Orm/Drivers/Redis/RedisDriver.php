@@ -50,11 +50,17 @@ class RedisDriver implements DriverInterface
      *
      * @param string         $key
      * @param SerialisedData $data
+     * @param int            $ttl
      * @return void
      */
-    public function persist($key, SerialisedData $data)
+    public function persist($key, SerialisedData $data, $ttl = null)
     {
-        $this->unit_of_work->addCommand('StringSet', [$key, $data->getSerialisationCode().$data->getData()]);
+        $params = [$key, $data->getSerialisationCode().$data->getData()];
+        if ($ttl) {
+            $params[] = 'EX';
+            $params[] = $ttl;
+        }
+        $this->unit_of_work->addCommand('StringSet', $params);
     }
 
     /**

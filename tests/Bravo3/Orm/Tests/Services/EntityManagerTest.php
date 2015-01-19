@@ -4,6 +4,7 @@ namespace Bravo3\Orm\Tests;
 use Bravo3\Orm\Enum\Event;
 use Bravo3\Orm\Events\PersistEvent;
 use Bravo3\Orm\Events\RetrieveEvent;
+use Bravo3\Orm\Exceptions\NotFoundException;
 use Bravo3\Orm\Proxy\OrmProxyInterface;
 use Bravo3\Orm\Tests\Entities\BadEntity;
 use Bravo3\Orm\Tests\Entities\Indexed\SluggedArticle;
@@ -96,6 +97,30 @@ class EntityManagerTest extends AbstractOrmTest
         $this->assertFalse($client->exists('doc:slugged_article:401'));
         $this->assertFalse($client->exists('idx:slugged_article:slug:some-slug'));
         $this->assertFalse($client->exists('idx:slugged_article:name:slugged article'));
+    }
+
+    /**
+     * @group integration
+     */
+    public function testTtl()
+    {
+        $em     = $this->getEntityManager();
+
+        $article = new Article();
+        $article->setId(499)->setTitle('Cached Article');
+        $em->persist($article, 2)->flush();
+
+        $r_article = $em->retrieve(self::ENTITY_ARTICLE, '499');
+        $this->assertEquals('Cached Article', $r_article->getTitle());
+
+        sleep(3);
+
+        try {
+            $em->retrieve(self::ENTITY_ARTICLE, '499');
+            $this->fail("Entity did not expire");
+        } catch (NotFoundException $e) {
+            // good
+        }
     }
 
     public function testIntercepts()
