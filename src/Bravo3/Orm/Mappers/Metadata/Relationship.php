@@ -52,7 +52,7 @@ class Relationship
     protected $setter;
 
     /**
-     * @var string[]
+     * @var Sortable[]
      */
     protected $sortable_by = [];
 
@@ -263,7 +263,7 @@ class Relationship
     /**
      * Get list of relative properties that this relationship can be sorted by
      *
-     * @return string[]
+     * @return Sortable[]
      */
     public function getSortableBy()
     {
@@ -273,7 +273,7 @@ class Relationship
     /**
      * Set list of relative properties that this relationship can be sorted by
      *
-     * @param string[] $sortable_by
+     * @param Sortable[] $sortable_by
      * @return $this
      */
     public function setSortableBy(array $sortable_by)
@@ -285,10 +285,10 @@ class Relationship
     /**
      * Add a property to be sortable by
      *
-     * @param string $property_name
+     * @param Sortable $property_name
      * @return $this
      */
-    public function addSortableBy($property_name)
+    public function addSortableBy(Sortable $property_name)
     {
         $this->sortable_by[] = $property_name;
         return $this;

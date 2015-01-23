@@ -42,6 +42,37 @@ lazy-loading entity holder, entities will only be hydrated when you retrieve the
     // Get the 3rd result:
     $entity = $result[2];   // database query to get entity here
 
+### Conditional Sorted Queries
+You want a list of all articles in a category ordered by their last modified timestamp, but only those with their 
+'publish' flag set to true.
+
+If you do a normal query you won't be able to filter the unpublished articles natively. You'll need to post-filter them
+which will mean your pagination now falls out of order.
+
+The solution is to create conditions on your sort indices:
+
+    /**
+     * @var Article[]
+     * @Orm\OneToMany(
+     *      target="Article",
+     *      inversed_by="category",
+     *      sortable_by={
+     *          @Orm\Sortable(column="last_modified", conditions={
+     *              @Orm\Condition(column="published", value=true),
+     *              @Orm\Condition(column="id", value=50, comparison=">")
+     *          }), "id"
+     *      })
+     */
+    protected $articles;
+
+This example will create two sort indices, one by `last_modified` with the condition that the article is published, and
+that the article's ID is greater than 50. The second index is by ID without conditions.
+
+It's important to note that you cannot retrieve an unfiltered version of the `last_modified` index now, the database
+will only add articles to the index if the conditions are met. 
+
+When using annotation mapping, you can add items to the `sortable_by` list either by a string or a @Sortable 
+annotation, however you can only add conditions when using @Sortable with @Condition annotations.
 
 Indexed Queries
 ---------------
