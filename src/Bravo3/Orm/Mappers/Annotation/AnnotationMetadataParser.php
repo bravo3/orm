@@ -10,14 +10,18 @@ use Bravo3\Orm\Annotations\ManyToMany;
 use Bravo3\Orm\Annotations\ManyToOne;
 use Bravo3\Orm\Annotations\OneToMany;
 use Bravo3\Orm\Annotations\OneToOne;
+use Bravo3\Orm\Annotations\Sortable as SortableAnnotation;
+use Bravo3\Orm\Annotations\Condition as ConditionAnnotation;
 use Bravo3\Orm\Enum\FieldType;
 use Bravo3\Orm\Enum\RelationshipType;
 use Bravo3\Orm\Exceptions\InvalidEntityException;
+use Bravo3\Orm\Exceptions\UnexpectedValueException;
 use Bravo3\Orm\Mappers\Metadata\Column;
+use Bravo3\Orm\Mappers\Metadata\Condition;
 use Bravo3\Orm\Mappers\Metadata\Entity;
 use Bravo3\Orm\Mappers\Metadata\Index;
 use Bravo3\Orm\Mappers\Metadata\Relationship;
-use Bravo3\Orm\Services\Io\Reader;
+use Bravo3\Orm\Mappers\Metadata\Sortable;
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Inflector\Inflector;
 
@@ -166,7 +170,29 @@ class AnnotationMetadataParser
                      ->setInversedBy($annotation->inversed_by);
 
         if (($annotation instanceof AbstractSortableRelationshipAnnotation) && $annotation->sortable_by) {
-            $relationship->setSortableBy($annotation->sortable_by);
+            $sortables = [];
+            foreach ($annotation->sortable_by as $sortable) {
+                if ($sortable instanceof SortableAnnotation) {
+                    $conditions = [];
+                    foreach ($sortable->conditions as $condition) {
+                        if ($condition instanceof ConditionAnnotation) {
+                            $conditions[] = new Condition(
+                                $condition->column,
+                                $condition->value,
+                                $condition->comparison
+                            );
+                        } else {
+                            throw new UnexpectedValueException("Unknown condition type, must be a Condition object");
+                        }
+                    }
+                    $sortables[] = new Sortable($sortable->column, $conditions);
+                } elseif (is_string($sortable)) {
+                    $sortables[] = new Sortable($sortable);
+                } else {
+                    throw new UnexpectedValueException("Unknown sortable type, must be a string or Sortable object");
+                }
+            }
+            $relationship->setSortableBy($sortables);
         }
 
         return $relationship;
