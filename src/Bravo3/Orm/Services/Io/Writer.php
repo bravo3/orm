@@ -142,11 +142,13 @@ class Writer
             if ($relative) {
                 if ($relative->getSetter() == $method) {
                     $this->proxy->setRelativeModified($property);
-                    $this->hydrated_methods[$method] = true;
+                    $this->hydrated_methods[$method]                = true;
+                    $this->hydrated_methods[$relative->getGetter()] = true;
                 } elseif ($relative->getGetter() == $method) {
                     if (!isset($this->hydrated_methods[$method])) {
                         $this->hydrateRelative($relative);
-                        $this->hydrated_methods[$method] = true;
+                        $this->hydrated_methods[$method]                = true;
+                        $this->hydrated_methods[$relative->getSetter()] = true;
                     }
                 }
             }
