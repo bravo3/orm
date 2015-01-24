@@ -44,7 +44,7 @@ class SortedQueryTest extends AbstractOrmTest
            ->persist($article2)
            ->flush();
 
-        // Update the categories article list by removing an entity on the inverse side
+        // Update the category's article list by removing an entity on the inverse side
         /** @var Article $article */
         $article = $em->retrieve(self::ARTICLE, 201);
         $article->setCanonicalCategory($category2);
@@ -69,7 +69,7 @@ class SortedQueryTest extends AbstractOrmTest
             $article->setTitle('Art '.(601 + $i));
             $time = new \DateTime();
             $time->modify('+'.($i + 1).' minutes');
-            $article->setLastModified($time);
+            $article->setSortDate($time);
             $article->setCanonicalCategory($category);
             $em->persist($article);
         }
@@ -77,27 +77,27 @@ class SortedQueryTest extends AbstractOrmTest
 
         /** @var Article $article */
         // Date sorting -
-        $results = $em->sortedQuery(new SortedQuery($category, 'articles', 'last_modified'));
+        $results = $em->sortedQuery(new SortedQuery($category, 'articles', 'sort_date'));
         $this->assertCount(15, $results);
         $article = $results[0];
         $this->assertEquals('Art 601', $article->getTitle());
 
-        $results = $em->sortedQuery(new SortedQuery($category, 'articles', 'last_modified', Direction::DESC()));
+        $results = $em->sortedQuery(new SortedQuery($category, 'articles', 'sort_date', Direction::DESC()));
         $this->assertCount(15, $results);
         $article = $results[0];
         $this->assertEquals('Art 615', $article->getTitle());
 
-        $results = $em->sortedQuery(new SortedQuery($category, 'articles', 'last_modified', Direction::DESC(), 5, -6));
+        $results = $em->sortedQuery(new SortedQuery($category, 'articles', 'sort_date', Direction::DESC(), 5, -6));
         $this->assertCount(5, $results);
         $article = $results[0];
         $this->assertEquals('Art 610', $article->getTitle());
 
-        $results = $em->sortedQuery(new SortedQuery($category, 'articles', 'last_modified', Direction::ASC(), 2, 5));
+        $results = $em->sortedQuery(new SortedQuery($category, 'articles', 'sort_date', Direction::ASC(), 2, 5));
         $this->assertCount(4, $results);
         $article = $results[0];
         $this->assertEquals('Art 603', $article->getTitle());
 
-        $results = $em->sortedQuery(new SortedQuery($category, 'articles', 'last_modified', Direction::ASC(), 20, 29));
+        $results = $em->sortedQuery(new SortedQuery($category, 'articles', 'sort_date', Direction::ASC(), 20, 29));
         $this->assertCount(0, $results);
 
         $results = $em->sortedQuery(new SortedQuery($category, 'articles', 'title'));
@@ -115,5 +115,17 @@ class SortedQueryTest extends AbstractOrmTest
         $this->assertCount(15, $results);
         $article = $results[0];
         $this->assertEquals('Art 615', $article->getTitle());
+
+        // Modify an entity's sort-by column
+        $article = $em->retrieve(self::ARTICLE, 609);
+        $time = $article->getSortDate();
+        $time->modify('+1 day');
+        $article->setSortDate($time);
+        $em->persist($article)->flush();
+
+        $results = $em->sortedQuery(new SortedQuery($category, 'articles', 'sort_date', Direction::DESC()));
+        $this->assertCount(15, $results);
+        $article = $results[0];
+        $this->assertEquals('Art 609', $article->getTitle());
     }
 }

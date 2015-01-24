@@ -41,6 +41,12 @@ class Article implements CreateModifyInterface
     private $last_modified;
 
     /**
+     * @var \DateTime
+     * @Orm\Column(type="datetime")
+     */
+    private $sort_date;
+
+    /**
      * Get Id
      *
      * @return int
@@ -147,6 +153,28 @@ class Article implements CreateModifyInterface
     public function setLastModified(\DateTime $last_modified)
     {
         $this->last_modified = $last_modified;
+        return $this;
+    }
+
+    /**
+     * Get SortDate
+     *
+     * @return \DateTime
+     */
+    public function getSortDate()
+    {
+        return $this->sort_date;
+    }
+
+    /**
+     * Set SortDate
+     *
+     * @param \DateTime $sort_date
+     * @return $this
+     */
+    public function setSortDate(\DateTime $sort_date = null)
+    {
+        $this->sort_date = $sort_date;
         return $this;
     }
 }

@@ -143,22 +143,37 @@ class RelationshipManager extends AbstractManagerUtility
         $is_proxy = $entity instanceof OrmProxyInterface;
 
         foreach ($relationships as $relationship) {
+            $key   = $this->getKeyScheme()->getRelationshipKey($relationship, $local_id);
+            $value = $reader->getPropertyValue($relationship->getName());
+
             // If the entity is not a proxy (i.e. a new entity) we still must allow for the scenario in which a new
             // entity is created over the top of an existing entity (same ID), as such, we still need to check every
             // relationship attached to the entity
             if ($is_proxy) {
                 /** @var OrmProxyInterface $entity */
+                // Check if we can skip the update
                 if (!$entity->isRelativeModified($relationship->getName())) {
-                    // Only if we have a proxy object and the relationship has not been modified, can we skip the
-                    // relationship update
+                    // Looks like we can skip, but check inverted sort indices first -
+                    $inverse_relationship = $this->invertRelationship($relationship);
+                    if ($inverse_relationship->getSortableBy()) {
+                        // The inverse relationship has sortable columns, we need to check for local property
+                        // changes that might have impacted this -
+                        list(, , $maintain) = $this->getRelationshipDeltas($key, $relationship, $value);
+
+                        $this->updateMaintainedRelationshipSortIndices(
+                            $inverse_relationship,
+                            $maintain,
+                            $reader,
+                            $local_id
+                        );
+                    }
+
+                    // Nothing else to update on this relationship
                     continue;
                 }
             }
 
-            $key   = $this->getKeyScheme()->getRelationshipKey($relationship, $local_id);
-            $value = $reader->getPropertyValue($relationship->getName());
-
-            // This test allows NEW (not a proxy) entities that have NOT set a relationship to inherit existing
+            // This condition allows NEW (not a proxy) entities that have NOT set a relationship to inherit existing
             // relationships which could be useful if the relationship was set by a foreign entity
             // See: docs/RaceConditions.md
             if ($is_proxy || $value) {
@@ -243,7 +258,7 @@ class RelationshipManager extends AbstractManagerUtility
     private function persistInversedRelationship(Relationship $relationship, $key, $value, $local_id, Reader $reader)
     {
         $inverse_relationship = $this->invertRelationship($relationship);
-        list($to_remove, $to_add) = $this->getRelationshipDeltas($key, $relationship, $value);
+        list($to_remove, $to_add, $maintain) = $this->getRelationshipDeltas($key, $relationship, $value);
 
         $this->getDriver()->debugLog('@Setting inverse relationship: '.$key);
 
@@ -288,6 +303,61 @@ class RelationshipManager extends AbstractManagerUtility
                 // Add inverse index
                 $this->getDriver()->addSortedIndex(
                     $this->getKeyScheme()->getSortIndexKey($inverse_relationship, $sortable->getColumn(), $foreign_id),
+                    $reader->getPropertyValue($sortable->getColumn()),
+                    $local_id
+                );
+            }
+        }
+
+        $this->updateMaintainedRelationshipSortIndices($inverse_relationship, $maintain, $reader, $local_id);
+    }
+
+    /**
+     * Re-test and update inverted sort-by columns for maintained relationship entities
+     *
+     * Entities in a relationship that are not maintained (added or removed) will be updated when the entire
+     * relationship is added/removed
+     *
+     * @param Relationship $inverse_relationship Inverted relationship
+     * @param string[]     $maintain             Array of foreign ID's that are the maintained part of the relationship
+     * @param Reader       $reader               Local entity reader
+     * @param string       $local_id             Local ID
+     */
+    private function updateMaintainedRelationshipSortIndices(
+        Relationship $inverse_relationship,
+        $maintain,
+        Reader $reader,
+        $local_id
+    ) {
+        if (!$inverse_relationship->getSortableBy()) {
+            return;
+        }
+
+        // Update unchanged relationships, as the sort-by column or conditions may have changed
+        foreach ($maintain as $foreign_id) {
+            foreach ($inverse_relationship->getSortableBy() as $sortable) {
+                $index_key = $this->getKeyScheme()->getSortIndexKey(
+                    $inverse_relationship,
+                    $sortable->getColumn(),
+                    $foreign_id
+                );
+
+                // Test conditions
+                foreach ($sortable->getConditions() as $condition) {
+                    if (!$condition->test($reader->getPropertyValue($condition->getColumn()))) {
+                        // Condition failed, remove index
+                        $this->getDriver()->removeSortedIndex(
+                            $index_key,
+                            $reader->getPropertyValue($sortable->getColumn()),
+                            $local_id
+                        );
+                        continue 2;
+                    }
+                }
+
+                // Add/update inverse index
+                $this->getDriver()->addSortedIndex(
+                    $index_key,
                     $reader->getPropertyValue($sortable->getColumn()),
                     $local_id
                 );
@@ -366,7 +436,7 @@ class RelationshipManager extends AbstractManagerUtility
 
     /**
      * Get an array containing an array of foreign entities to remove the local entity from, and an array of foreign
-     * entities to add the local entity to
+     * entities to add the local entity to and an array of entities which remain the same in the relationship
      *
      * @param string          $key          Local relationship key
      * @param Relationship    $relationship Relationship in question
@@ -390,12 +460,14 @@ class RelationshipManager extends AbstractManagerUtility
 
             $to_remove = array_diff($old_ids, $new_ids);
             $to_add    = array_diff($new_ids, $old_ids);
+            $maintain  = array_intersect($old_ids, $new_ids);
         } else {
             $old_id = $this->getDriver()->getSingleValueIndex($key);
             $new_id = $new_value ? $this->getEntityId($new_value) : null;
 
             $to_remove = [];
             $to_add    = [];
+            $maintain  = [];
 
             if ($new_id != $old_id) {
                 if ($old_id) {
@@ -404,10 +476,12 @@ class RelationshipManager extends AbstractManagerUtility
                 if ($new_id) {
                     $to_add[] = $new_id;
                 }
+            } else {
+                $maintain[] = $old_id;
             }
         }
 
-        return [$to_remove, $to_add];
+        return [$to_remove, $to_add, $maintain];
     }
 
     /**
