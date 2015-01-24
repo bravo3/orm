@@ -154,18 +154,20 @@ class RelationshipManager extends AbstractManagerUtility
                 // Check if we can skip the update
                 if (!$entity->isRelativeModified($relationship->getName())) {
                     // Looks like we can skip, but check inverted sort indices first -
-                    $inverse_relationship = $this->invertRelationship($relationship);
-                    if ($inverse_relationship->getSortableBy()) {
-                        // The inverse relationship has sortable columns, we need to check for local property
-                        // changes that might have impacted this -
-                        list(, , $maintain) = $this->getRelationshipDeltas($key, $relationship, $value);
+                    if ($relationship->getInversedBy()) {
+                        $inverse_relationship = $this->invertRelationship($relationship);
+                        if ($inverse_relationship->getSortableBy()) {
+                            // The inverse relationship has sortable columns, we need to check for local property
+                            // changes that might have impacted this -
+                            list(, , $maintain) = $this->getRelationshipDeltas($key, $relationship, $value);
 
-                        $this->updateMaintainedRelationshipSortIndices(
-                            $inverse_relationship,
-                            $maintain,
-                            $reader,
-                            $local_id
-                        );
+                            $this->updateMaintainedRelationshipSortIndices(
+                                $inverse_relationship,
+                                $maintain,
+                                $reader,
+                                $local_id
+                            );
+                        }
                     }
 
                     // Nothing else to update on this relationship
