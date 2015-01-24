@@ -38,6 +38,14 @@ class ConditionalTest extends AbstractOrmTest
 
         $articles = $em->sortedQuery(new SortedQuery($category, 'articles', 'id'));
         $this->assertCount(11, $articles);
+
+        // Update an entity to make it fail the condition -
+        $article = $em->retrieve('Bravo3\Orm\Tests\Entities\Conditional\Article', 54);
+        $article->setPublished(false);
+        $em->persist($article)->flush();
+
+        $articles = $em->sortedQuery(new SortedQuery($category, 'articles', 'last_modified'));
+        $this->assertCount(3, $articles);
     }
 
     public function testReverseConditionalRelationship()

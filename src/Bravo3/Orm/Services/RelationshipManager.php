@@ -350,7 +350,6 @@ class RelationshipManager extends AbstractManagerUtility
                         // Condition failed, remove index
                         $this->getDriver()->removeSortedIndex(
                             $index_key,
-                            $reader->getPropertyValue($sortable->getColumn()),
                             $local_id
                         );
                         continue 2;
