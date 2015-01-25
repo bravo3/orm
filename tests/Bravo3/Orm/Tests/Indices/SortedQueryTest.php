@@ -84,16 +84,22 @@ class SortedQueryTest extends AbstractOrmTest
 
         $results = $em->sortedQuery(new SortedQuery($category, 'articles', 'sort_date', Direction::DESC()));
         $this->assertCount(15, $results);
+        $this->assertEquals(15, $results->getFullSize());
         $article = $results[0];
         $this->assertEquals('Art 615', $article->getTitle());
 
-        $results = $em->sortedQuery(new SortedQuery($category, 'articles', 'sort_date', Direction::DESC(), 5, -6));
+        $results = $em->sortedQuery(
+            new SortedQuery($category, 'articles', 'sort_date', Direction::DESC(), 5, -6),
+            true
+        );
         $this->assertCount(5, $results);
+        $this->assertEquals(15, $results->getFullSize());
         $article = $results[0];
         $this->assertEquals('Art 610', $article->getTitle());
 
         $results = $em->sortedQuery(new SortedQuery($category, 'articles', 'sort_date', Direction::ASC(), 2, 5));
         $this->assertCount(4, $results);
+        $this->assertNull($results->getFullSize());
         $article = $results[0];
         $this->assertEquals('Art 603', $article->getTitle());
 
@@ -118,7 +124,7 @@ class SortedQueryTest extends AbstractOrmTest
 
         // Modify an entity's sort-by column
         $article = $em->retrieve(self::ARTICLE, 609);
-        $time = $article->getSortDate();
+        $time    = $article->getSortDate();
         $time->modify('+1 day');
         $article->setSortDate($time);
         $em->persist($article)->flush();

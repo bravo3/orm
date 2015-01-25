@@ -357,4 +357,15 @@ class RedisDriver implements DriverInterface
 
         return $this->score_normaliser;
     }
+
+    /**
+     * Get the size of a sorted index, without any filters applied
+     *
+     * @param string $key
+     * @return int
+     */
+    public function getSortedIndexSize($key)
+    {
+        return $this->client->zcard($key);
+    }
 }

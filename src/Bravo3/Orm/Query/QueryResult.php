@@ -33,12 +33,18 @@ class QueryResult implements \Countable, \Iterator, \ArrayAccess
      */
     protected $iterator;
 
-    public function __construct(EntityManager $entity_manager, QueryInterface $query, array $results)
+    /**
+     * @var int
+     */
+    protected $full_size;
+
+    public function __construct(EntityManager $entity_manager, QueryInterface $query, array $results, $full_size = null)
     {
         $this->entity_manager = $entity_manager;
         $this->query          = $query;
         $this->id_list        = $results;
         $this->iterator       = new \ArrayIterator($this->id_list);
+        $this->full_size      = $full_size;
     }
 
     /**
@@ -84,6 +90,18 @@ class QueryResult implements \Countable, \Iterator, \ArrayAccess
         }
 
         return $this->entities[$id];
+    }
+
+    /**
+     * Get the full size of the query, without any limits applied to it
+     *
+     * This information may not be available, and should be explicitly requested when creating the query.
+     *
+     * @return int
+     */
+    public function getFullSize()
+    {
+        return $this->full_size;
     }
 
     /**

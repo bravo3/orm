@@ -154,7 +154,7 @@ interface DriverInterface extends DebugInterface
     public function removeSortedIndex($key, $value);
 
     /**
-     * Get a range values in a sorted index
+     * Get a range of values in a sorted index
      *
      * If $start/$stop are === null, they are assumed to be the start/end of the entire set
      *
@@ -165,4 +165,12 @@ interface DriverInterface extends DebugInterface
      * @return string[]
      */
     public function getSortedIndex($key, $reverse = false, $start = null, $stop = null);
+
+    /**
+     * Get the size of a sorted index, without any filters applied
+     *
+     * @param string $key
+     * @return int
+     */
+    public function getSortedIndexSize($key);
 }

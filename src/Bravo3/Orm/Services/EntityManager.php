@@ -296,12 +296,16 @@ class EntityManager
     /**
      * Get all foreign entities ordered by a sort column
      *
+     * If you have applied a limit to the query but need to know the full size of the unfiltered set, you must set
+     * $check_full_set_size to true to gather this information at the expense of a second database query.
+     *
      * @param SortedQuery $query
+     * @param bool        $check_full_set_size
      * @return QueryResult
      */
-    public function sortedQuery(SortedQuery $query)
+    public function sortedQuery(SortedQuery $query, $check_full_set_size = false)
     {
-        return $this->getQueryManager()->sortedQuery($query);
+        return $this->getQueryManager()->sortedQuery($query, $check_full_set_size);
     }
 
     /**

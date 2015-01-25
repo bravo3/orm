@@ -48,10 +48,14 @@ class QueryManager extends AbstractManagerUtility
     /**
      * Get all foreign entities ordered by a sort column
      *
+     * If you have applied a limit to the query but need to know the full size of the unfiltered set, you must set
+     * $check_full_set_size to true to gather this information at the expense of a second database query.
+     *
      * @param SortedQuery $query
+     * @param bool        $check_full_set_size
      * @return QueryResult
      */
-    public function sortedQuery(SortedQuery $query)
+    public function sortedQuery(SortedQuery $query, $check_full_set_size = false)
     {
         $metadata     = $this->getMapper()->getEntityMetadata($query->getClassName());
         $reader       = new Reader($metadata, $query->getEntity());
@@ -63,14 +67,23 @@ class QueryManager extends AbstractManagerUtility
 
         // Important, else the QueryResult class will try to hydrate the wrong entity
         $query->setClassName($relationship->getTarget());
+        $key = $this->getKeyScheme()->getSortIndexKey($relationship, $query->getSortBy(), $reader->getId());
 
         $results = $this->getDriver()->getSortedIndex(
-            $this->getKeyScheme()->getSortIndexKey($relationship, $query->getSortBy(), $reader->getId()),
+            $key,
             $query->getDirection() == Direction::DESC(),
             $query->getStart(),
             $query->getEnd()
         );
 
-        return new QueryResult($this->entity_manager, $query, $results);
+        if (!$query->getStart() && !$query->getEnd()) {
+            $full_size = count($results);
+        } elseif ($check_full_set_size) {
+            $full_size = $this->getDriver()->getSortedIndexSize($key);
+        } else {
+            $full_size = null;
+        }
+
+        return new QueryResult($this->entity_manager, $query, $results, $full_size);
     }
 }
