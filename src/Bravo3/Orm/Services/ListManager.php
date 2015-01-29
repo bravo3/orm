@@ -53,12 +53,12 @@ class ListManager
 
         $local_values = [];
         foreach ($fns as $fn_index => $fn) {
-            $local_values[$fn_index] = $entity->$fn();
+            $local_values[$fn_index] = $value->$fn();
         }
 
         foreach ($arr as $item_index => $item) {
             foreach ($fns as $fn_index => $fn) {
-                if ($local_values[$fn_index] !== $entity->$fn()) {
+                if ($local_values[$fn_index] !== $item->$fn()) {
                     continue 2;
                 }
             }
