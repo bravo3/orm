@@ -237,8 +237,14 @@ class RelationshipManager extends AbstractManagerUtility
 
                 // Test conditions
                 foreach ($sortable->getConditions() as $condition) {
-                    if (!$condition->test($reader->getPropertyValue($condition->getColumn()))) {
-                        continue 2;
+                    if ($condition->getColumn()) {
+                        if (!$condition->test($reader->getPropertyValue($condition->getColumn()))) {
+                            continue 2;
+                        }
+                    } elseif ($condition->getMethod()) {
+                        if (!$condition->test($reader->getMethodValue($condition->getMethod()))) {
+                            continue 2;
+                        }
                     }
                 }
 
@@ -297,8 +303,14 @@ class RelationshipManager extends AbstractManagerUtility
             foreach ($inverse_relationship->getSortableBy() as $sortable) {
                 // Test conditions
                 foreach ($sortable->getConditions() as $condition) {
-                    if (!$condition->test($reader->getPropertyValue($condition->getColumn()))) {
-                        continue 2;
+                    if ($condition->getColumn()) {
+                        if (!$condition->test($reader->getPropertyValue($condition->getColumn()))) {
+                            continue 2;
+                        }
+                    } elseif ($condition->getMethod()) {
+                        if (!$condition->test($reader->getMethodValue($condition->getMethod()))) {
+                            continue 2;
+                        }
                     }
                 }
 
@@ -346,13 +358,24 @@ class RelationshipManager extends AbstractManagerUtility
 
                 // Test conditions
                 foreach ($sortable->getConditions() as $condition) {
-                    if (!$condition->test($reader->getPropertyValue($condition->getColumn()))) {
-                        // Condition failed, remove index
-                        $this->getDriver()->removeSortedIndex(
-                            $index_key,
-                            $local_id
-                        );
-                        continue 2;
+                    if ($condition->getColumn()) {
+                        if (!$condition->test($reader->getPropertyValue($condition->getColumn()))) {
+                            // Condition failed, remove index
+                            $this->getDriver()->removeSortedIndex(
+                                $index_key,
+                                $local_id
+                            );
+                            continue 2;
+                        }
+                    } elseif ($condition->getMethod()) {
+                        if (!$condition->test($reader->getMethodValue($condition->getMethod()))) {
+                            // Condition failed, remove index
+                            $this->getDriver()->removeSortedIndex(
+                                $index_key,
+                                $local_id
+                            );
+                            continue 2;
+                        }
                     }
                 }
 

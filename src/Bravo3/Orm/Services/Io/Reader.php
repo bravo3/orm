@@ -61,6 +61,15 @@ class Reader
         return $this->entity->$getter();
     }
 
+    public function getMethodValue($name)
+    {
+        if (method_exists(get_class($this->entity), $name)) {
+            return $this->entity->$name();
+        }
+
+        throw new InvalidArgumentException("The method '".$name."' does not exist on " . get_class($this->entity));
+    }
+
     /**
      * Get the value of an index
      *

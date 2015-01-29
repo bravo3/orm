@@ -68,6 +68,22 @@ The solution is to create conditions on your sort indices:
 This example will create two sort indices, one by `last_modified` with the condition that the article is published, and
 that the article's ID is greater than 50. The second index is by ID without conditions.
 
+You can also test your condition against the value returned by a method call:
+
+    /**
+     * @var Article[]
+     * @Orm\OneToMany(
+     *      target="Article",
+     *      inversed_by="category",
+     *      sortable_by={
+     *          @Orm\Sortable(column="last_modified", conditions={
+     *              @Orm\Condition(method="isPublished", value=true),
+     *              @Orm\Condition(column="id", value=50, comparison=">")
+     *          }), "id"
+     *      })
+     */
+    protected $articles;
+
 It's important to note that you cannot retrieve an unfiltered version of the `last_modified` index now, the database
 will only add articles to the index if the conditions are met. 
 
