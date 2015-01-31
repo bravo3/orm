@@ -18,21 +18,33 @@ class QueryManager extends AbstractManagerUtility
      */
     public function indexedQuery(IndexedQuery $query)
     {
-        $metadata = $this->getMapper()->getEntityMetadata($query->getClassName());
+        $metadata   = $this->getMapper()->getEntityMetadata($query->getClassName());
+        $prefix     = $this->getKeyScheme()->getEntityKey($metadata->getTableName(), '');
+        $prefix_len = strlen($prefix);
 
         $master_list = null;
         foreach ($query->getIndices() as $index_name => $index_key) {
-            $index = $metadata->getIndexByName($index_name);
-            if (!$index) {
-                throw new InvalidArgumentException('Index "'.$index_name.'" does not exist in query table');
-            }
+            if ($index_name == '@id') {
+                $key = $this->getKeyScheme()->getEntityKey($metadata->getTableName(), $index_key);
+                $set = $this->getDriver()->scan($key);
 
-            $key = $this->getKeyScheme()->getIndexKey($index, $index_key);
-            $set = $this->getDriver()->scan($key);
+                $results = [];
+                foreach ($set as $search_key) {
+                    $results[] = substr($search_key, $prefix_len);
+                }
+            } else {
+                $index = $metadata->getIndexByName($index_name);
+                if (!$index) {
+                    throw new InvalidArgumentException('Index "'.$index_name.'" does not exist on the entity');
+                }
 
-            $results = [];
-            foreach ($set as $key) {
-                $results[] = $this->getDriver()->getSingleValueIndex($key);
+                $key = $this->getKeyScheme()->getIndexKey($index, $index_key);
+                $set = $this->getDriver()->scan($key);
+
+                $results = [];
+                foreach ($set as $search_key) {
+                    $results[] = $this->getDriver()->getSingleValueIndex($search_key);
+                }
             }
 
             if ($master_list === null) {

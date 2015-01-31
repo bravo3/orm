@@ -142,6 +142,20 @@ It is also an ArrayAccess implementation, you can request entities by index:
     // Get an individual entity at index 2, without making database calls to retrieve any other entities:
     $entity = $result[2];
     echo $entity->getName()."\n";
+
+### Searching by ID
+It's possible to scan by the entities ID as well as normal indices, to do so use '@id' as the index name:
+
+    $result = $em->query(new IndexQuery('...', ['@id' => 'hello*']));
+    
+You can combine the `@id` query with other indices. 
+
+### Get all items in a table
+To get all items in a table you can scan by ID using value '*':
+
+    $result = $em->query(new IndexQuery('...', ['@id' => '*']));
+    
+The above query will return all items in the given table.
     
 Wildcards
 ---------
