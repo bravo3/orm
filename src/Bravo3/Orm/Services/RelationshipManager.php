@@ -448,38 +448,61 @@ class RelationshipManager extends AbstractManagerUtility
     {
         $this->getDriver()->debugLog('Getting inverse relationship deltas: '.$key);
 
-        // Work out what needs to be added, and what needs to be removed
         if (RelationshipType::isMultiIndex($relationship->getRelationshipType())) {
-            $old_ids = $this->getDriver()->getMultiValueIndex($key);
-
-            $new_ids = [];
-            if ($new_value) {
-                foreach ($new_value as $item) {
-                    $new_ids[] = $this->getEntityId($item);
-                }
-            }
-
-            $to_remove = array_diff($old_ids, $new_ids);
-            $to_add    = array_diff($new_ids, $old_ids);
-            $maintain  = array_intersect($old_ids, $new_ids);
+            return $this->getRelationshipDeltasMulti($key, $relationship, $new_value);
         } else {
-            $old_id = $this->getDriver()->getSingleValueIndex($key);
-            $new_id = $new_value ? $this->getEntityId($new_value) : null;
+            return $this->getRelationshipDeltasSingle($key, $relationship, $new_value);
+        }
+    }
 
-            $to_remove = [];
-            $to_add    = [];
-            $maintain  = [];
+    /**
+     * Get the deltas for a to-many relationship
+     *
+     * @param string          $key          Local relationship key
+     * @param Relationship    $relationship Relationship in question
+     * @param object|object[] $new_value    New local value containing foreign entities
+     * @return array
+     */
+    private function getRelationshipDeltasMulti($key, Relationship $relationship, $new_value)
+    {
+        $old_ids = $this->getDriver()->getMultiValueIndex($key);
 
-            if ($new_id != $old_id) {
-                if ($old_id) {
-                    $to_remove[] = $old_id;
-                }
-                if ($new_id) {
-                    $to_add[] = $new_id;
-                }
-            } else {
-                $maintain[] = $old_id;
+        $new_ids = [];
+        if ($new_value) {
+            foreach ($new_value as $item) {
+                $new_ids[] = $this->getEntityId($item);
             }
+        }
+
+        return [array_diff($old_ids, $new_ids), array_diff($new_ids, $old_ids), array_intersect($old_ids, $new_ids)];
+    }
+
+    /**
+     * Get the deltas for a to-one relationship
+     *
+     * @param string          $key          Local relationship key
+     * @param Relationship    $relationship Relationship in question
+     * @param object|object[] $new_value    New local value containing foreign entities
+     * @return array
+     */
+    private function getRelationshipDeltasSingle($key, Relationship $relationship, $new_value)
+    {
+        $old_id = $this->getDriver()->getSingleValueIndex($key);
+        $new_id = $new_value ? $this->getEntityId($new_value) : null;
+
+        $to_remove = [];
+        $to_add    = [];
+        $maintain  = [];
+
+        if ($new_id != $old_id) {
+            if ($old_id) {
+                $to_remove[] = $old_id;
+            }
+            if ($new_id) {
+                $to_add[] = $new_id;
+            }
+        } else {
+            $maintain[] = $old_id;
         }
 
         return [$to_remove, $to_add, $maintain];
