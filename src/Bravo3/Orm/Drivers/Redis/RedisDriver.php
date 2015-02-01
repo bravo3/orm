@@ -115,7 +115,9 @@ class RedisDriver implements DriverInterface
     private function flushSingle()
     {
         $command = $this->unit_of_work->getWork();
-        $this->client->executeCommand($this->getPredisCommand($command));
+        if ($command) {
+            $this->client->executeCommand($this->getPredisCommand($command));
+        }
     }
 
     /**

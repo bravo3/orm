@@ -148,7 +148,7 @@ class Entity
      */
     private function resetMaps()
     {
-        $this->id_columns = null;
+        $this->id_columns   = null;
         $this->property_map = null;
     }
 
@@ -189,7 +189,7 @@ class Entity
     public function setRelationships(array $relationships)
     {
         $this->relationships = $relationships;
-        $this->property_map = null;
+        $this->property_map  = null;
         return $this;
     }
 
@@ -202,7 +202,7 @@ class Entity
     public function addRelationship(Relationship $relationship)
     {
         $this->relationships[] = $relationship;
-        $this->property_map = null;
+        $this->property_map    = null;
         return $this;
     }
 
@@ -229,7 +229,8 @@ class Entity
      * @param string $fn
      * @return string|null
      */
-    public function getPropertyFor($fn) {
+    public function getPropertyFor($fn)
+    {
         if ($this->property_map === null) {
             $this->generatePropertyMap();
         }
@@ -287,7 +288,8 @@ class Entity
      * @param Index $index
      * @return $this
      */
-    public function addIndex(Index $index) {
+    public function addIndex(Index $index)
+    {
         $this->indices[] = $index;
         return $this;
     }

@@ -3,6 +3,7 @@ namespace Bravo3\Orm\Services;
 
 use Bravo3\Orm\Config\Configuration;
 use Bravo3\Orm\Drivers\DriverInterface;
+use Bravo3\Orm\Exceptions\InvalidArgumentException;
 use Bravo3\Orm\Exceptions\NotFoundException;
 use Bravo3\Orm\KeySchemes\KeySchemeInterface;
 use Bravo3\Orm\Mappers\MapperInterface;
@@ -216,7 +217,7 @@ class EntityManager
      * If a new entity is passed to this function, any persisted entity with matching ID & class will be deleted. No
      * error will be raised if a persisted entity is not matched.
      *
-     * @param string $entity
+     * @param object $entity
      * @return $this
      */
     public function delete($entity)
@@ -273,7 +274,12 @@ class EntityManager
     {
         $metadata = $this->mapper->getEntityMetadata($class_name);
         $index    = $metadata->getIndexByName($index_name);
-        $id       = $this->driver->getSingleValueIndex($this->key_scheme->getIndexKey($index, $index_key));
+
+        if (!$index) {
+            throw new InvalidArgumentException('Index "'.$index_name.'" is not valid');
+        }
+
+        $id = $this->driver->getSingleValueIndex($this->key_scheme->getIndexKey($index, $index_key));
 
         if (!$id) {
             throw new NotFoundException('Index "'.$index_key.'" not found');

@@ -100,7 +100,7 @@ class Reader
     /**
      * Get the true class name of the entity, resolving any proxy wrappers
      *
-     * @param object $entity
+     * @param object|string $entity
      * @return string
      */
     public static function getEntityClassName($entity)

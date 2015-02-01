@@ -161,7 +161,7 @@ class AnnotationMetadataParser
         $target       = new AnnotationMetadataParser($annotation->target);
         $relationship = new Relationship($name, $type);
 
-        $relationship->setSource($this->reflection_obj->getName())
+        $relationship->setSource($this->reflection_obj->name)
                      ->setTarget($annotation->target)
                      ->setSourceTable($this->getTableName())
                      ->setTargetTable($target->getTableName())
@@ -244,7 +244,7 @@ class AnnotationMetadataParser
      */
     public function getEntityMetadata()
     {
-        $entity = new Entity($this->reflection_obj->getName(), $this->getTableName());
+        $entity = new Entity($this->reflection_obj->name, $this->getTableName());
         $entity->setColumns($this->getColumns());
         $entity->setRelationships($this->getRelationships());
         $entity->setIndices($this->getIndices());
