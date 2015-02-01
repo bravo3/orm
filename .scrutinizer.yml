@@ -1,0 +1,32 @@
+build_failure_conditions:
+    - 'elements.rating(<= D).exists'
+    - 'issues.label("coding-style").exists'
+    - 'issues.severity(>= MAJOR).new.exists'
+    - 'project.metric("scrutinizer.quality", < 8)'
+
+tools:
+    php_sim: false
+    php_pdepend: true
+    php_analyzer:
+        config:
+            checkstyle:
+                enabled:              true
+                no_trailing_whitespace:  true
+                naming:
+                    enabled:              true
+                    local_variable:       ^[a-z][a-z0-9_]*$
+                    abstract_class_name:  ^Abstract|Factory$
+                    utility_class_name:   Utils?$
+                    constant_name:        ^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*$
+                    property_name:        ^[a-z][a-z0-9_]*$
+                    method_name:          ^(?:[a-z]|__)[a-zA-Z0-9]*$
+                    parameter_name:       ^[a-z][a-z0-9_]*$
+                    interface_name:       ^[A-Z][a-zA-Z0-9]*Interface$
+                    type_name:            ^[A-Z][a-zA-Z0-9]*$
+                    exception_name:       ^[A-Z][a-zA-Z0-9]*Exception$
+                    isser_method_name:    ^(?:is|has|should|may|supports|contains)
+    php_code_sniffer:
+        enabled:              true
+        config:
+            standard:             PSR2
+    sensiolabs_security_checker: true
