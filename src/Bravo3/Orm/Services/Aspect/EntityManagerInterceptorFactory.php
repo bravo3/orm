@@ -13,7 +13,7 @@ class EntityManagerInterceptorFactory implements InterceptorFactoryInterface
     /**
      * Get all prefix interceptors
      *
-     * @return array
+     * @return \Closure[]
      */
     public function getPrefixInterceptors()
     {
@@ -28,7 +28,7 @@ class EntityManagerInterceptorFactory implements InterceptorFactoryInterface
     /**
      * Get all suffix interceptors
      *
-     * @return array
+     * @return \Closure[]
      */
     public function getSuffixInterceptors()
     {
@@ -41,7 +41,7 @@ class EntityManagerInterceptorFactory implements InterceptorFactoryInterface
     }
 
     /**
-     * @return callable
+     * @return \Closure
      */
     protected function getPrePersist()
     {
@@ -59,7 +59,7 @@ class EntityManagerInterceptorFactory implements InterceptorFactoryInterface
     }
 
     /**
-     * @return callable
+     * @return \Closure
      */
     protected function getPreRetrieve()
     {
@@ -76,7 +76,7 @@ class EntityManagerInterceptorFactory implements InterceptorFactoryInterface
     }
 
     /**
-     * @return callable
+     * @return \Closure
      */
     protected function getPreDelete()
     {
@@ -94,7 +94,7 @@ class EntityManagerInterceptorFactory implements InterceptorFactoryInterface
     }
 
     /**
-     * @return callable
+     * @return \Closure
      */
     protected function getPreFlush()
     {
@@ -112,7 +112,7 @@ class EntityManagerInterceptorFactory implements InterceptorFactoryInterface
     }
 
     /**
-     * @return callable
+     * @return \Closure
      */
     protected function getPostPersist()
     {
@@ -130,7 +130,7 @@ class EntityManagerInterceptorFactory implements InterceptorFactoryInterface
     }
 
     /**
-     * @return callable
+     * @return \Closure
      */
     protected function getPostRetrieve()
     {
@@ -148,7 +148,7 @@ class EntityManagerInterceptorFactory implements InterceptorFactoryInterface
 
 
     /**
-     * @return callable
+     * @return \Closure
      */
     protected function getPostDelete()
     {
@@ -166,7 +166,7 @@ class EntityManagerInterceptorFactory implements InterceptorFactoryInterface
     }
 
     /**
-     * @return callable
+     * @return \Closure
      */
     protected function getPostFlush()
     {

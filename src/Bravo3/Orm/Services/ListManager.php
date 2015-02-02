@@ -74,7 +74,7 @@ class ListManager
      * @param string $property
      * @param string $getter
      * @param string $setter
-     * @return array
+     * @return string[]
      */
     protected static function resolveFunctionNames($property, $getter = null, $setter = null)
     {

@@ -48,7 +48,7 @@ class RelationshipManager extends AbstractManagerUtility
     /**
      * Traverse the given list of relationships and delete them
      *
-     * @param array  $relationships
+     * @param Relationship[]  $relationships
      * @param object $entity
      * @param string $local_id
      */
