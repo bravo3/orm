@@ -39,6 +39,20 @@ class Category
     protected $articles;
 
     /**
+     * @var Asset[]
+     * @Orm\OneToMany(
+     *      target="Bravo3\Orm\Tests\Entities\Conditional\Asset",
+     *      inversed_by="category",
+     *      sortable_by={
+     *          @Sortable(column="last_modified", conditions={
+     *              @Condition(method="isPublished", value=true),
+     *              @Condition(column="id", value=50, comparison=">")
+     *          }), "id"
+     *      })
+     */
+    protected $assets;
+
+    /**
      * Get Id
      *
      * @return mixed
@@ -125,6 +139,52 @@ class Category
     public function removeArticle(Article $article)
     {
         ListManager::remove($this, 'articles', $article, ['getId']);
+        return $this;
+    }
+
+    /**
+     * Get Assets
+     *
+     * @return Asset[]
+     */
+    public function getAssets()
+    {
+        return $this->assets;
+    }
+
+    /**
+     * Set Assets
+     *
+     * @param Asset[] $assets
+     * @return $this
+     */
+    public function setAssets(array $assets)
+    {
+        $this->assets = $assets;
+        return $this;
+    }
+
+    /**
+     * Add an asset to the category
+     *
+     * @param Asset $asset
+     * @return $this
+     */
+    public function addAsset(Asset $asset)
+    {
+        ListManager::add($this, 'assets', $asset);
+        return $this;
+    }
+
+    /**
+     * Remove an asset from the category
+     *
+     * @param Asset $asset
+     * @return $this
+     */
+    public function removeAsset(Asset $asset)
+    {
+        ListManager::remove($this, 'assets', $asset, ['getId']);
         return $this;
     }
 }

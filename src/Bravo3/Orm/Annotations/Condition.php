@@ -8,14 +8,19 @@ namespace Bravo3\Orm\Annotations;
 class Condition
 {
     /**
-     * @var string
-     */
-    public $column;
-
-    /**
      * @var mixed
      */
     public $value;
+
+    /**
+     * @var string
+     */
+    public $column = '';
+
+    /**
+     * @var string
+     */
+    public $method = '';
 
     /**
      * @var string

@@ -11,6 +11,11 @@ class Condition
     protected $column;
 
     /**
+     * @var string
+     */
+    protected $method;
+
+    /**
      * @var mixed
      */
     protected $value;
@@ -20,9 +25,10 @@ class Condition
      */
     protected $comparison;
 
-    public function __construct($column, $value, $comparison = '=')
+    public function __construct($column, $method, $value, $comparison = '=')
     {
         $this->column     = $column;
+        $this->method     = $method;
         $this->value      = $value;
         $this->comparison = $comparison;
     }
@@ -48,6 +54,18 @@ class Condition
         $this->column = $column;
         return $this;
     }
+
+    public function getMethod()
+    {
+        return $this->method;
+    }
+
+    public function setMethod($method)
+    {
+        $this->method = $method;
+        return $this;
+    }
+
 
     /**
      * Get Value

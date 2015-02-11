@@ -176,8 +176,11 @@ class AnnotationMetadataParser
                     $conditions = [];
                     foreach ($sortable->conditions as $condition) {
                         if ($condition instanceof ConditionAnnotation) {
+                            $this->testConditionAnnotation($condition);
+
                             $conditions[] = new Condition(
                                 $condition->column,
+                                $condition->method,
                                 $condition->value,
                                 $condition->comparison
                             );
@@ -196,6 +199,24 @@ class AnnotationMetadataParser
         }
 
         return $relationship;
+    }
+
+    /**
+     * Check a condition and throw an exception if it is invalid
+     *
+     * @param ConditionAnnotation $condition
+     */
+    private function testConditionAnnotation(ConditionAnnotation $condition)
+    {
+        if ($condition->column && $condition->method) {
+            throw new UnexpectedValueException("A condition cannot be tested against both a 'column' and a 'method'");
+        }
+
+        if (!$condition->column && !$condition->method) {
+            throw new UnexpectedValueException(
+                "A condition must define either a 'column' or a 'method' to test against"
+            );
+        }
     }
 
     /**
