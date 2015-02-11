@@ -186,7 +186,7 @@ class JsonSerialiser implements SerialiserInterface
         foreach ($metadata->getColumns() as $column) {
             $setter = $column->getSetter();
             $field  = $column->getName();
-            $value  = $raw[$field];
+            $value  = isset($raw[$field]) ? $raw[$field] : null;
 
             switch ($column->getType()) {
                 default:
