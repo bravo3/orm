@@ -83,7 +83,7 @@ class RedisDriver implements DriverInterface
     public function retrieve($key)
     {
         if (!$this->client->exists($key)) {
-            return;
+            throw new NotFoundException('Key "'.$key.'" does not exist');
         }
 
         $data = $this->client->get($key);
