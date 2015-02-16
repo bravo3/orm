@@ -263,6 +263,22 @@ class EntityManager
     }
 
     /**
+     * Retrieve an entity by ClassName + Id
+     *
+     * @param string        $class_name
+     * @param int           $id
+     * @return object|null
+     */
+    public function retrieveEntityOrNull($class_name, $id)
+    {
+        try {
+            return $this->retrieve($class_name, $id);
+        } catch (NotFoundException $e) {
+            return null;
+        }
+    }
+
+    /**
      * Retrieve an entity
      *
      * @param string $class_name
