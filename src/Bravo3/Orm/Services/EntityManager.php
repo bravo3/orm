@@ -267,7 +267,7 @@ class EntityManager
      *
      * @param string        $class_name
      * @param int           $id
-     * @return object\null
+     * @return object|null
      */
     public function retrieveEntityOrNull($class_name, $id)
     {
