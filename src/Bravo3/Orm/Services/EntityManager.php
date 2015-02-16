@@ -254,12 +254,14 @@ class EntityManager
     {
         $metadata = $this->mapper->getEntityMetadata($class_name);
 
-        $serialised_data = $this->driver->retrieve(
-            $this->key_scheme->getEntityKey($metadata->getTableName(), $id)
-        );
-
-        $writer = new Writer($metadata, $serialised_data, $this);
-        return $writer->getProxy();
+        $entity_key = $this->key_scheme->getEntityKey($metadata->getTableName(), $id);
+        if ($entity_key) {
+            $serialised_data = $this->driver->retrieve($entity_key);
+            if ($serialised_data) {
+                $writer = new Writer($metadata, $serialised_data, $this);
+                return $writer->getProxy();
+            }
+        }
     }
 
     /**
