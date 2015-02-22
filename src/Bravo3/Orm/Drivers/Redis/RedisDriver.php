@@ -12,7 +12,7 @@ use Bravo3\Orm\Services\ScoreNormaliser;
 use Bravo3\Orm\Traits\DebugTrait;
 use Predis\Client;
 use Predis\Command\CommandInterface;
-use Predis\Transaction\MultiExec;
+use Predis\Pipeline\Pipeline;
 
 class RedisDriver implements DriverInterface
 {
@@ -125,11 +125,12 @@ class RedisDriver implements DriverInterface
      */
     private function flushMulti()
     {
-        $multi = new MultiExec($this->client);
-        while ($command = $this->unit_of_work->getWork()) {
-            $multi->executeCommand($this->getPredisCommand($command));
-        }
-        $multi->execute();
+        $this->client->pipeline(function ($pipe) {
+            /** @var Pipeline $pipe */
+            while ($command = $this->unit_of_work->getWork()) {
+                $pipe->executeCommand($this->getPredisCommand($command));
+            }
+        });
     }
 
     /**
