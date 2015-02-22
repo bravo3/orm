@@ -64,7 +64,7 @@ class RelationshipManager extends AbstractManagerUtility
 
         /** @var Relationship $relationship */
         foreach ($relationships as $relationship) {
-            $inverse_relationship = $this->invertRelationship($relationship);
+            $inverse_relationship = $relationship->getInversedBy() ? $this->invertRelationship($relationship) : null;
             $forward_key          = $this->getKeyScheme()->getRelationshipKey($relationship, $local_id);
 
             // Delete relationship keys
