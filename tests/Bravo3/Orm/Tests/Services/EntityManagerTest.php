@@ -22,11 +22,6 @@ class EntityManagerTest extends AbstractOrmTest
     public function testIo()
     {
         $em = $this->getEntityManager();
-        $temp = sys_get_temp_dir().'/bravo3-orm';
-        if (!file_exists($temp)) {
-            mkdir($temp, 0777, true);
-        }
-        $em->getConfig()->setCacheDir($temp);
 
         $create_time = new \DateTime("2015-01-01 12:15:03+0000");
 

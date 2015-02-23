@@ -17,7 +17,15 @@ abstract class AbstractOrmTest extends \PHPUnit_Framework_TestCase
         $driver = $this->getDriver();
         $driver->setDebugMode(true);
         $mapper = new AnnotationMapper();
-        return EntityManager::build($driver, $mapper);
+        $em     = EntityManager::build($driver, $mapper);
+
+        $temp = sys_get_temp_dir().'/bravo3-orm';
+        if (!file_exists($temp)) {
+            mkdir($temp, 0777, true);
+        }
+        $em->getConfig()->setCacheDir($temp);
+
+        return $em;
     }
 
     protected function getDriver()

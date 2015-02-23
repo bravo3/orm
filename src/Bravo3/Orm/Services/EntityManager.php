@@ -248,9 +248,10 @@ class EntityManager
      *
      * @param string $class_name
      * @param string $id
+     * @param bool   $use_cache
      * @return object
      */
-    public function retrieve($class_name, $id)
+    public function retrieve($class_name, $id, $use_cache = true)
     {
         $metadata = $this->mapper->getEntityMetadata($class_name);
 
@@ -265,28 +266,30 @@ class EntityManager
     /**
      * Retrieve an entity by ClassName + Id
      *
-     * @param string        $class_name
-     * @param int           $id
-     * @return object|null
+     * @param string $class_name
+     * @param int    $id
+     * @param bool   $use_cache
+     * @return null|object
      */
-    public function retrieveEntityOrNull($class_name, $id)
+    public function retrieveEntityOrNull($class_name, $id, $use_cache = true)
     {
         try {
-            return $this->retrieve($class_name, $id);
+            return $this->retrieve($class_name, $id, $use_cache);
         } catch (NotFoundException $e) {
             return null;
         }
     }
 
     /**
-     * Retrieve an entity
+     * Retrieve an entity by an index
      *
      * @param string $class_name
      * @param string $index_name
      * @param string $index_key
+     * @param bool   $use_cache
      * @return object
      */
-    public function retrieveByIndex($class_name, $index_name, $index_key)
+    public function retrieveByIndex($class_name, $index_name, $index_key, $use_cache = true)
     {
         $metadata = $this->mapper->getEntityMetadata($class_name);
         $index    = $metadata->getIndexByName($index_name);
@@ -301,18 +304,19 @@ class EntityManager
             throw new NotFoundException('Index "'.$index_key.'" not found');
         }
 
-        return $this->retrieve($class_name, $id);
+        return $this->retrieve($class_name, $id, $use_cache);
     }
 
     /**
      * Create a query against a table matching one or more indices
      *
      * @param IndexedQuery $query
+     * @param bool         $use_cache
      * @return QueryResult
      */
-    public function indexedQuery(IndexedQuery $query)
+    public function indexedQuery(IndexedQuery $query, $use_cache = true)
     {
-        return $this->getQueryManager()->indexedQuery($query);
+        return $this->getQueryManager()->indexedQuery($query, $use_cache);
     }
 
     /**
@@ -323,11 +327,12 @@ class EntityManager
      *
      * @param SortedQuery $query
      * @param bool        $check_full_set_size
+     * @param bool        $use_cache
      * @return QueryResult
      */
-    public function sortedQuery(SortedQuery $query, $check_full_set_size = false)
+    public function sortedQuery(SortedQuery $query, $check_full_set_size = false, $use_cache = true)
     {
-        return $this->getQueryManager()->sortedQuery($query, $check_full_set_size);
+        return $this->getQueryManager()->sortedQuery($query, $check_full_set_size, $use_cache);
     }
 
     /**

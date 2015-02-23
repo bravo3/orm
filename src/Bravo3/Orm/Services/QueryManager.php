@@ -14,9 +14,10 @@ class QueryManager extends AbstractManagerUtility
      * Create a query against a table matching one or more indices
      *
      * @param IndexedQuery $query
+     * @param bool         $use_cache
      * @return QueryResult
      */
-    public function indexedQuery(IndexedQuery $query)
+    public function indexedQuery(IndexedQuery $query, $use_cache = true)
     {
         $metadata   = $this->getMapper()->getEntityMetadata($query->getClassName());
         $prefix     = $this->getKeyScheme()->getEntityKey($metadata->getTableName(), '');
@@ -54,7 +55,7 @@ class QueryManager extends AbstractManagerUtility
             }
         }
 
-        return new QueryResult($this->entity_manager, $query, array_values($master_list));
+        return new QueryResult($this->entity_manager, $query, array_values($master_list), null, $use_cache);
     }
 
     /**
@@ -65,9 +66,10 @@ class QueryManager extends AbstractManagerUtility
      *
      * @param SortedQuery $query
      * @param bool        $check_full_set_size
+     * @param bool        $use_cache
      * @return QueryResult
      */
-    public function sortedQuery(SortedQuery $query, $check_full_set_size = false)
+    public function sortedQuery(SortedQuery $query, $check_full_set_size = false, $use_cache = true)
     {
         $metadata     = $this->getMapper()->getEntityMetadata($query->getClassName());
         $reader       = new Reader($metadata, $query->getEntity());
@@ -96,6 +98,6 @@ class QueryManager extends AbstractManagerUtility
             $full_size = null;
         }
 
-        return new QueryResult($this->entity_manager, $query, $results, $full_size);
+        return new QueryResult($this->entity_manager, $query, $results, $full_size, $use_cache);
     }
 }

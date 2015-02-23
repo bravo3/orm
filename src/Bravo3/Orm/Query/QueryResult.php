@@ -38,13 +38,24 @@ class QueryResult implements \Countable, \Iterator, \ArrayAccess
      */
     protected $full_size;
 
-    public function __construct(EntityManager $entity_manager, QueryInterface $query, array $results, $full_size = null)
-    {
+    /**
+     * @var bool
+     */
+    protected $use_cache;
+
+    public function __construct(
+        EntityManager $entity_manager,
+        QueryInterface $query,
+        array $results,
+        $full_size = null,
+        $use_cache = true
+    ) {
         $this->entity_manager = $entity_manager;
         $this->query          = $query;
         $this->id_list        = $results;
         $this->iterator       = new \ArrayIterator($this->id_list);
         $this->full_size      = $full_size;
+        $this->use_cache      = (bool)$use_cache;
     }
 
     /**
@@ -112,7 +123,7 @@ class QueryResult implements \Countable, \Iterator, \ArrayAccess
      */
     private function hydrateEntity($id)
     {
-        $this->entities[$id] = $this->entity_manager->retrieve($this->query->getClassName(), $id);
+        $this->entities[$id] = $this->entity_manager->retrieve($this->query->getClassName(), $id, $this->use_cache);
         return $this;
     }
 
