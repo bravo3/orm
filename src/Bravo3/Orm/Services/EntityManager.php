@@ -78,6 +78,11 @@ class EntityManager
     protected $cache;
 
     /**
+     * @var bool
+     */
+    protected $maintenance_mode = false;
+
+    /**
      * Create a raw entity manager
      *
      * Do not construct an entity manager directly or it will lack access interceptors which are responsible for
@@ -521,5 +526,27 @@ class EntityManager
     public function getCache()
     {
         return $this->cache;
+    }
+
+    /**
+     * Get the state of the maintenance mode
+     *
+     * @return boolean
+     */
+    public function getMaintenanceMode()
+    {
+        return $this->maintenance_mode;
+    }
+
+    /**
+     * Enable or disable maintenance mode
+     *
+     * @param bool $enabled
+     * @return $this
+     */
+    public function setMaintenanceMode($enabled = true)
+    {
+        $this->maintenance_mode = $enabled;
+        return $this;
     }
 }

@@ -48,9 +48,9 @@ class RelationshipManager extends AbstractManagerUtility
     /**
      * Traverse the given list of relationships and delete them
      *
-     * @param Relationship[]  $relationships
-     * @param object $entity
-     * @param string $local_id
+     * @param Relationship[] $relationships
+     * @param object         $entity
+     * @param string         $local_id
      */
     private function deleteRelationshipsTraversal(array $relationships, $entity, $local_id)
     {
@@ -146,10 +146,11 @@ class RelationshipManager extends AbstractManagerUtility
             $key   = $this->getKeyScheme()->getRelationshipKey($relationship, $local_id);
             $value = $reader->getPropertyValue($relationship->getName());
 
+            // Skip relationship rules:
             // If the entity is not a proxy (i.e. a new entity) we still must allow for the scenario in which a new
             // entity is created over the top of an existing entity (same ID), as such, we still need to check every
             // relationship attached to the entity
-            if ($is_proxy) {
+            if (!$this->entity_manager->getMaintenanceMode() && $is_proxy) {
                 /** @var OrmProxyInterface $entity */
                 // Check if we can skip the update
                 if (!$entity->isRelativeModified($relationship->getName())) {
@@ -178,7 +179,7 @@ class RelationshipManager extends AbstractManagerUtility
             // This condition allows NEW (not a proxy) entities that have NOT set a relationship to inherit existing
             // relationships which could be useful if the relationship was set by a foreign entity
             // See: docs/RaceConditions.md
-            if ($is_proxy || $value) {
+            if ($is_proxy || $value || $this->entity_manager->getMaintenanceMode()) {
                 $this->persistForwardRelationship($relationship, $key, $value);
                 if (count($relationship->getSortableBy())) {
                     $this->persistForwardSortIndices($relationship, $local_id, $value);
@@ -269,6 +270,12 @@ class RelationshipManager extends AbstractManagerUtility
         list($to_remove, $to_add, $maintain) = $this->getRelationshipDeltas($key, $relationship, $value);
 
         $this->getDriver()->debugLog('@Setting inverse relationship: '.$key);
+
+        // When we're in maintenance mode, force the index to be built
+        if ($this->entity_manager->getMaintenanceMode()) {
+            $to_add = array_merge($to_add, $maintain);
+            $maintain = [];
+        }
 
         // Remove local from all foreigners no longer in the relationship
         foreach ($to_remove as $foreign_id) {
