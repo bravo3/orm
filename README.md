@@ -204,3 +204,11 @@ Known Issues
 ------------
 * Using traits in entities may cause issues with proxies when attempting to retrieve the entity
     * Caused by Zend MethodReflection claiming a comment is unterminated
+
+Change Log
+----------
+### 0.2.0
+* Added EntityManager::refresh()
+* The entity manager will now remember previously retrieved entities and return them instead of querying the database
+* Added $use_cache parameter to all `retrieve*()` and `*Query()` functions on the entity manager
+

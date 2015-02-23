@@ -15,6 +15,8 @@ use Bravo3\Orm\Serialisers\JsonSerialiser;
 use Bravo3\Orm\Serialisers\SerialiserMap;
 use Bravo3\Orm\Services\Aspect\CreateModifySubscriber;
 use Bravo3\Orm\Services\Aspect\EntityManagerInterceptorFactory;
+use Bravo3\Orm\Services\Cache\EntityCachingInterface;
+use Bravo3\Orm\Services\Cache\EphemeralEntityCache;
 use Bravo3\Orm\Services\Io\Reader;
 use Bravo3\Orm\Services\Io\Writer;
 use Bravo3\Orm\Traits\ProxyAwareTrait;
@@ -71,6 +73,11 @@ class EntityManager
     protected $config;
 
     /**
+     * @var EntityCachingInterface
+     */
+    protected $cache;
+
+    /**
      * Create a raw entity manager
      *
      * Do not construct an entity manager directly or it will lack access interceptors which are responsible for
@@ -78,23 +85,26 @@ class EntityManager
      *
      * @see EntityManager::build()
      *
-     * @param DriverInterface    $driver
-     * @param MapperInterface    $mapper
-     * @param SerialiserMap      $serialiser_map
-     * @param KeySchemeInterface $key_scheme
-     * @param Configuration      $configuration
+     * @param DriverInterface        $driver
+     * @param MapperInterface        $mapper
+     * @param SerialiserMap          $serialiser_map
+     * @param KeySchemeInterface     $key_scheme
+     * @param Configuration          $configuration
+     * @param EntityCachingInterface $cache
      */
     protected function __construct(
         DriverInterface $driver,
         MapperInterface $mapper,
         SerialiserMap $serialiser_map = null,
         KeySchemeInterface $key_scheme = null,
-        Configuration $configuration = null
+        Configuration $configuration = null,
+        EntityCachingInterface $cache = null
     ) {
         $this->driver     = $driver;
         $this->mapper     = $mapper;
         $this->key_scheme = $key_scheme ?: $driver->getPreferredKeyScheme();
         $this->config     = $configuration ?: new Configuration();
+        $this->cache      = $cache ?: new EphemeralEntityCache();
 
         if ($serialiser_map) {
             $this->serialiser_map = $serialiser_map;
@@ -117,11 +127,12 @@ class EntityManager
     /**
      * Create a new entity manager
      *
-     * @param DriverInterface    $driver
-     * @param MapperInterface    $mapper
-     * @param SerialiserMap      $serialiser_map
-     * @param KeySchemeInterface $key_scheme
-     * @param Configuration      $configuration
+     * @param DriverInterface        $driver
+     * @param MapperInterface        $mapper
+     * @param SerialiserMap          $serialiser_map
+     * @param KeySchemeInterface     $key_scheme
+     * @param Configuration          $configuration
+     * @param EntityCachingInterface $cache
      * @return EntityManager
      */
     public static function build(
@@ -129,7 +140,8 @@ class EntityManager
         MapperInterface $mapper,
         SerialiserMap $serialiser_map = null,
         KeySchemeInterface $key_scheme = null,
-        Configuration $configuration = null
+        Configuration $configuration = null,
+        EntityCachingInterface $cache = null
     ) {
         $em_conf    = $configuration ?: new Configuration();
         $proxy_conf = new \ProxyManager\Configuration();
@@ -139,7 +151,7 @@ class EntityManager
         $proxy_factory      = new AccessInterceptorValueHolderFactory($proxy_conf);
         $interceptor_factor = new EntityManagerInterceptorFactory();
 
-        $em    = new self($driver, $mapper, $serialiser_map, $key_scheme, $em_conf);
+        $em    = new self($driver, $mapper, $serialiser_map, $key_scheme, $em_conf, $cache);
         $proxy = $proxy_factory->createProxy(
             $em,
             $interceptor_factor->getPrefixInterceptors(),
@@ -253,6 +265,10 @@ class EntityManager
      */
     public function retrieve($class_name, $id, $use_cache = true)
     {
+        if ($use_cache && $this->cache->exists($class_name, $id)) {
+            return $this->cache->retrieve($class_name, $id);
+        }
+
         $metadata = $this->mapper->getEntityMetadata($class_name);
 
         $serialised_data = $this->driver->retrieve(
@@ -260,7 +276,10 @@ class EntityManager
         );
 
         $writer = new Writer($metadata, $serialised_data, $this);
-        return $writer->getProxy();
+        $entity = $writer->getProxy();
+        $this->cache->store($class_name, $id, $entity);
+
+        return $entity;
     }
 
     /**
@@ -333,6 +352,23 @@ class EntityManager
     public function sortedQuery(SortedQuery $query, $check_full_set_size = false, $use_cache = true)
     {
         return $this->getQueryManager()->sortedQuery($query, $check_full_set_size, $use_cache);
+    }
+
+    /**
+     * Will force a database update of an entity
+     *
+     * This will also convert a fresh entity to an OrmProxyInterface
+     *
+     * @param object $entity
+     * @return object
+     */
+    public function refresh(&$entity)
+    {
+        $metadata = $this->getMapper()->getEntityMetadata($entity);
+        $reader   = new Reader($metadata, $entity);
+
+        $entity = $this->retrieve($metadata->getClassName(), $reader->getId());
+        return $entity;
     }
 
     /**
@@ -463,5 +499,27 @@ class EntityManager
     {
         $this->config = $config;
         return $this;
+    }
+
+    /**
+     * Set caching service
+     *
+     * @param EntityCachingInterface $cache
+     * @return $this
+     */
+    public function setCache(EntityCachingInterface $cache)
+    {
+        $this->cache = $cache;
+        return $this;
+    }
+
+    /**
+     * Get caching service
+     *
+     * @return EntityCachingInterface
+     */
+    public function getCache()
+    {
+        return $this->cache;
     }
 }

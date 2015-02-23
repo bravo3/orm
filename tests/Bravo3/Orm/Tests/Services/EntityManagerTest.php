@@ -7,6 +7,7 @@ use Bravo3\Orm\Events\RetrieveEvent;
 use Bravo3\Orm\Exceptions\NotFoundException;
 use Bravo3\Orm\Proxy\OrmProxyInterface;
 use Bravo3\Orm\Tests\Entities\BadEntity;
+use Bravo3\Orm\Tests\Entities\Indexed\IndexedEntity;
 use Bravo3\Orm\Tests\Entities\Indexed\SluggedArticle;
 use Bravo3\Orm\Tests\Entities\ModifiedEntity;
 use Bravo3\Orm\Tests\Entities\OneToMany\Article;
@@ -42,6 +43,71 @@ class EntityManagerTest extends AbstractOrmTest
         $this->assertEquals('01/01/2015 12:15:03', $retrieved->getCreateTime()->format('d/m/Y H:i:s'));
         $this->assertSame(12.45, $retrieved->getPrice());
         $this->assertTrue($retrieved->getActive());
+    }
+
+    public function testRefresh()
+    {
+        $em = $this->getEntityManager();
+
+        $product = new Product();
+        $product->setId(222)->setName('Test Product')->setDescription("lorem ipsum");
+        $em->persist($product)->flush();
+
+        $r = $em->retrieve(Product::class, '222');
+        $r->setDescription('hello world');
+        $em->persist($r)->flush();
+
+        $this->assertEquals('lorem ipsum', $product->getDescription());
+        $this->assertFalse($product instanceof OrmProxyInterface);
+        $em->refresh($product);
+        $this->assertEquals('hello world', $product->getDescription());
+        $this->assertTrue($product instanceof OrmProxyInterface);
+    }
+
+    public function testCache()
+    {
+        $em = $this->getEntityManager();
+
+        $product = new Product();
+        $product->setId(212)->setName('Test Product')->setDescription("lorem ipsum");
+        $em->persist($product)->flush();
+
+        $r = $em->retrieve(Product::class, '212');
+        $r->setDescription('hello world');
+
+        $r1 = $em->retrieve(Product::class, '212');
+        $this->assertEquals('hello world', $r1->getDescription());
+
+        $r2 = $em->retrieve(Product::class, '212', false);
+        $this->assertEquals('lorem ipsum', $r2->getDescription());
+
+        $em->getCache()->purge(Product::class, '212');
+
+        $r3 = $em->retrieve(Product::class, '212');
+        $this->assertEquals('lorem ipsum', $r3->getDescription());
+    }
+
+    public function testCacheIndex()
+    {
+        $em = $this->getEntityManager();
+
+        $product = new IndexedEntity();
+        $product->setId1(212)->setId2('test')->setAlpha('index-test')->setBravo(888);
+        $em->persist($product)->flush();
+
+        $r = $em->retrieve(IndexedEntity::class, '212.test');
+        $r->setBravo(999);
+
+        $r1 = $em->retrieveByIndex(IndexedEntity::class, 'ab', 'index-test.888');
+        $this->assertEquals(999, $r1->getBravo());
+
+        $r2 = $em->retrieveByIndex(IndexedEntity::class, 'ab', 'index-test.888', false);
+        $this->assertEquals(888, $r2->getBravo());
+
+        $em->getCache()->purge(IndexedEntity::class, '212.test');
+
+        $r3 = $em->retrieveByIndex(IndexedEntity::class, 'ab', 'index-test.888');
+        $this->assertEquals(888, $r3->getBravo());
     }
 
     public function testDeleteRelationships()
