@@ -12,6 +12,10 @@ use Bravo3\Orm\Services\ScoreNormaliser;
 use Bravo3\Orm\Traits\DebugTrait;
 use Predis\Client;
 use Predis\Command\CommandInterface;
+use Predis\Command\KeyScan;
+use Predis\Connection\Aggregate\PredisCluster;
+use Predis\Connection\Aggregate\ReplicationInterface;
+use Predis\Connection\NodeConnectionInterface;
 use Predis\Pipeline\Pipeline;
 
 class RedisDriver implements DriverInterface
@@ -261,10 +265,29 @@ class RedisDriver implements DriverInterface
      */
     public function scan($key)
     {
-        $cursor  = 0;
-        $results = [];
+        $cursor     = 0;
+        $results    = [];
+        $connection = $this->client->getConnection();
+
         do {
-            $set     = $this->client->scan($cursor, ['MATCH' => $key]);
+            if ($connection instanceof ReplicationInterface) {
+                $slaves = $connection->getSlaves();
+                /** @var NodeConnectionInterface $slave */
+                $slave = $slaves[rand(0, count($slaves) - 1)];
+                $cmd   = new KeyScan();
+                $cmd->setArguments([$cursor, 'MATCH', $key]);
+                $set = $slave->executeCommand($cmd);
+            } elseif ($connection instanceof PredisCluster) {
+                $iterator = $connection->getIterator();
+                /** @var NodeConnectionInterface $node */
+                $node = $iterator->current();
+                $cmd  = new KeyScan();
+                $cmd->setArguments([$cursor, 'MATCH', $key]);
+                $set = $node->executeCommand($cmd);
+            } else {
+                $set = $this->client->scan($cursor, ['MATCH' => $key]);
+            }
+
             $cursor  = $set[0];
             $results = array_merge($results, $set[1]);
         } while ($cursor != 0);
