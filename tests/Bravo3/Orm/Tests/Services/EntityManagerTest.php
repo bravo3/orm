@@ -327,9 +327,4 @@ class EntityManagerTest extends AbstractOrmTest
         $leaves = $em->sortedQuery(new SortedQuery($owner, 'leaf', 'id'));
         $this->assertCount(0, $leaves);
     }
-
-    public function testRefsBreakingFormer()
-    {
-        // TODO: test that breaking relationships works via refs too
-    }
 }

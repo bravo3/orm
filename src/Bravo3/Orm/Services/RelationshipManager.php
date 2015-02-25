@@ -521,7 +521,6 @@ class RelationshipManager extends AbstractManagerUtility
      */
     private function breakFormerRelationship(Relationship $relationship, $source_id)
     {
-        // TODO: consider breaking by ref
         $key = $this->getKeyScheme()->getRelationshipKey($relationship, $source_id);
         $this->getDriver()->debugLog('Checking for breakable former relationship: '.$key);
         $old_value = $this->getDriver()->getSingleValueIndex($key);
