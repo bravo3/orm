@@ -6,6 +6,7 @@ use Bravo3\Orm\Events\PersistEvent;
 use Bravo3\Orm\Events\RetrieveEvent;
 use Bravo3\Orm\Exceptions\NotFoundException;
 use Bravo3\Orm\Proxy\OrmProxyInterface;
+use Bravo3\Orm\Query\SortedQuery;
 use Bravo3\Orm\Tests\Entities\BadEntity;
 use Bravo3\Orm\Tests\Entities\Indexed\IndexedEntity;
 use Bravo3\Orm\Tests\Entities\Indexed\SluggedArticle;
@@ -13,6 +14,8 @@ use Bravo3\Orm\Tests\Entities\ModifiedEntity;
 use Bravo3\Orm\Tests\Entities\OneToMany\Article;
 use Bravo3\Orm\Tests\Entities\OneToMany\Category;
 use Bravo3\Orm\Tests\Entities\Product;
+use Bravo3\Orm\Tests\Entities\Refs\Leaf;
+use Bravo3\Orm\Tests\Entities\Refs\Owner;
 use Bravo3\Orm\Tests\Resources\Enum;
 
 class EntityManagerTest extends AbstractOrmTest
@@ -165,7 +168,7 @@ class EntityManagerTest extends AbstractOrmTest
      */
     public function testTtl()
     {
-        $em     = $this->getEntityManager();
+        $em = $this->getEntityManager();
 
         $article = new Article();
         $article->setId(499)->setTitle('Cached Article');
@@ -281,5 +284,52 @@ class EntityManagerTest extends AbstractOrmTest
         /** @var Product $r_product */
         $r_product = $em->retrieve(self::ENTITY_PRODUCT, '701');
         $this->assertNull($r_product->getEnum());
+    }
+
+    public function testRefs()
+    {
+        $em      = $this->getEntityManager();
+        $client  = $this->getRawRedisClient();
+        $members = $client->smembers('ref:leaf:leaf1');
+        $this->assertCount(0, $members);
+
+        $leaf  = (new Leaf())->setId('leaf1');
+        $owner = (new Owner())->setId('owner1')->setLeaf([$leaf]);
+
+        $em->persist($leaf)->persist($owner)->flush();
+
+        $client  = $this->getRawRedisClient();
+        $members = $client->smembers('ref:leaf:leaf1');
+
+        $this->assertCount(1, $members);
+        $this->assertEquals('Bravo3\Orm\Tests\Entities\Refs\Owner:owner1:leaf', $members[0]);
+
+        $leaves = $em->sortedQuery(new SortedQuery($owner, 'leaf', 'id'));
+        $this->assertCount(1, $leaves);
+
+        $em->refresh($owner);
+        $em->refresh($leaf);
+
+        $leaf->setPublished(false);
+        $em->persist($leaf)->flush();
+
+        $leaves = $em->sortedQuery(new SortedQuery($owner, 'leaf', 'id'));
+        $this->assertCount(0, $leaves);
+
+        $leaf->setPublished(true);
+        $em->persist($leaf)->flush();
+
+        $leaves = $em->sortedQuery(new SortedQuery($owner, 'leaf', 'id'));
+        $this->assertCount(1, $leaves);
+
+        $em->delete($leaf)->flush();
+
+        $leaves = $em->sortedQuery(new SortedQuery($owner, 'leaf', 'id'));
+        $this->assertCount(0, $leaves);
+    }
+
+    public function testRefsBreakingFormer()
+    {
+        // TODO: test that breaking relationships works via refs too
     }
 }

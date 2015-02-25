@@ -1,9 +1,9 @@
 <?php
 namespace Bravo3\Orm\Drivers;
 
+use Bravo3\Orm\Drivers\Common\Ref;
 use Bravo3\Orm\Drivers\Common\SerialisedData;
 use Bravo3\Orm\KeySchemes\KeySchemeInterface;
-use Bravo3\Orm\Query\IndexedQuery;
 use Bravo3\Orm\Traits\DebugInterface;
 
 interface DriverInterface extends DebugInterface
@@ -75,7 +75,7 @@ interface DriverInterface extends DebugInterface
     /**
      * Get the value of a key-value index
      *
-     * If the key does not exist, null should be returned
+     * If the key does not exist, null should be returned.
      *
      * @param string $key
      * @return string|null
@@ -156,7 +156,7 @@ interface DriverInterface extends DebugInterface
     /**
      * Get a range of values in a sorted index
      *
-     * If $start/$stop are === null, they are assumed to be the start/end of the entire set
+     * If $start/$stop are === null, they are assumed to be the start/end of the entire set.
      *
      * @param string $key
      * @param bool   $reverse
@@ -173,4 +173,40 @@ interface DriverInterface extends DebugInterface
      * @return int
      */
     public function getSortedIndexSize($key);
+
+    /**
+     * Get all refs to an entity
+     *
+     * @param string $key Entity ref key
+     * @return Ref[]
+     */
+    public function getRefs($key);
+
+    /**
+     * Add a ref to an entity
+     *
+     * @param string $key Entity ref key
+     * @param Ref    $ref Reference to add
+     * @return void
+     */
+    public function addRef($key, Ref $ref);
+
+    /**
+     * Remove a ref from an entity
+     *
+     * If the reference does not exist, no action is taken.
+     *
+     * @param string $key Entity ref key
+     * @param Ref    $ref Reference to remove
+     * @return void
+     */
+    public function removeRef($key, Ref $ref);
+
+    /**
+     * Clear all refs from an entity (delete a ref list)
+     *
+     * @param string $key
+     * @return void
+     */
+    public function clearRefs($key);
 }

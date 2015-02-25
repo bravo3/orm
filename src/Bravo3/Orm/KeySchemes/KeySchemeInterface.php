@@ -16,6 +16,15 @@ interface KeySchemeInterface
     public function getEntityKey($table_name, $id);
 
     /**
+     * Return the key for an entity ref table
+     *
+     * @param string $table_name Table name
+     * @param string $id         Entity ID
+     * @return string
+     */
+    public function getEntityRefKey($table_name, $id);
+
+    /**
      * Get the key for a foreign relationship
      *
      * @param Relationship $relationship Relationship

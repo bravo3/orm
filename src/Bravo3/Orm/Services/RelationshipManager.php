@@ -1,9 +1,11 @@
 <?php
 namespace Bravo3\Orm\Services;
 
+use Bravo3\Orm\Drivers\Common\Ref;
 use Bravo3\Orm\Enum\RelationshipType;
 use Bravo3\Orm\Exceptions\InvalidArgumentException;
 use Bravo3\Orm\Exceptions\InvalidEntityException;
+use Bravo3\Orm\Exceptions\UnexpectedValueException;
 use Bravo3\Orm\Mappers\Metadata\Entity;
 use Bravo3\Orm\Mappers\Metadata\Relationship;
 use Bravo3\Orm\Proxy\OrmProxyInterface;
@@ -24,7 +26,8 @@ class RelationshipManager extends AbstractManagerUtility
     {
         /** @var $metadata Entity */
         list($metadata, $reader, $local_id) = $this->buildPrerequisites($entity, $metadata, $reader, $local_id);
-        $this->persistRelationshipsTraversal($metadata->getRelationships(), $entity, $reader, $local_id);
+        $this->persistRelationshipsTraversal($metadata, $entity, $reader, $local_id);
+        $this->updateRefs($metadata->getTableName(), $local_id, $reader);
         return $this;
     }
 
@@ -41,20 +44,22 @@ class RelationshipManager extends AbstractManagerUtility
     {
         /** @var $metadata Entity */
         list($metadata, , $local_id) = $this->buildPrerequisites($entity, $metadata, $reader, $local_id);
-        $this->deleteRelationshipsTraversal($metadata->getRelationships(), $entity, $local_id);
+        $this->deleteRelationshipsTraversal($metadata, $entity, $local_id);
+        $this->deleteRefs($metadata->getTableName(), $local_id);
         return $this;
     }
 
     /**
      * Traverse the given list of relationships and delete them
      *
-     * @param Relationship[] $relationships
-     * @param object         $entity
-     * @param string         $local_id
+     * @param Entity $metadata
+     * @param object $entity
+     * @param string $local_id
      */
-    private function deleteRelationshipsTraversal(array $relationships, $entity, $local_id)
+    private function deleteRelationshipsTraversal(Entity $metadata, $entity, $local_id)
     {
-        $is_proxy = $entity instanceof OrmProxyInterface;
+        $relationships = $metadata->getRelationships();
+        $is_proxy      = $entity instanceof OrmProxyInterface;
 
         // If we're a proxy and modified the ID, get the un-modified ID else the result could be unexpected
         if ($is_proxy) {
@@ -133,14 +138,15 @@ class RelationshipManager extends AbstractManagerUtility
     /**
      * Traverse an array of relationships and persist them
      *
-     * @param Relationship[] $relationships
-     * @param object         $entity
-     * @param Reader         $reader
-     * @param string         $local_id
+     * @param Entity $metadata
+     * @param object $entity
+     * @param Reader $reader
+     * @param string $local_id
      */
-    private function persistRelationshipsTraversal(array $relationships, $entity, Reader $reader, $local_id)
+    private function persistRelationshipsTraversal(Entity $metadata, $entity, Reader $reader, $local_id)
     {
-        $is_proxy = $entity instanceof OrmProxyInterface;
+        $relationships = $metadata->getRelationships();
+        $is_proxy      = $entity instanceof OrmProxyInterface;
 
         foreach ($relationships as $relationship) {
             $key   = $this->getKeyScheme()->getRelationshipKey($relationship, $local_id);
@@ -188,6 +194,8 @@ class RelationshipManager extends AbstractManagerUtility
                 // Modify the inversed relationships
                 if ($relationship->getInversedBy()) {
                     $this->persistInversedRelationship($relationship, $key, $value, $local_id, $reader);
+                } else {
+                    $this->persistRefs($relationship, $key, $value, $local_id);
                 }
             }
         }
@@ -273,7 +281,7 @@ class RelationshipManager extends AbstractManagerUtility
 
         // When we're in maintenance mode, force the index to be built
         if ($this->entity_manager->getMaintenanceMode()) {
-            $to_add = array_merge($to_add, $maintain);
+            $to_add   = array_merge($to_add, $maintain);
             $maintain = [];
         }
 
@@ -331,6 +339,106 @@ class RelationshipManager extends AbstractManagerUtility
         }
 
         $this->updateMaintainedRelationshipSortIndices($inverse_relationship, $maintain, $reader, $local_id);
+    }
+
+    /**
+     * Persist refs in-place of inverted indices
+     *
+     * @param Relationship    $relationship Forward relationship
+     * @param string          $key          Forward relationship key
+     * @param object|object[] $value        Forward relationship value
+     * @param string          $local_id     ID of local entity
+     */
+    private function persistRefs(Relationship $relationship, $key, $value, $local_id)
+    {
+        list($to_remove, $to_add, $maintain) = $this->getRelationshipDeltas($key, $relationship, $value);
+        $ref = new Ref($relationship->getSource(), $local_id, $relationship->getName());
+
+        // When we're in maintenance mode, force the ref table to be built
+        if ($this->entity_manager->getMaintenanceMode()) {
+            $to_add = array_merge($to_add, $maintain);
+        }
+
+        foreach ($to_remove as $foreign_id) {
+            $ref_key = $this->getKeyScheme()->getEntityRefKey($relationship->getTargetTable(), $foreign_id);
+            $this->getDriver()->removeRef($ref_key, $ref);
+        }
+
+        foreach ($to_add as $foreign_id) {
+            $ref_key = $this->getKeyScheme()->getEntityRefKey($relationship->getTargetTable(), $foreign_id);
+            $this->getDriver()->addRef($ref_key, $ref);
+        }
+    }
+
+    /**
+     * Update references to this entity (such as conditional sort indices)
+     *
+     * @param string $table_name Local table name
+     * @param string $local_id   Local entity ID
+     * @param Reader $reader     Local entity reader
+     */
+    private function updateRefs($table_name, $local_id, Reader $reader)
+    {
+        $ref_key = $this->getKeyScheme()->getEntityRefKey($table_name, $local_id);
+        $refs    = $this->getDriver()->getRefs($ref_key);
+        foreach ($refs as $ref) {
+            $relationship = $this->getMapper()
+                                 ->getEntityMetadata($ref->getSourceClass())
+                                 ->getRelationshipByName($ref->getRelationshipName());
+
+            if ($relationship->getSortableBy()) {
+                $this->updateMaintainedRelationshipSortIndices(
+                    $relationship,
+                    [$ref->getEntityId()],
+                    $reader,
+                    $local_id
+                );
+            }
+        }
+    }
+
+    /**
+     * Remove all references to this entity
+     *
+     * @param string $table_name
+     * @param string $local_id
+     */
+    private function deleteRefs($table_name, $local_id)
+    {
+        $ref_key = $this->getKeyScheme()->getEntityRefKey($table_name, $local_id);
+        $refs    = $this->getDriver()->getRefs($ref_key);
+        foreach ($refs as $ref) {
+            $relationship = $this->getMapper()
+                                 ->getEntityMetadata($ref->getSourceClass())
+                                 ->getRelationshipByName($ref->getRelationshipName());
+
+            $relationship_key = $this->getKeyScheme()->getRelationshipKey($relationship, $ref->getEntityId());
+
+            switch ($relationship->getRelationshipType()) {
+                default:
+                    throw new UnexpectedValueException(
+                        "Unknown relationship type: ".$relationship->getRelationshipType()->value()
+                    );
+                case RelationshipType::MANYTOMANY():
+                case RelationshipType::ONETOMANY():
+                    $this->getDriver()->removeMultiValueIndex($relationship_key, $local_id);
+                    break;
+                case RelationshipType::MANYTOONE():
+                case RelationshipType::ONETOONE():
+                    $this->getDriver()->clearSingleValueIndex($relationship_key, $local_id);
+                    break;
+            }
+
+            foreach ($relationship->getSortableBy() as $sortable) {
+                $sort_key = $this->getKeyScheme()->getSortIndexKey(
+                    $relationship,
+                    $sortable->getColumn(),
+                    $ref->getEntityId()
+                );
+                $this->getDriver()->removeSortedIndex($sort_key, $local_id);
+            }
+        }
+        $this->getDriver()->clearRefs($ref_key);
     }
 
     /**
@@ -413,6 +521,7 @@ class RelationshipManager extends AbstractManagerUtility
      */
     private function breakFormerRelationship(Relationship $relationship, $source_id)
     {
+        // TODO: consider breaking by ref
         $key = $this->getKeyScheme()->getRelationshipKey($relationship, $source_id);
         $this->getDriver()->debugLog('Checking for breakable former relationship: '.$key);
         $old_value = $this->getDriver()->getSingleValueIndex($key);

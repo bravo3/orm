@@ -1,6 +1,13 @@
 Important Notes
 ===============
 
+Illegal Characters
+------------------
+* Table names must only contain alpha-numeric characters: a-z, 0-9
+* Entity IDs must only contain alpha-numeric characters, hyphen and underscores: a-z, 0-9, -, _
+
+Entity IDs will inherit a period (.) as a delimiter when concatenating a multi-column ID.
+
 Serialisation
 -------------
 * Supported primitive data-types are 'int', 'decimal', 'string' and 'bool'
