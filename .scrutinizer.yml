@@ -12,6 +12,8 @@ tools:
             checkstyle:
                 enabled:              true
                 no_trailing_whitespace:  true
+                naming:
+                    enabled:              false
     php_code_sniffer:
         enabled:              true
         config:
