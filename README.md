@@ -27,6 +27,11 @@ Further Examples
 * [Multi-Column IDs](docs/Examples/MultiColumnId.md)
 * [Sorted Relationships](docs/Queries.md)
 
+Advanced/Internals
+------------------
+* [Refs](docs/Advanced/Refs.md)
+
+
 Example
 -------
 If you intend to use Redis, please include Predis in your `composer.json`:
@@ -207,6 +212,13 @@ Known Issues
 
 Change Log
 ----------
+### 0.3.0
+* Added ref tables to maintain non-reciprocated relationships
+* Added restrictions to table names and entity ID values
+* Changed sort index key names to include the relationship name (WARNING: will break existing data)
+    * Multiple relationships with the same sort-by columns would conflict
+    * Use the Maintenance#rebuild() function to repair sort indices
+
 ### 0.2.0
 * Added EntityManager::refresh()
 * The entity manager will now remember previously retrieved entities and return them instead of querying the database

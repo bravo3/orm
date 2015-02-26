@@ -7,6 +7,7 @@ use Bravo3\Orm\Tests\AbstractOrmTest;
 use Bravo3\Orm\Tests\Entities\NotAnEntity;
 use Bravo3\Orm\Tests\Entities\OneToOne\User;
 use Bravo3\Orm\Tests\Entities\Product;
+use Bravo3\Orm\Tests\Entities\VeryBadEntity;
 
 class AnnotationMetadataTest extends AbstractOrmTest
 {
@@ -54,6 +55,16 @@ class AnnotationMetadataTest extends AbstractOrmTest
     {
         $mapper = new AnnotationMapper();
         $entity = new NotAnEntity();
+        $mapper->getEntityMetadata($entity);
+    }
+
+    /**
+     * @expectedException \Bravo3\Orm\Exceptions\InvalidEntityException
+     */
+    public function testIllegalEntity()
+    {
+        $mapper = new AnnotationMapper();
+        $entity = new VeryBadEntity();
         $mapper->getEntityMetadata($entity);
     }
 }

@@ -11,6 +11,7 @@ class StandardKeyScheme implements KeySchemeInterface
 {
     const DEFAULT_DELIMITER = ':';
     const ENTITY_NAMESPACE  = 'doc';
+    const REF_NAMESPACE     = 'ref';
     const INDEX_NAMESPACE   = 'idx';
     const SORT_NAMESPACE    = 'srt';
 
@@ -56,7 +57,24 @@ class StandardKeyScheme implements KeySchemeInterface
     public function getEntityKey($table_name, $id)
     {
         // doc:article:54624
-        return static::ENTITY_NAMESPACE.$this->delimiter.$table_name.$this->delimiter.$id;
+        return static::ENTITY_NAMESPACE.$this->delimiter.
+               $table_name.$this->delimiter.
+               $id;
+    }
+
+    /**
+     * Return the key for an entity ref table
+     *
+     * @param string $table_name Table name
+     * @param string $id         Entity ID
+     * @return string
+     */
+    public function getEntityRefKey($table_name, $id)
+    {
+        // ref:article:54624
+        return static::REF_NAMESPACE.$this->delimiter.
+               $table_name.$this->delimiter.
+               $id;
     }
 
     /**
@@ -71,7 +89,8 @@ class StandardKeyScheme implements KeySchemeInterface
         // otm:user-address:89726:home_address
         return (string)$relationship->getRelationshipType()->value().$this->delimiter.
                $relationship->getSourceTable().'-'.$relationship->getTargetTable().$this->delimiter.
-               $id.$this->delimiter.$relationship->getName();
+               $id.$this->delimiter.
+               $relationship->getName();
     }
 
     /**
@@ -84,8 +103,10 @@ class StandardKeyScheme implements KeySchemeInterface
     public function getIndexKey(Index $index, $key)
     {
         // idx:article:slug:some-slug
-        return static::INDEX_NAMESPACE.$this->delimiter.$index->getTableName().$this->delimiter.$index->getName().
-               $this->delimiter.$key;
+        return static::INDEX_NAMESPACE.$this->delimiter.
+               $index->getTableName().$this->delimiter.
+               $index->getName().$this->delimiter.
+               $key;
     }
 
     /**
@@ -101,6 +122,8 @@ class StandardKeyScheme implements KeySchemeInterface
         // srt:category-article:89726:title
         return static::SORT_NAMESPACE.$this->delimiter.
                $relationship->getSourceTable().'-'.$relationship->getTargetTable().$this->delimiter.
-               $id.$this->delimiter.$sort_field;
+               $id.$this->delimiter.
+               $relationship->getName().$this->delimiter.
+               $sort_field;
     }
 }

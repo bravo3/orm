@@ -203,6 +203,8 @@ class EntityManager
         $reader     = new Reader($metadata, $entity);
         $id         = $reader->getId();
 
+        $this->validateId($id);
+
         if ($ttl) {
             $this->driver->debugLog("Caching ".$metadata->getTableName().' '.$id.' (TTL: '.$ttl.')');
         } else {
@@ -223,6 +225,18 @@ class EntityManager
         }
 
         return $this->getProxy();
+    }
+
+    /**
+     * Throw an exception if an ID contains illegal chars
+     *
+     * @param string $id
+     */
+    private function validateId($id)
+    {
+        if (!ctype_alnum(str_replace(['-', '.', '_'], '', $id))) {
+            throw new InvalidArgumentException("Entity ID '".$id."' contains illegal characters");
+        }
     }
 
     /**
@@ -248,6 +262,8 @@ class EntityManager
             $local_id = $reader->getId();
         }
 
+        $this->validateId($local_id);
+
         // Delete document
         $this->driver->delete(
             $this->key_scheme->getEntityKey($metadata->getTableName(), $local_id)
@@ -270,6 +286,8 @@ class EntityManager
      */
     public function retrieve($class_name, $id, $use_cache = true)
     {
+        $this->validateId($id);
+
         if ($use_cache && $this->cache->exists($class_name, $id)) {
             return $this->cache->retrieve($class_name, $id);
         }

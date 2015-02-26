@@ -2,6 +2,7 @@
 namespace Bravo3\Orm\Drivers\Redis;
 
 use Bravo3\Orm\Drivers\Common\Command;
+use Bravo3\Orm\Drivers\Common\Ref;
 use Bravo3\Orm\Drivers\Common\SerialisedData;
 use Bravo3\Orm\Drivers\Common\UnitOfWork;
 use Bravo3\Orm\Drivers\DriverInterface;
@@ -129,12 +130,14 @@ class RedisDriver implements DriverInterface
      */
     private function flushMulti()
     {
-        $this->client->pipeline(function ($pipe) {
-            /** @var Pipeline $pipe */
-            while ($command = $this->unit_of_work->getWork()) {
-                $pipe->executeCommand($this->getPredisCommand($command));
+        $this->client->pipeline(
+            function ($pipe) {
+                /** @var Pipeline $pipe */
+                while ($command = $this->unit_of_work->getWork()) {
+                    $pipe->executeCommand($this->getPredisCommand($command));
+                }
             }
-        });
+        );
     }
 
     /**
@@ -393,5 +396,63 @@ class RedisDriver implements DriverInterface
     public function getSortedIndexSize($key)
     {
         return $this->client->zcard($key);
+    }
+
+    /**
+     * Get all refs to an entity
+     *
+     * @param string $key Entity ref key
+     * @return Ref[]
+     */
+    public function getRefs($key)
+    {
+        $members = $this->client->smembers($key);
+        if (!$members) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($members as $member) {
+            $out[] = Ref::fromString($member);
+        }
+
+        return $out;
+    }
+
+    /**
+     * Add a ref to an entity
+     *
+     * @param string $key Entity ref key
+     * @param Ref    $ref Reference to add
+     * @return void
+     */
+    public function addRef($key, Ref $ref)
+    {
+        $this->unit_of_work->addCommand('SetAdd', [$key, (string)$ref]);
+    }
+
+    /**
+     * Remove a ref from an entity
+     *
+     * If the reference does not exist, no action is taken.
+     *
+     * @param string $key Entity ref key
+     * @param Ref    $ref Reference to remove
+     * @return void
+     */
+    public function removeRef($key, Ref $ref)
+    {
+        $this->unit_of_work->addCommand('SetRemove', [$key, (string)$ref]);
+    }
+
+    /**
+     * Clear all refs from an entity (delete a ref list)
+     *
+     * @param string $key
+     * @return void
+     */
+    public function clearRefs($key)
+    {
+        $this->unit_of_work->addCommand('KeyDelete', [$key]);
     }
 }

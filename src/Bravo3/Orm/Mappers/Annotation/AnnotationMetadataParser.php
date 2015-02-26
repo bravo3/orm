@@ -4,6 +4,7 @@ namespace Bravo3\Orm\Mappers\Annotation;
 use Bravo3\Orm\Annotations\AbstractRelationshipAnnotation;
 use Bravo3\Orm\Annotations\AbstractSortableRelationshipAnnotation;
 use Bravo3\Orm\Annotations\Column as ColumnAnnotation;
+use Bravo3\Orm\Annotations\Condition as ConditionAnnotation;
 use Bravo3\Orm\Annotations\Entity as EntityAnnotation;
 use Bravo3\Orm\Annotations\Index as IndexAnnotation;
 use Bravo3\Orm\Annotations\ManyToMany;
@@ -11,7 +12,6 @@ use Bravo3\Orm\Annotations\ManyToOne;
 use Bravo3\Orm\Annotations\OneToMany;
 use Bravo3\Orm\Annotations\OneToOne;
 use Bravo3\Orm\Annotations\Sortable as SortableAnnotation;
-use Bravo3\Orm\Annotations\Condition as ConditionAnnotation;
 use Bravo3\Orm\Enum\FieldType;
 use Bravo3\Orm\Enum\RelationshipType;
 use Bravo3\Orm\Exceptions\InvalidEntityException;
@@ -60,6 +60,17 @@ class AnnotationMetadataParser
         $this->class_name        = $class_name;
         $this->annotation_reader = new AnnotationReader();
         $this->reflection_obj    = new \ReflectionClass($this->class_name);
+        $this->validateTableName();
+    }
+
+    /**
+     * Throw an exception if the table name contains illegal chars
+     */
+    private function validateTableName()
+    {
+        if (!ctype_alnum(str_replace(['_'], '', $this->getTableName()))) {
+            throw new InvalidEntityException("Table name for '".$this->class_name."' contains an illegal characters.");
+        }
     }
 
     /**
