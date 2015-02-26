@@ -256,6 +256,10 @@ class EntityManager
         $metadata = $this->mapper->getEntityMetadata($entity);
         $reader   = new Reader($metadata, $entity);
 
+        // Force entity hydration
+        /** @noinspection PhpExpressionResultUnusedInspection */
+        isset($entity->_);
+
         if ($entity instanceof OrmProxyInterface) {
             $local_id = $entity->getOriginalId();
         } else {
