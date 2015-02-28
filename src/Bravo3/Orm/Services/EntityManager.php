@@ -234,7 +234,9 @@ class EntityManager
      */
     private function validateId($id)
     {
-        if (!ctype_alnum(str_replace(['-', '.', '_', '~', '/', '\\'], '', $id))) {
+        $id = str_replace(['-', '.', '_', '~', '/', '\\'], '', $id);
+
+        if ($id && !ctype_alnum($id)) {
             throw new InvalidArgumentException("Entity ID '".$id."' contains illegal characters");
         }
     }
