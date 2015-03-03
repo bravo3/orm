@@ -397,7 +397,7 @@ class EntityManager
         $metadata = $this->getMapper()->getEntityMetadata($entity);
         $reader   = new Reader($metadata, $entity);
 
-        $entity = $this->retrieve($metadata->getClassName(), $reader->getId());
+        $entity = $this->retrieve($metadata->getClassName(), $reader->getId(), false);
         return $entity;
     }
 
