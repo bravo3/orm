@@ -22,6 +22,7 @@ use Bravo3\Orm\Services\Io\Writer;
 use Bravo3\Orm\Traits\ProxyAwareTrait;
 use ProxyManager\Factory\AccessInterceptorValueHolderFactory;
 use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class EntityManager
 {
@@ -566,5 +567,27 @@ class EntityManager
     {
         $this->maintenance_mode = $enabled;
         return $this;
+    }
+
+    /**
+     * Add an event subscriber
+     *
+     * @param EventSubscriberInterface $subscriber
+     */
+    public function addSubscriber(EventSubscriberInterface $subscriber)
+    {
+        $this->getDispatcher()->addSubscriber($subscriber);
+    }
+
+    /**
+     * Add an event listener
+     *
+     * @param string   $event_name
+     * @param callable $listener
+     * @param int      $priority
+     */
+    public function addListener($event_name, $listener, $priority = 0)
+    {
+        $this->getDispatcher()->addListener($event_name, $listener, $priority);
     }
 }

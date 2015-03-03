@@ -1,7 +1,6 @@
 <?php
 namespace Bravo3\Orm\Mappers\Metadata;
 
-
 class Sortable
 {
     /**
