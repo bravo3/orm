@@ -25,8 +25,6 @@ class CharlieRevised
     protected $name;
 
     /**
-     * NB: Not inversed
-     *
      * @var DeltaRevised[]
      * @ManyToMany(target="Bravo3\Orm\Tests\Entities\Maintenance\DeltaRevised", inversed_by="charlie")
      */

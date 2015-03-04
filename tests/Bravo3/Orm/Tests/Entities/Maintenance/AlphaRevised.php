@@ -25,8 +25,6 @@ class AlphaRevised
     protected $name;
 
     /**
-     * NB: Not inversed
-     *
      * @var BravoRevised
      * @OneToOne(target="Bravo3\Orm\Tests\Entities\Maintenance\BravoRevised", inversed_by="alpha")
      */

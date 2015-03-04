@@ -311,7 +311,9 @@ class RelationshipManager extends AbstractManagerUtility
             if (RelationshipType::isMultiIndex($inverse_relationship->getRelationshipType())) {
                 $this->getDriver()->addMultiValueIndex($inverse_key, $local_id);
             } else {
-                $this->breakFormerRelationship($inverse_relationship, $foreign_id);
+                if (!$this->entity_manager->getMaintenanceMode()) {
+                    $this->breakFormerRelationship($inverse_relationship, $foreign_id);
+                }
                 $this->getDriver()->setSingleValueIndex($inverse_key, $local_id);
             }
 
