@@ -163,6 +163,42 @@ class EntityManagerTest extends AbstractOrmTest
         $this->assertFalse($client->exists('idx:slugged_article:name:slugged article'));
     }
 
+    public function testDeleteIndicesAndRelationships()
+    {
+        $em     = $this->getEntityManager();
+        $client = $this->getRawRedisClient();
+
+        $article1 = new Article();
+        $article1->setId(501)->setTitle('Article 501');
+
+        $category1 = new Category();
+        $category1->setId(532)->setName('Category 532');
+
+        $category1
+            ->addArticle($article1)
+        ;
+
+        $em
+            ->persist($category1)
+            ->persist($article1)
+            ->flush()
+        ;
+
+        $this->assertTrue($client->exists('doc:article:501'));
+        $this->assertEquals('532', $client->get('mto:article-category:501:canonical_category'));
+        $this->assertTrue(in_array('501', $client->smembers('otm:category-article:532:articles')));
+
+        /** @var Article $article */
+        $article = $em->retrieve(self::ENTITY_ARTICLE, 501);
+        $em->delete($article)->flush();
+
+        // Delete the Article 501
+        $em->delete($article)->flush();
+        $this->assertFalse($client->exists('doc:article:501'));
+        $this->assertFalse($client->exists('mto:article-category:501:canonical_category'));
+        $this->assertFalse(in_array('501', $client->smembers('otm:category-article:532:articles')));
+    }
+
     /**
      * @group integration
      */

@@ -24,7 +24,7 @@ class Article implements CreateModifyInterface
 
     /**
      * @var Category
-     * @Orm\ManyToOne(target="Bravo3\Orm\Tests\Entities\OneToMany\Category", inversed_by="articles")
+     * @Orm\ManyToOne(target="Bravo3\Orm\Tests\Entities\OneToMany\Category")
      */
     protected $canonical_category;
 
