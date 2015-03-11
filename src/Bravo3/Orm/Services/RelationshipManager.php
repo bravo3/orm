@@ -43,8 +43,8 @@ class RelationshipManager extends AbstractManagerUtility
     public function deleteRelationships($entity, Entity $metadata = null, Reader $reader = null, $local_id = null)
     {
         /** @var $metadata Entity */
-        list($metadata, , $local_id) = $this->buildPrerequisites($entity, $metadata, $reader, $local_id);
-        $this->deleteRelationshipsTraversal($metadata, $entity, $local_id);
+        list($metadata, $reader, $local_id) = $this->buildPrerequisites($entity, $metadata, $reader, $local_id);
+        $this->deleteRelationshipsTraversal($metadata, $entity, $reader, $local_id);
         $this->deleteRefs($metadata->getTableName(), $local_id);
         return $this;
     }
@@ -54,9 +54,10 @@ class RelationshipManager extends AbstractManagerUtility
      *
      * @param Entity $metadata
      * @param object $entity
+     * @param Reader $reader
      * @param string $local_id
      */
-    private function deleteRelationshipsTraversal(Entity $metadata, $entity, $local_id)
+    private function deleteRelationshipsTraversal(Entity $metadata, $entity, Reader $reader, $local_id)
     {
         $relationships = $metadata->getRelationships();
         $is_proxy      = $entity instanceof OrmProxyInterface;
@@ -71,6 +72,11 @@ class RelationshipManager extends AbstractManagerUtility
         foreach ($relationships as $relationship) {
             $inverse_relationship = $relationship->getInversedBy() ? $this->invertRelationship($relationship) : null;
             $forward_key          = $this->getKeyScheme()->getRelationshipKey($relationship, $local_id);
+            
+            if (!$inverse_relationship) {
+                $value = $reader->getPropertyValue($relationship->getName());
+                $this->deleteRelationshipRefs($relationship, $value, $local_id);
+            }
 
             // Delete relationship keys
             if (RelationshipType::isMultiIndex($relationship->getRelationshipType())) {
@@ -344,7 +350,7 @@ class RelationshipManager extends AbstractManagerUtility
     }
 
     /**
-     * Persist refs in-place of inverted indices
+     * Persist refs in place of inverted indices
      *
      * @param Relationship    $relationship Forward relationship
      * @param string          $key          Forward relationship key
@@ -369,6 +375,29 @@ class RelationshipManager extends AbstractManagerUtility
         foreach ($to_add as $foreign_id) {
             $ref_key = $this->getKeyScheme()->getEntityRefKey($relationship->getTargetTable(), $foreign_id);
             $this->getDriver()->addRef($ref_key, $ref);
+        }
+    }
+
+    /**
+     * Delete all references created by this relationship
+     *
+     * @param Relationship    $relationship Forward relationship
+     * @param object|object[] $value        Forward relationship value
+     * @param string          $local_id     ID of local entity
+     * @internal param string $key Forward relationship key
+     */
+    private function deleteRelationshipRefs(Relationship $relationship, $value, $local_id)
+    {
+        $ref = new Ref($relationship->getSource(), $local_id, $relationship->getName());
+
+        if (!is_array($value)) {
+            $value = [$value];
+        }
+
+        foreach ($value as $foreign_entity) {
+            $foreign_id = $this->getEntityId($foreign_entity);
+            $ref_key    = $this->getKeyScheme()->getEntityRefKey($relationship->getTargetTable(), $foreign_id);
+            $this->getDriver()->removeRef($ref_key, $ref);
         }
     }
 
@@ -427,7 +456,7 @@ class RelationshipManager extends AbstractManagerUtility
                     break;
                 case RelationshipType::MANYTOONE():
                 case RelationshipType::ONETOONE():
-                    $this->getDriver()->clearSingleValueIndex($relationship_key, $local_id);
+                    $this->getDriver()->clearSingleValueIndex($relationship_key);
                     break;
             }
 

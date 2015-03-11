@@ -13,6 +13,8 @@ use Bravo3\Orm\Tests\Entities\Indexed\SluggedArticle;
 use Bravo3\Orm\Tests\Entities\ModifiedEntity;
 use Bravo3\Orm\Tests\Entities\OneToMany\Article;
 use Bravo3\Orm\Tests\Entities\OneToMany\Category;
+use Bravo3\Orm\Tests\Entities\Refs\Article as RefArticle;
+use Bravo3\Orm\Tests\Entities\Refs\Category as RefCategory;
 use Bravo3\Orm\Tests\Entities\Product;
 use Bravo3\Orm\Tests\Entities\Refs\Leaf;
 use Bravo3\Orm\Tests\Entities\Refs\Owner;
@@ -161,6 +163,106 @@ class EntityManagerTest extends AbstractOrmTest
         $this->assertFalse($client->exists('doc:slugged_article:401'));
         $this->assertFalse($client->exists('idx:slugged_article:slug:some-slug'));
         $this->assertFalse($client->exists('idx:slugged_article:name:slugged article'));
+    }
+
+    /**
+     * Use ref's to delete non-inversed relationships
+     */
+    public function testDeleteIndicesAndRelationships()
+    {
+        $em     = $this->getEntityManager();
+        $client = $this->getRawRedisClient();
+
+        $article1 = new RefArticle();
+        $article1->setId(501)->setTitle('Ref Article 501');
+
+        $category1 = new RefCategory();
+        $category1->setId(532)->setName('Ref Category 532');
+
+        $article1->setCanonicalCategory($category1);
+
+        $em->persist($category1)->persist($article1)->flush();
+
+        $this->assertTrue($client->exists('doc:article:501'));
+        $this->assertEquals('532', $client->get('mto:article-category:501:canonical_category'));
+
+        // Not inversed:
+        $this->assertFalse(in_array('501', $client->smembers('otm:category-article:532:articles')));
+
+        // Ref exists:
+        $this->assertTrue($client->exists('ref:category:532'));
+        $this->assertTrue(
+            in_array(
+                'Bravo3\Orm\Tests\Entities\Refs\Article:501:canonical_category',
+                $client->smembers('ref:category:532')
+            )
+        );
+
+        /** @var RefArticle $article */
+        $article = $em->retrieve(RefArticle::class, 501);
+        $em->delete($article)->flush();
+
+        $this->assertFalse($client->exists('doc:article:501'));
+        $this->assertFalse($client->exists('mto:article-category:501:canonical_category'));
+        $this->assertFalse(in_array('501', $client->smembers('otm:category-article:532:articles')));
+
+        // Ref no longer needed:
+        $this->assertFalse(
+            in_array(
+                'Bravo3\Orm\Tests\Entities\Refs\Article:501:canonical_category',
+                $client->smembers('ref:category:532')
+            )
+        );
+    }
+
+    /**
+     * Same as above test, except we'll delete the category
+     */
+    public function testDeleteIndicesAndRelationshipsAlt()
+    {
+        $em     = $this->getEntityManager();
+        $client = $this->getRawRedisClient();
+
+        $article1 = new RefArticle();
+        $article1->setId(502)->setTitle('Ref Article 502');
+
+        $category1 = new RefCategory();
+        $category1->setId(533)->setName('Ref Category 533');
+
+        $article1->setCanonicalCategory($category1);
+
+        $em->persist($category1)->persist($article1)->flush();
+
+        $this->assertTrue($client->exists('doc:article:502'));
+        $this->assertEquals('533', $client->get('mto:article-category:502:canonical_category'));
+
+        // Not inversed:
+        $this->assertFalse(in_array('502', $client->smembers('otm:category-article:533:articles')));
+
+        // Ref exists:
+        $this->assertTrue($client->exists('ref:category:533'));
+        $this->assertTrue(
+            in_array(
+                'Bravo3\Orm\Tests\Entities\Refs\Article:502:canonical_category',
+                $client->smembers('ref:category:533')
+            )
+        );
+
+        /** @var RefCategory $category */
+        $category = $em->retrieve(RefCategory::class, 533);
+        $em->delete($category)->flush();
+
+        $this->assertFalse($client->exists('doc:category:533'));
+        $this->assertFalse($client->exists('mto:article-category:502:canonical_category'));
+        $this->assertFalse(in_array('502', $client->smembers('otm:category-article:533:articles')));
+
+        // Ref no longer needed:
+        $this->assertFalse(
+            in_array(
+                'Bravo3\Orm\Tests\Entities\Refs\Article:502:canonical_category',
+                $client->smembers('ref:category:533')
+            )
+        );
     }
 
     /**
