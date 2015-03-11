@@ -1,5 +1,5 @@
 <?php
-namespace Bravo3\Orm\Tests\Entities\OneToMany;
+namespace Bravo3\Orm\Tests\Entities\Refs;
 
 use Bravo3\Orm\Annotations as Orm;
 use Bravo3\Orm\Traits\CreateModifyInterface;
@@ -24,7 +24,7 @@ class Article implements CreateModifyInterface
 
     /**
      * @var Category
-     * @Orm\ManyToOne(target="Bravo3\Orm\Tests\Entities\OneToMany\Category", inversed_by="articles")
+     * @Orm\ManyToOne(target="Bravo3\Orm\Tests\Entities\Refs\Category")
      */
     protected $canonical_category;
 
