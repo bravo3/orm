@@ -72,7 +72,7 @@ class RelationshipManager extends AbstractManagerUtility
         foreach ($relationships as $relationship) {
             $inverse_relationship = $relationship->getInversedBy() ? $this->invertRelationship($relationship) : null;
             $forward_key          = $this->getKeyScheme()->getRelationshipKey($relationship, $local_id);
-            
+
             if (!$inverse_relationship) {
                 $value = $reader->getPropertyValue($relationship->getName());
                 $this->deleteRelationshipRefs($relationship, $value, $local_id);
@@ -395,9 +395,11 @@ class RelationshipManager extends AbstractManagerUtility
         }
 
         foreach ($value as $foreign_entity) {
-            $foreign_id = $this->getEntityId($foreign_entity);
-            $ref_key    = $this->getKeyScheme()->getEntityRefKey($relationship->getTargetTable(), $foreign_id);
-            $this->getDriver()->removeRef($ref_key, $ref);
+            if (null !== $foreign_entity) {
+                $foreign_id = $this->getEntityId($foreign_entity);
+                $ref_key    = $this->getKeyScheme()->getEntityRefKey($relationship->getTargetTable(), $foreign_id);
+                $this->getDriver()->removeRef($ref_key, $ref);
+            }
         }
     }
 
