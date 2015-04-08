@@ -96,11 +96,13 @@ class QueryResult implements \Countable, \Iterator, \ArrayAccess
      */
     public function getEntityById($id)
     {
-        if (!array_key_exists($id, $this->entities)) {
-            $this->hydrateEntity($id);
-        }
+        try {
+            if (!array_key_exists($id, $this->entities)) {
+                $this->hydrateEntity($id);
+            }
 
-        return $this->entities[$id];
+            return $this->entities[$id];
+        } catch (\Exception $e) {}
     }
 
     /**
@@ -124,6 +126,7 @@ class QueryResult implements \Countable, \Iterator, \ArrayAccess
     private function hydrateEntity($id)
     {
         $this->entities[$id] = $this->entity_manager->retrieve($this->query->getClassName(), $id, $this->use_cache);
+
         return $this;
     }
 
@@ -134,7 +137,12 @@ class QueryResult implements \Countable, \Iterator, \ArrayAccess
      */
     public function current()
     {
-        return $this->getEntityById($this->iterator->current());
+        if ($result = $this->getEntityById($this->iterator->current())) {
+            return $result;
+        } else {
+            $this->next();
+            return $this->current();
+        }
     }
 
     /**

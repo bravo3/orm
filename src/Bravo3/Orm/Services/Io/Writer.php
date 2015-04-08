@@ -177,7 +177,9 @@ class Writer
             $items = [];
             $ids   = $this->entity_manager->getDriver()->getMultiValueIndex($key);
             foreach ($ids as $id) {
-                $items[] = $this->entity_manager->retrieve($relative->getTarget(), $id);
+                try {
+                    $items[] = $this->entity_manager->retrieve($relative->getTarget(), $id);
+                } catch (\Exception $e) {}
             }
             $this->proxy->$setter($items);
         } else {
