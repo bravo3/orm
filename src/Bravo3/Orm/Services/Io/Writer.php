@@ -10,6 +10,8 @@ use Bravo3\Orm\Proxy\OrmProxyInterface;
 use Bravo3\Orm\Services\EntityManager;
 use ProxyManager\Configuration;
 use ProxyManager\Proxy\LazyLoadingInterface;
+use Bravo3\Orm\Exceptions\NotFoundException;
+use Bravo3\Orm\Events\HydrationExceptionEvent;
 
 /**
  * Responsible for creating lazy-loading proxy objects of serialised data, that will deserialise and look-up related
@@ -177,9 +179,16 @@ class Writer
             $items = [];
             $ids   = $this->entity_manager->getDriver()->getMultiValueIndex($key);
             foreach ($ids as $id) {
-                try {
+                if ($this->entity_manager->getConfig()->getHydrationExceptionsAsEvents()) {
+                    try {
+                        $items[] = $this->entity_manager->retrieve($relative->getTarget(), $id);
+                    } catch (NotFoundException $e) {
+                        $dispatcher = $this->entity_manager->getDispatcher();
+                        $dispatcher->dispatch('orm.hydration_exception', new HydrationExceptionEvent($e));
+                    }
+                } else {
                     $items[] = $this->entity_manager->retrieve($relative->getTarget(), $id);
-                } catch (\Exception $e) {}
+                }
             }
             $this->proxy->$setter($items);
         } else {
