@@ -108,6 +108,8 @@ class QueryResult implements \Countable, \Iterator, \ArrayAccess
             } catch (NotFoundException $e) {
                 $dispatcher = $this->entity_manager->getDispatcher();
                 $dispatcher->dispatch('orm.hydration_exception', new HydrationExceptionEvent($e));
+
+                return null;
             }
         } else {
             if (!array_key_exists($id, $this->entities)) {
