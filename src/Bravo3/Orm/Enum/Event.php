@@ -13,5 +13,5 @@ final class Event extends AbstractEnumeration
     const POST_RETRIEVE       = 'retrieve.post';
     const PRE_DELETE          = 'delete.pre';
     const POST_DELETE         = 'delete.post';
-    const HYDRATION_EXCEPTION = 'hydration_exception';
+    const HYDRATION_EXCEPTION = 'hydration.exception';
 }
