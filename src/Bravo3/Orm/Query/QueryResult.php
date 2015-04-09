@@ -94,7 +94,7 @@ class QueryResult implements \Countable, \Iterator, \ArrayAccess
      * Return an entity from the results by its ID
      *
      * @param string $id
-     * @return object
+     * @return object|null
      */
     public function getEntityById($id)
     {

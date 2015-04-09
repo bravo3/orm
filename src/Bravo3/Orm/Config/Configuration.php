@@ -13,7 +13,7 @@ class Configuration
      */
     protected $hydration_exceptions_as_events;
 
-    public function __construct($cache_dir = null, $hydration_exceptions_as_events = null)
+    public function __construct($cache_dir = null, $hydration_exceptions_as_events = false)
     {
         $this->cache_dir                      = $cache_dir;
         $this->hydration_exceptions_as_events = $hydration_exceptions_as_events;
@@ -42,7 +42,7 @@ class Configuration
     }
 
     /**
-     * getHydrationExceptionsAsEvents
+     * Get HydrationExceptionsAsEvents
      *
      * @return bool
      */
@@ -52,7 +52,7 @@ class Configuration
     }
 
     /**
-     * setHydrationExceptionsAsEvents
+     * Set HydrationExceptionsAsEvents
      *
      * @param bool
      * @return $this
