@@ -12,6 +12,7 @@ use ProxyManager\Configuration;
 use ProxyManager\Proxy\LazyLoadingInterface;
 use Bravo3\Orm\Exceptions\NotFoundException;
 use Bravo3\Orm\Events\HydrationExceptionEvent;
+use Bravo3\Orm\Enum\Event;
 
 /**
  * Responsible for creating lazy-loading proxy objects of serialised data, that will deserialise and look-up related
@@ -184,7 +185,7 @@ class Writer
                         $items[] = $this->entity_manager->retrieve($relative->getTarget(), $id);
                     } catch (NotFoundException $e) {
                         $dispatcher = $this->entity_manager->getDispatcher();
-                        $dispatcher->dispatch('orm.hydration_exception', new HydrationExceptionEvent($e));
+                        $dispatcher->dispatch(Event::HYDRATION_EXCEPTION, new HydrationExceptionEvent($e));
                     }
                 } else {
                     $items[] = $this->entity_manager->retrieve($relative->getTarget(), $id);
