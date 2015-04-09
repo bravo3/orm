@@ -2,6 +2,8 @@
 namespace Bravo3\Orm\Query;
 
 use Bravo3\Orm\Services\EntityManager;
+use Bravo3\Orm\Exceptions\NotFoundException;
+use Bravo3\Orm\Events\HydrationExceptionEvent;
 
 /**
  * QueryResult objects are a traversable lazy-loading entity holder
@@ -92,15 +94,30 @@ class QueryResult implements \Countable, \Iterator, \ArrayAccess
      * Return an entity from the results by its ID
      *
      * @param string $id
-     * @return object
+     * @return object|null
      */
     public function getEntityById($id)
     {
-        if (!array_key_exists($id, $this->entities)) {
-            $this->hydrateEntity($id);
-        }
+        if ($this->entity_manager->getConfig()->getHydrationExceptionsAsEvents()) {
+            try {
+                if (!array_key_exists($id, $this->entities)) {
+                    $this->hydrateEntity($id);
+                }
 
-        return $this->entities[$id];
+                return $this->entities[$id];
+            } catch (NotFoundException $e) {
+                $dispatcher = $this->entity_manager->getDispatcher();
+                $dispatcher->dispatch('orm.hydration_exception', new HydrationExceptionEvent($e));
+
+                return null;
+            }
+        } else {
+            if (!array_key_exists($id, $this->entities)) {
+                $this->hydrateEntity($id);
+            }
+
+            return $this->entities[$id];
+        }
     }
 
     /**
@@ -124,6 +141,7 @@ class QueryResult implements \Countable, \Iterator, \ArrayAccess
     private function hydrateEntity($id)
     {
         $this->entities[$id] = $this->entity_manager->retrieve($this->query->getClassName(), $id, $this->use_cache);
+
         return $this;
     }
 
@@ -134,7 +152,12 @@ class QueryResult implements \Countable, \Iterator, \ArrayAccess
      */
     public function current()
     {
-        return $this->getEntityById($this->iterator->current());
+        if ($result = $this->getEntityById($this->iterator->current())) {
+            return $result;
+        } else {
+            $this->next();
+            return $this->current();
+        }
     }
 
     /**
