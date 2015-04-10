@@ -4,6 +4,7 @@ namespace Bravo3\Orm\Query;
 use Bravo3\Orm\Services\EntityManager;
 use Bravo3\Orm\Exceptions\NotFoundException;
 use Bravo3\Orm\Events\HydrationExceptionEvent;
+use Bravo3\Orm\Enum\Event;
 
 /**
  * QueryResult objects are a traversable lazy-loading entity holder
@@ -107,7 +108,7 @@ class QueryResult implements \Countable, \Iterator, \ArrayAccess
                 return $this->entities[$id];
             } catch (NotFoundException $e) {
                 $dispatcher = $this->entity_manager->getDispatcher();
-                $dispatcher->dispatch('orm.hydration_exception', new HydrationExceptionEvent($e));
+                $dispatcher->dispatch(Event::HYDRATION_EXCEPTION, new HydrationExceptionEvent($e));
 
                 return null;
             }
