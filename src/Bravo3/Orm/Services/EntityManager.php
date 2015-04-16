@@ -330,6 +330,23 @@ class EntityManager
     }
 
     /**
+     * Retrieve an entity by ClassName + Id or create a new Instance
+     *
+     * @param string $class_name
+     * @param int    $id
+     * @param bool   $use_cache
+     * @return object
+     */
+    public static function retrieveEntityOrNew($class_name, $id, $use_cache = true)
+    {
+        try {
+            return $this->retrieve($class_name, $id, $use_cache);
+        } catch (NotFoundException $e) {
+            return new $class_name;
+        }
+    }
+
+    /**
      * Retrieve an entity by an index
      *
      * @param string $class_name
