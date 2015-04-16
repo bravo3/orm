@@ -195,7 +195,16 @@ class Writer
         } else {
             $id = $this->entity_manager->getDriver()->getSingleValueIndex($key);
             if ($id) {
-                $this->proxy->$setter($this->entity_manager->retrieve($relative->getTarget(), $id));
+                if ($this->entity_manager->getConfig()->getHydrationExceptionsAsEvents()) {
+                    try {
+                        $this->proxy->$setter($this->entity_manager->retrieve($relative->getTarget(), $id));
+                    } catch (NotFoundException $e) {
+                        $dispatcher = $this->entity_manager->getDispatcher();
+                        $dispatcher->dispatch(Event::HYDRATION_EXCEPTION, new HydrationExceptionEvent($e));
+                    }
+                } else {
+                    $items[] = $this->entity_manager->retrieve($relative->getTarget(), $id);
+                }
             }
         }
 
