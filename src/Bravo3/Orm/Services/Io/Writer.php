@@ -180,30 +180,30 @@ class Writer
             $items = [];
             $ids   = $this->entity_manager->getDriver()->getMultiValueIndex($key);
             foreach ($ids as $id) {
-                if ($this->entity_manager->getConfig()->getHydrationExceptionsAsEvents()) {
-                    try {
-                        $items[] = $this->entity_manager->retrieve($relative->getTarget(), $id);
-                    } catch (NotFoundException $e) {
+                try {
+                    $items[] = $this->entity_manager->retrieve($relative->getTarget(), $id);
+                } catch (NotFoundException $e) {
+                    if ($this->entity_manager->getConfig()->getHydrationExceptionsAsEvents()) {
                         $dispatcher = $this->entity_manager->getDispatcher();
                         $dispatcher->dispatch(Event::HYDRATION_EXCEPTION, new HydrationExceptionEvent($e));
+                    } else {
+                        throw $e;
                     }
-                } else {
-                    $items[] = $this->entity_manager->retrieve($relative->getTarget(), $id);
                 }
             }
             $this->proxy->$setter($items);
         } else {
             $id = $this->entity_manager->getDriver()->getSingleValueIndex($key);
             if ($id) {
-                if ($this->entity_manager->getConfig()->getHydrationExceptionsAsEvents()) {
-                    try {
-                        $this->proxy->$setter($this->entity_manager->retrieve($relative->getTarget(), $id));
-                    } catch (NotFoundException $e) {
+                try {
+                    $this->proxy->$setter($this->entity_manager->retrieve($relative->getTarget(), $id));
+                } catch (NotFoundException $e) {
+                    if ($this->entity_manager->getConfig()->getHydrationExceptionsAsEvents()) {
                         $dispatcher = $this->entity_manager->getDispatcher();
                         $dispatcher->dispatch(Event::HYDRATION_EXCEPTION, new HydrationExceptionEvent($e));
+                    } else {
+                        throw $e;
                     }
-                } else {
-                    $items[] = $this->entity_manager->retrieve($relative->getTarget(), $id);
                 }
             }
         }
