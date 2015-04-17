@@ -337,7 +337,7 @@ class EntityManager
      * @param bool   $use_cache
      * @return object
      */
-    public static function retrieveEntityOrNew($class_name, $id, $use_cache = true)
+    public function retrieveEntityOrNew($class_name, $id, $use_cache = true)
     {
         try {
             return $this->retrieve($class_name, $id, $use_cache);
