@@ -212,6 +212,10 @@ Known Issues
 
 Change Log
 ----------
+### 0.3.13
+* changed logic for retrieving entities. If nothing found (during writing) it will generate a new instance of the entity with the correct id
+* retrieving an entity with missing relatives will now return blank new instances of the relatives
+
 ### 0.3.0
 * Added ref tables to maintain non-reciprocated relationships
 * Added restrictions to table names and entity ID values

@@ -120,11 +120,8 @@ class HydrationExceptionEventsTest extends AbstractOrmTest
 
         $em->getConfig()->setHydrationExceptionsAsEvents(false);
     }
-
-    /**
-     * @expectedException Bravo3\Orm\Exceptions\NotFoundException
-     */
-    public function testWriterCanThrowNotFoundException()
+    
+    public function testWriterGenerateNewClassIfNothingFound()
     {
         $em = $this->getEntityManager();
 
@@ -147,16 +144,17 @@ class HydrationExceptionEventsTest extends AbstractOrmTest
 
         /**
          * Forcefully break the relationship within the ORM by manually
-         * removing a Recipe entity.
+         * removing an Article entity.
          */
         $this->getRawRedisClient()->del('doc:article:5002');
 
         $category = $em->retrieve(Category::class, 5000, false);
 
         /**
-         * A call to getArticles() is enough to trigger the exception
+         * A call to getArticles() still contains 3 items, new instance of doc:article:5002 
          */
         $results = $category->getArticles();
+	$this->assertCount(3, $results);
     }
 
     public function testWriterCanTriggerHydrationExceptionEvent()
@@ -170,6 +168,7 @@ class HydrationExceptionEventsTest extends AbstractOrmTest
          */
         $event_result = new \StdClass;
         $event_result->result = false;
+
         $em->getDispatcher()->addListener(Event::HYDRATION_EXCEPTION, function(HydrationExceptionEvent $event) use ($event_result) {
             $event_result->result = true;
         });
@@ -193,7 +192,7 @@ class HydrationExceptionEventsTest extends AbstractOrmTest
 
         /**
          * Forcefully break the relationship within the ORM by manually
-         * removing a Recipe entity.
+         * removing an Article entity.
          */
         $this->getRawRedisClient()->del('doc:article:5002');
 
@@ -204,7 +203,7 @@ class HydrationExceptionEventsTest extends AbstractOrmTest
         /**
          * A count here reveals only 2 results
          */
-        $this->assertCount(2, $results);
+        $this->assertCount(3, $results);
 
         $titles = '';
         foreach ($results as $result) {
@@ -217,9 +216,9 @@ class HydrationExceptionEventsTest extends AbstractOrmTest
         $this->assertEquals('AC', $titles);
 
         /**
-         * $event_result::result should now be true
+         * $event_result::result should now be false
          */
-        $this->assertTrue($event_result->result);
+        $this->assertFalse($event_result->result);
 
         $em->getConfig()->setHydrationExceptionsAsEvents(false);
     }
