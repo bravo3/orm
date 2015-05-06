@@ -92,4 +92,37 @@ class OneToOneTest extends AbstractOrmTest
         $this->assertTrue($r_address instanceof Address);
         $this->assertTrue($r_address instanceof OrmProxyInterface);
     }
+
+    public function testOneToOneBreaking()
+    {
+        $ed = new User();
+        $ed->setId(900)->setName('Ed');
+
+        $jane = new User();
+        $jane->setId(901)->setName('Jane');
+
+        $address = new Address();
+        $address->setId(951)->setStreet('Howzer-Black St');
+
+        $ed->setAddress($address);
+
+        $em = $this->getEntityManager();
+        $em->persist($address)->persist($ed)->persist($jane)->flush();
+
+        $em->refresh($ed);
+        $em->refresh($jane);
+        $em->refresh($address);
+
+        $jane->setAddress($address);
+        $em->persist($jane)->flush();
+
+        $em->refresh($ed);
+        $em->refresh($jane);
+        $em->refresh($address);
+
+        $this->assertNull($ed->getAddress());
+        $this->assertEquals('Howzer-Black St', $jane->getAddress()->getStreet());
+        $this->assertEquals('Jane', $address->getUser()->getName());
+    }
+
 }
