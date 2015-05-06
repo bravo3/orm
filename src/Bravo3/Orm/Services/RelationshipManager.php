@@ -568,7 +568,13 @@ class RelationshipManager extends AbstractManagerUtility
         // Relationship keys
         $inverse_key = $this->getKeyScheme()->getRelationshipKey($inverse_relationship, $old_value);
         $this->getDriver()->debugLog('@Breaking former relationship: '.$inverse_key);
-        $this->getDriver()->removeMultiValueIndex($inverse_key, $source_id);
+        if ($inverse_relationship->getRelationshipType() == RelationshipType::MANYTOONE() ||
+            $inverse_relationship->getRelationshipType() == RelationshipType::ONETOONE()
+        ) {
+            $this->getDriver()->clearSingleValueIndex($inverse_key);
+        } else {
+            $this->getDriver()->removeMultiValueIndex($inverse_key, $source_id);
+        }
 
         // Sorted index keys
         foreach ($inverse_relationship->getSortableBy() as $sortable) {

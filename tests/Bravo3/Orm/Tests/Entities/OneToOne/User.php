@@ -87,7 +87,7 @@ class User
      * @param Address $address
      * @return $this
      */
-    public function setAddress(Address $address)
+    public function setAddress(Address $address = null)
     {
         $this->address = $address;
         return $this;
