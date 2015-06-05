@@ -36,7 +36,7 @@ class RedisDriver implements DriverInterface
     /**
      * @var SentinelMonitor
      */
-    private $sentinel = null;
+    protected $sentinel = null;
 
     /**
      * @var ScoreNormaliser

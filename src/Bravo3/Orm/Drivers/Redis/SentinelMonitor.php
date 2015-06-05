@@ -17,11 +17,11 @@ class SentinelMonitor
      * If more than one sentinel server parameters are provided, the first
      * sentinel that connects will be used for retrival of information.
      *
-     * @param mixed $params
+     * @param array $params
      */
     public function __construct($connection_params = null)
     {
-        foreach($connection_params as $connection) {
+        foreach ($connection_params as $connection) {
             $this->client = new Client($connection);
 
             // Usable connection is found
@@ -40,8 +40,7 @@ class SentinelMonitor
      */
     public function findSentinels($master_name = 'mymaster')
     {
-        $sentinels = $this->client->sentinel('sentinels', $master_name);
-        return $sentinels;
+        return $this->client->sentinel('sentinels', $master_name);
     }
 
     /**
@@ -52,8 +51,10 @@ class SentinelMonitor
      */
     public function findMasters()
     {
-        $masters = $this->client->sentinel('masters');
-        return $this->getConnectionParams($masters, 'master');
+        return $this->getConnectionParams(
+            $this->client->sentinel('masters'),
+            'master'
+        );
     }
 
     /**
@@ -73,7 +74,6 @@ class SentinelMonitor
         if (null !== $master_name) {
             $slaves = $this->client->sentinel('slaves', $master_name);
         } else {
-
             // Find out slaves attached to each master instance
             foreach ($this->findMasters() as $master) {
                 $name = $master['name'];
@@ -131,7 +131,6 @@ class SentinelMonitor
     protected function validateConnection($host_info)
     {
         if ('master' === $host_info['role-reported']) {
-
             // Verify reported master is up based on parameters discovered
             // by sentinel
             $down_after_interval = (int) $host_info['down-after-milliseconds'];
@@ -141,7 +140,6 @@ class SentinelMonitor
                 return false;
             }
         } elseif ('slave' === $host_info['role-reported']) {
-
             // If slave status is disconnected ignore
             if (!(false === strpos($host_info['flags'], 'disconnected'))) {
                 return false;
