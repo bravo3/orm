@@ -64,6 +64,9 @@ class RedisDriver implements DriverInterface
                 $slaves = $this->sentinel->findSlaves();
             }
 
+            // List of possible connections to redis instances
+            $redis_connections = [];
+
             // Merge fixed connections to redis with discovered masters
             if (is_array($params)) {
                 $redis_connections = array_merge(
