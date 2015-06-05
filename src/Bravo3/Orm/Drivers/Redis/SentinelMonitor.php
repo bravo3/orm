@@ -143,7 +143,7 @@ class SentinelMonitor
         } elseif ('slave' === $host_info['role-reported']) {
 
             // If slave status is disconnected ignore
-            if (!(false === strpos($host_info['flags'], 'disconnected')) {
+            if (!(false === strpos($host_info['flags'], 'disconnected'))) {
                 return false;
             }
         }
