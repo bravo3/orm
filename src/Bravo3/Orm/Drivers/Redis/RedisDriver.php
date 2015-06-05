@@ -82,7 +82,7 @@ class RedisDriver implements DriverInterface
             if (!empty($masters) && !empty($slaves)) {
                 $options = array_merge($options ?: [], ['replication' => true]);
             }
-die(var_dump($redis_connections, $options));
+
             $this->client = new Client($redis_connections, $options);
         } else {
             $this->client = new Client($params, $options);
