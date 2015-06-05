@@ -34,6 +34,11 @@ class RedisDriver implements DriverInterface
     protected $client;
 
     /**
+     * @var SentinelMonitor
+     */
+    protected $sentinel = null;
+
+    /**
      * @var ScoreNormaliser
      */
     protected $score_normaliser = null;
@@ -43,10 +48,46 @@ class RedisDriver implements DriverInterface
      *
      * @param mixed $params
      * @param mixed $options
+     * @param mixed $sentinels
      */
-    public function __construct($params = null, $options = null)
+    public function __construct($params = null, $options = null, $sentinel_params = null)
     {
-        $this->client       = new Client($params, $options);
+        // If sentinel params are defined use sentinel to find out about
+        // redis servers.
+        if (!empty($sentinel_params)) {
+            $slaves = [];
+
+            $this->sentinel = new SentinelMonitor($sentinel_params);
+            $masters = $this->sentinel->findMasters();
+
+            if (!empty($masters)) {
+                $slaves = $this->sentinel->findSlaves();
+            }
+
+            // Merge fixed connections to redis with discovered masters
+            if (is_array($params)) {
+                $redis_connections = array_merge(
+                    $params,
+                    $masters
+                );
+            }
+
+            // Merge additional slaves discovered
+            $redis_connections = array_merge(
+                $redis_connections,
+                $slaves
+            );
+
+            // Enable replication if master and slave configuration found in Sentinel
+            if (!empty($masters) && !empty($slaves)) {
+                $options = array_merge($options ?: [], ['replication' => true]);
+            }
+
+            $this->client = new Client($redis_connections, $options);
+        } else {
+            $this->client = new Client($params, $options);
+        }
+
         $this->unit_of_work = new UnitOfWork();
     }
 
