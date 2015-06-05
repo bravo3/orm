@@ -131,10 +131,19 @@ class SentinelMonitor
     protected function validateConnection($host_info)
     {
         if ('master' === $host_info['role-reported']) {
+
+            // Verify reported master is up based on parameters discovered
+            // by sentinel
             $down_after_interval = (int) $host_info['down-after-milliseconds'];
             $last_ok_since = (int) $host_info['last-ok-ping-reply'];
 
             if ($last_ok_since > $down_after_interval) {
+                return false;
+            }
+        } elseif ('slave' === $host_info['role-reported']) {
+
+            // If slave status is disconnected ignore
+            if (!(false === strpos($host_info['flags'], 'disconnected')) {
                 return false;
             }
         }

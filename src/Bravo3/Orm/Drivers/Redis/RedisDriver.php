@@ -64,8 +64,17 @@ class RedisDriver implements DriverInterface
                 $slaves = $this->sentinel->findSlaves();
             }
 
-            $params = array_merge(
-                $masters,
+            // Merge fixed connections to redis with discovered masters
+            if (is_array($params)) {
+                $redis_connections = array_merge(
+                    $params,
+                    $masters
+                );
+            }
+
+            // Merge additional slaves discovered
+            $redis_connections = array_merge(
+                $redis_connections,
                 $slaves
             );
 
@@ -73,8 +82,8 @@ class RedisDriver implements DriverInterface
             if (!empty($masters) && !empty($slaves)) {
                 $options = array_merge($options ?: [], ['replication' => true]);
             }
-
-            $this->client = new Client($params, $options);
+die(var_dump($redis_connections, $options));
+            $this->client = new Client($redis_connections, $options);
         } else {
             $this->client = new Client($params, $options);
         }
