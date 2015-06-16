@@ -140,8 +140,20 @@ class SentinelMonitor
                 return false;
             }
         } elseif ('slave' === $host_info['role-reported']) {
+
             // If slave status is disconnected ignore
             if (!(false === strpos($host_info['flags'], 'disconnected'))) {
+                return false;
+            }
+
+            // If slave is subjectively down ignore
+            // Reference: http://redis.io/topics/sentinel#pubsub-messages
+            if (!(false === strpos($host_info['flags'], 's_down'))) {
+                return false;
+            }
+
+            // If slave is objectively down ignore
+            if (!(false === strpos($host_info['flags'], 'o_down'))) {
                 return false;
             }
         }
