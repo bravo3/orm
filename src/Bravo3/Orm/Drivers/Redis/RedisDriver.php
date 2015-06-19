@@ -64,7 +64,7 @@ class RedisDriver implements DriverInterface
                 $slaves = $this->sentinel->findSlaves();
             }
 
-            // Initialise redis connections array
+            // List of possible connections to redis instances
             $redis_connections = [];
 
             // Merge fixed connections to redis with discovered masters
@@ -81,9 +81,12 @@ class RedisDriver implements DriverInterface
                 $slaves
             );
 
-            // Enable replication if master and slave configuration found in Sentinel
-            if (!empty($masters) && !empty($slaves)) {
-                $options = array_merge($options ?: [], ['replication' => true]);
+            // Enable replication if slave can be found within the Redis configuration
+            foreach ($redis_connections as $connection) {
+                if (isset($connection['alias']) && 'slave' === $connection['alias']) {
+                    $options = array_merge($options ?: [], ['replication' => true]);
+                    break;
+                }
             }
 
             $this->client = new Client($redis_connections, $options);
