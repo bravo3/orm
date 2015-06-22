@@ -48,7 +48,7 @@ class RedisDriver implements DriverInterface
      *
      * @param mixed $params
      * @param mixed $options
-     * @param mixed $sentinels
+     * @param mixed $sentinel_params
      */
     public function __construct($params = null, $options = null, $sentinel_params = null)
     {

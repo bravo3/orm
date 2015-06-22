@@ -17,7 +17,7 @@ class SentinelMonitor
      * If more than one sentinel server parameters are provided, the first
      * sentinel that connects will be used for retrival of information.
      *
-     * @param array $params
+     * @param mixed $connection_params
      */
     public function __construct($connection_params = null)
     {
