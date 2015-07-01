@@ -7,6 +7,7 @@ use Bravo3\Orm\Annotations\Column as ColumnAnnotation;
 use Bravo3\Orm\Annotations\Condition as ConditionAnnotation;
 use Bravo3\Orm\Annotations\Entity as EntityAnnotation;
 use Bravo3\Orm\Annotations\Index as IndexAnnotation;
+use Bravo3\Orm\Annotations\Sortable as IndexSortable;
 use Bravo3\Orm\Annotations\ManyToMany;
 use Bravo3\Orm\Annotations\ManyToOne;
 use Bravo3\Orm\Annotations\OneToMany;
@@ -28,12 +29,16 @@ use Doctrine\Common\Inflector\Inflector;
 class AnnotationMetadataParser
 {
     const ENTITY_ANNOTATION = 'Bravo3\Orm\Annotations\Entity';
-    const ID_ANNOTATION     = 'Bravo3\Orm\Annotations\Id';
+    const ID_ANNOTATION = 'Bravo3\Orm\Annotations\Id';
     const COLUMN_ANNOTATION = 'Bravo3\Orm\Annotations\Column';
-    const OTO_ANNOTATION    = 'Bravo3\Orm\Annotations\OneToOne';
-    const OTM_ANNOTATION    = 'Bravo3\Orm\Annotations\OneToMany';
-    const MTO_ANNOTATION    = 'Bravo3\Orm\Annotations\ManyToOne';
-    const MTM_ANNOTATION    = 'Bravo3\Orm\Annotations\ManyToMany';
+    const OTO_ANNOTATION = 'Bravo3\Orm\Annotations\OneToOne';
+    const OTM_ANNOTATION = 'Bravo3\Orm\Annotations\OneToMany';
+    const MTO_ANNOTATION = 'Bravo3\Orm\Annotations\ManyToOne';
+    const MTM_ANNOTATION = 'Bravo3\Orm\Annotations\ManyToMany';
+    const ERR_UNKNOWN_CONDITION = "Unknown condition type, must be a Condition object";
+    const ERR_UNKNOWN_SORTABLE = "Unknown sortable type, must be a string or Sortable object";
+    const ERR_CONDITION_CONFLICT = "A condition cannot be tested against both a 'column' and a 'method'";
+    const ERR_CONDITION_PREREQUISITES = "A condition must define either a 'column' or a 'method' to test against";
 
     /**
      * @var AnnotationReader
@@ -196,14 +201,14 @@ class AnnotationMetadataParser
                                 $condition->comparison
                             );
                         } else {
-                            throw new UnexpectedValueException("Unknown condition type, must be a Condition object");
+                            throw new UnexpectedValueException(self::ERR_UNKNOWN_CONDITION);
                         }
                     }
-                    $sortables[] = new Sortable($sortable->column, $conditions);
+                    $sortables[] = new Sortable($sortable->column, $conditions, $sortable->name);
                 } elseif (is_string($sortable)) {
                     $sortables[] = new Sortable($sortable);
                 } else {
-                    throw new UnexpectedValueException("Unknown sortable type, must be a string or Sortable object");
+                    throw new UnexpectedValueException(self::ERR_UNKNOWN_SORTABLE);
                 }
             }
             $relationship->setSortableBy($sortables);
@@ -220,12 +225,12 @@ class AnnotationMetadataParser
     private function testConditionAnnotation(ConditionAnnotation $condition)
     {
         if ($condition->column && $condition->method) {
-            throw new UnexpectedValueException("A condition cannot be tested against both a 'column' and a 'method'");
+            throw new UnexpectedValueException(self::ERR_CONDITION_CONFLICT);
         }
 
         if (!$condition->column && !$condition->method) {
             throw new UnexpectedValueException(
-                "A condition must define either a 'column' or a 'method' to test against"
+                self::ERR_CONDITION_PREREQUISITES
             );
         }
     }
@@ -270,6 +275,47 @@ class AnnotationMetadataParser
     }
 
     /**
+     * Get table sortables
+     *
+     * @return Sortable[]
+     */
+    public function getSortables()
+    {
+        $sortables            = [];
+        $annotation_sortables = $this->getEntityAnnotation()->sortable_by;
+
+        foreach ($annotation_sortables as $sortable) {
+            $conditions = [];
+
+            if ($sortable instanceof SortableAnnotation) {
+                if ($sortable->conditions) {
+                    foreach ($sortable->conditions as $condition) {
+                        if ($condition instanceof ConditionAnnotation) {
+                            $this->testConditionAnnotation($condition);
+
+                            $conditions[] = new Condition(
+                                $condition->column,
+                                $condition->method,
+                                $condition->value,
+                                $condition->comparison
+                            );
+                        } else {
+                            throw new UnexpectedValueException(self::ERR_UNKNOWN_CONDITION);
+                        }
+                    }
+                }
+                $sortables[] = new Sortable($sortable->column, $conditions, $sortable->name);
+            } elseif (is_string($sortable)) {
+                $sortables[] = new Sortable($sortable);
+            } else {
+                throw new UnexpectedValueException(self::ERR_UNKNOWN_SORTABLE);
+            }
+        }
+
+        return $sortables;
+    }
+
+    /**
      * Get the Entity metadata object
      *
      * @return Entity
@@ -280,6 +326,7 @@ class AnnotationMetadataParser
         $entity->setColumns($this->getColumns());
         $entity->setRelationships($this->getRelationships());
         $entity->setIndices($this->getIndices());
+        $entity->setSortables($this->getSortables());
         return $entity;
     }
 
@@ -292,8 +339,8 @@ class AnnotationMetadataParser
     {
         if ($this->entity_annotation === null) {
             /** @var EntityAnnotation $entity */
-            $this->entity_annotation =
-                $this->annotation_reader->getClassAnnotation($this->reflection_obj, self::ENTITY_ANNOTATION);
+            $this->entity_annotation
+                = $this->annotation_reader->getClassAnnotation($this->reflection_obj, self::ENTITY_ANNOTATION);
 
             if (!$this->entity_annotation) {
                 throw new InvalidEntityException(

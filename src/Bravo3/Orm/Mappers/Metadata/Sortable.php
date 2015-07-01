@@ -6,6 +6,11 @@ class Sortable
     /**
      * @var string
      */
+    protected $name;
+
+    /**
+     * @var string
+     */
     protected $column;
 
     /**
@@ -13,8 +18,9 @@ class Sortable
      */
     protected $conditions;
 
-    public function __construct($column, array $conditions = [])
+    public function __construct($column, array $conditions = [], $name = null)
     {
+        $this->name       = $name ?: $column;
         $this->column     = $column;
         $this->conditions = $conditions;
     }
@@ -72,6 +78,28 @@ class Sortable
     public function addCondition(Condition $condition)
     {
         $this->conditions[] = $condition;
+        return $this;
+    }
+
+    /**
+     * Get Name
+     *
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    /**
+     * Set Name
+     *
+     * @param string $name
+     * @return $this
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
         return $this;
     }
 }

@@ -10,6 +10,11 @@ class Sortable
     /**
      * @var string
      */
+    public $name = null;
+
+    /**
+     * @var string
+     */
     public $column;
 
     /**

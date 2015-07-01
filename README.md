@@ -212,9 +212,13 @@ Known Issues
 
 Change Log
 ----------
+### 0.4.3
+* Added the ability to perform sorted, conditional queries on all items in a table
+* Added the ability to name sorted queries, allowing different configurations of conditions on the same column
+
 ### 0.3.13
-* changed logic for retrieving entities. If nothing found (during writing) it will generate a new instance of the entity with the correct id
-* retrieving an entity with missing relatives will now return blank new instances of the relatives
+* Changed logic for retrieving entities. If nothing found (during writing) it will generate a new instance of the entity with the correct id
+* Retrieving an entity with missing relatives will now return blank new instances of the relatives
 
 ### 0.3.0
 * Added ref tables to maintain non-reciprocated relationships
