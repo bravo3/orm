@@ -51,6 +51,9 @@ class ConditionalTest extends AbstractOrmTest
         $articles = $em->sortedQuery(new SortedQuery($category, 'articles', 'last_modified'));
         $this->assertCount(4, $articles);
 
+        $articles = $em->sortedQuery(new SortedQuery($category, 'articles', 'last_modified_all'));
+        $this->assertCount(10, $articles);
+
         $articles = $em->sortedQuery(new SortedQuery($category, 'articles', 'id'));
         $this->assertCount(11, $articles);
 

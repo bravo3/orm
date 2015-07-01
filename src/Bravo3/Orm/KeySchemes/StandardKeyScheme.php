@@ -126,4 +126,19 @@ class StandardKeyScheme implements KeySchemeInterface
                $relationship->getName().$this->delimiter.
                $sort_field;
     }
+
+    /**
+     * Get the key for a sort index on a table
+     *
+     * @param string $table_name Name of table containing sorted entity list
+     * @param string $sort_field Sortable field on the table
+     * @return string
+     */
+    public function getTableSortKey($table_name, $sort_field)
+    {
+        // srt:category:title
+        return static::SORT_NAMESPACE.$this->delimiter.
+               $table_name.$this->delimiter.
+               $sort_field;
+    }
 }

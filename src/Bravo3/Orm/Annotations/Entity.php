@@ -16,4 +16,9 @@ class Entity
      * @var array
      */
     public $indices = [];
+
+    /**
+     * @var array
+     */
+    public $sortable_by = [];
 }

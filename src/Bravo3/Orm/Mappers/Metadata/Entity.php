@@ -34,6 +34,11 @@ class Entity
     protected $indices = [];
 
     /**
+     * @var Sortable[]
+     */
+    protected $sortables = [];
+
+    /**
      * Used to lookup the property that matches a getter/setter function
      *
      * @var array
@@ -309,5 +314,56 @@ class Entity
         }
 
         return null;
+    }
+
+    /**
+     * Get Sortables
+     *
+     * @return Sortable[]
+     */
+    public function getSortables()
+    {
+        return $this->sortables;
+    }
+
+    /**
+     * Set Sortables
+     *
+     * @param Sortable[] $sortables
+     * @return $this
+     */
+    public function setSortables(array $sortables)
+    {
+        $this->sortables = $sortables;
+        return $this;
+    }
+
+    /**
+     * Get a table sortable by name
+     *
+     * @param string $name
+     * @return Sortable|null
+     */
+    public function getSortableByName($name)
+    {
+        foreach ($this->sortables as $sortable) {
+            if ($sortable->getName() == $name) {
+                return $sortable;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Add a sortable to the table metadata
+     *
+     * @param Sortable $sortable
+     * @return $this
+     */
+    public function addSortable(Sortable $sortable)
+    {
+        $this->sortables[] = $sortable;
+        return $this;
     }
 }

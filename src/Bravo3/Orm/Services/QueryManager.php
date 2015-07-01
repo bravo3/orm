@@ -3,6 +3,7 @@ namespace Bravo3\Orm\Services;
 
 use Bravo3\Orm\Enum\Direction;
 use Bravo3\Orm\Exceptions\InvalidArgumentException;
+use Bravo3\Orm\Mappers\Metadata\Entity;
 use Bravo3\Orm\Query\IndexedQuery;
 use Bravo3\Orm\Query\QueryResult;
 use Bravo3\Orm\Query\SortedQuery;
@@ -71,17 +72,24 @@ class QueryManager extends AbstractManagerUtility
      */
     public function sortedQuery(SortedQuery $query, $check_full_set_size = false, $use_cache = true)
     {
-        $metadata     = $this->getMapper()->getEntityMetadata($query->getClassName());
-        $reader       = new Reader($metadata, $query->getEntity());
-        $relationship = $metadata->getRelationshipByName($query->getRelationshipName());
+        $metadata = $this->getMapper()->getEntityMetadata($query->getClassName());
 
-        if (!$relationship) {
-            throw new InvalidArgumentException('Relationship "'.$query->getRelationshipName().'" does not exist');
+        if ($query->getRelationshipName()) {
+            // Entity relationship based query
+            $reader       = new Reader($metadata, $query->getEntity());
+            $relationship = $metadata->getRelationshipByName($query->getRelationshipName());
+
+            if (!$relationship) {
+                throw new InvalidArgumentException('Relationship "'.$query->getRelationshipName().'" does not exist');
+            }
+
+            // Important, else the QueryResult class will try to hydrate the wrong entity
+            $query->setClassName($relationship->getTarget());
+            $key = $this->getKeyScheme()->getSortIndexKey($relationship, $query->getSortBy(), $reader->getId());
+        } else {
+            // Table based query
+            $key = $this->getKeyScheme()->getTableSortKey($metadata->getTableName(), $query->getSortBy());
         }
-
-        // Important, else the QueryResult class will try to hydrate the wrong entity
-        $query->setClassName($relationship->getTarget());
-        $key = $this->getKeyScheme()->getSortIndexKey($relationship, $query->getSortBy(), $reader->getId());
 
         $results = $this->getDriver()->getSortedIndex(
             $key,
@@ -99,5 +107,72 @@ class QueryManager extends AbstractManagerUtility
         }
 
         return new QueryResult($this->entity_manager, $query, $results, $full_size, $use_cache);
+    }
+
+    /**
+     * Persist entity indices
+     *
+     * @param object $entity   Local entity object
+     * @param Entity $metadata Optionally provide entity metadata to prevent recalculation
+     * @param Reader $reader   Optionally provide the entity reader
+     * @param string $local_id Optionally provide the local entity ID to prevent recalculation
+     * @return $this
+     */
+    public function persistTableQueries($entity, Entity $metadata = null, Reader $reader = null, $local_id = null)
+    {
+        /** @var $metadata Entity */
+        list($metadata, $reader, $local_id) = $this->buildPrerequisites($entity, $metadata, $reader, $local_id);
+
+        foreach ($metadata->getSortables() as $sortable) {
+            $key = $this->getKeyScheme()->getTableSortKey($metadata->getTableName(), $sortable->getName());
+
+            // Test conditions
+            $pass = true;
+            foreach ($sortable->getConditions() as $condition) {
+                if ($condition->getColumn()) {
+                    if (!$condition->test($reader->getPropertyValue($condition->getColumn()))) {
+                        $pass = false;
+                        break;
+                    }
+                } elseif ($condition->getMethod()) {
+                    if (!$condition->test($reader->getMethodValue($condition->getMethod()))) {
+                        $pass = false;
+                        break;
+                    }
+                }
+            }
+
+            if ($pass) {
+                // Conditions met, add the index
+                $this->getDriver()->addSortedIndex($key, $reader->getPropertyValue($sortable->getColumn()), $local_id);
+            } else {
+                // Conditions failed, remove the index
+                $this->getDriver()->removeSortedIndex($key, $local_id);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * Persist entity indices
+     *
+     * @param object $entity   Local entity object
+     * @param Entity $metadata Optionally provide entity metadata to prevent recalculation
+     * @param Reader $reader   Optionally provide the entity reader
+     * @param string $local_id Optionally provide the local entity ID to prevent recalculation
+     * @return $this
+     */
+    public function deleteTableQueries($entity, Entity $metadata = null, Reader $reader = null, $local_id = null)
+    {
+        /** @var $metadata Entity */
+        list($metadata, , $local_id) = $this->buildPrerequisites($entity, $metadata, $reader, $local_id);
+
+        foreach ($metadata->getSortables() as $sortable) {
+            $key = $this->getKeyScheme()->getTableSortKey($metadata->getTableName(), $sortable->getName());
+            $this->getDriver()->removeSortedIndex($key, $local_id);
+        }
+
+        return $this;
     }
 }

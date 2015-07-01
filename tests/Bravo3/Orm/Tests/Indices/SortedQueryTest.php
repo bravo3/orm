@@ -9,8 +9,6 @@ use Bravo3\Orm\Tests\Entities\OneToMany\Category;
 
 class SortedQueryTest extends AbstractOrmTest
 {
-    const ARTICLE = 'Bravo3\Orm\Tests\Entities\OneToMany\Article';
-
     public function testPersist()
     {
         // Persist a forward relationship
@@ -46,7 +44,7 @@ class SortedQueryTest extends AbstractOrmTest
 
         // Update the category's article list by removing an entity on the inverse side
         /** @var Article $article */
-        $article = $em->retrieve(self::ARTICLE, 201);
+        $article = $em->retrieve(Article::class, 201);
         $article->setCanonicalCategory($category2);
         $em->persist($article)->flush();
 
@@ -123,7 +121,7 @@ class SortedQueryTest extends AbstractOrmTest
         $this->assertEquals('Art 615', $article->getTitle());
 
         // Modify an entity's sort-by column
-        $article = $em->retrieve(self::ARTICLE, 609);
+        $article = $em->retrieve(Article::class, 609);
         $time    = $article->getSortDate();
         $time->modify('+1 day');
         $article->setSortDate($time);

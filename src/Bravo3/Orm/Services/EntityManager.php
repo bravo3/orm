@@ -220,6 +220,7 @@ class EntityManager
 
         $this->getRelationshipManager()->persistRelationships($entity, $metadata, $reader, $id);
         $this->getIndexManager()->persistIndices($entity, $metadata, $reader, $id);
+        $this->getQueryManager()->persistTableQueries($entity, $metadata, $reader, $id);
 
         if ($entity instanceof OrmProxyInterface) {
             $entity->setEntityPersisted($id);
@@ -279,6 +280,7 @@ class EntityManager
         // Delete relationships & indices
         $this->getRelationshipManager()->deleteRelationships($entity, $metadata, $reader, $local_id);
         $this->getIndexManager()->deleteIndices($entity, $metadata, $reader, $local_id);
+        $this->getQueryManager()->deleteTableQueries($entity, $metadata, $reader, $local_id);
 
         return $this->getProxy();
     }
@@ -404,7 +406,7 @@ class EntityManager
     /**
      * Will force a database update of an entity
      *
-     * This will also convert a fresh entity to an OrmProxyInterface
+     * This will also convert a fresh entity to an OrmProxyInterface.
      *
      * @param object $entity
      * @return object

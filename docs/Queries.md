@@ -4,7 +4,7 @@ Queries
 Sorted Queries
 --------------
 The sorted query is the most efficient way to perform a query. Sorted queries work on a z-index and can be sorted in
-ascending or descending order, as well as efficiently select a range for the query.
+ascending or descending order, as well as efficiently select a range for the query and apply conditions on the query.
 
 Sorted queries however must work on a numeric score for sorting, thus only the following field types can be properly
 sorted:
@@ -60,8 +60,10 @@ The solution is to create conditions on your sort indices:
      *          @Orm\Sortable(column="last_modified", conditions={
      *              @Orm\Condition(column="published", value=true),
      *              @Orm\Condition(column="id", value=50, comparison=">")
-     *          }), "id"
-     *      })
+     *          }), 
+     *          "id"
+     *      }
+     * )
      */
     protected $articles;
 
@@ -84,11 +86,29 @@ You can also test your condition against the value returned by a method call:
      */
     protected $articles;
 
-It's important to note that you cannot retrieve an unfiltered version of the `last_modified` index now, the database
-will only add articles to the index if the conditions are met. 
+### Multiple Conditions
+When specifying sortable columns, by default we name the index according to the column name. However, if you require
+multiple conditions on the same column you must specify a name:
 
-When using annotation mapping, you can add items to the `sortable_by` list either by a string or a @Sortable 
-annotation, however you can only add conditions when using @Sortable with @Condition annotations.
+    /**
+     * @var Article[]
+     * @Orm\OneToMany(
+     *      target="Article",
+     *      inversed_by="category",
+     *      sortable_by={
+     *          @Orm\Sortable(column="last_modified", name="last_modified_unpublished", conditions={
+     *              @Orm\Condition(method="isPublished", value=false)
+     *          }),
+     *          @Orm\Sortable(column="last_modified", name="last_modified_published" conditions={
+     *              @Orm\Condition(method="isPublished", value=true)
+     *          })
+     *      })
+     */
+    protected $articles;
+
+### Note on Syntax
+When using annotation mapping, you can add items to the `sortable_by` list either by a string or a `@Sortable` 
+annotation, however you can only add conditions and name the index when using the full `@Sortable` annotation syntax.
 
 Indexed Queries
 ---------------

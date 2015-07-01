@@ -33,7 +33,11 @@ class Category
      *          @Sortable(column="last_modified", conditions={
      *              @Condition(column="published", value=true),
      *              @Condition(column="id", value=50, comparison=">")
-     *          }), "id"
+     *          }),
+     *          "id",
+     *          @Sortable(column="last_modified", conditions={
+     *              @Condition(column="published", value=true),
+     *          }, name="last_modified_all")
      *      })
      */
     protected $articles;
