@@ -43,7 +43,7 @@ class Reader
     }
 
     /**
-     * Get a property value
+     * Get the value of a property on the entity
      *
      * @param string $name
      * @return mixed
@@ -52,15 +52,21 @@ class Reader
     {
         if ($column = $this->metadata->getColumnByProperty($name)) {
             $getter = $column->getGetter();
+            return $this->entity->$getter();
         } elseif ($relationship = $this->metadata->getRelationshipByName($name)) {
             $getter = $relationship->getGetter();
+            return $this->entity->$getter();
         } else {
             throw new InvalidArgumentException("No column/relationship found for property '".$name."'");
         }
-
-        return $this->entity->$getter();
     }
 
+    /**
+     * Get the value of a method on the entity
+     *
+     * @param $name
+     * @return mixed
+     */
     public function getMethodValue($name)
     {
         if (method_exists(get_class($this->entity), $name)) {
@@ -80,7 +86,7 @@ class Reader
     {
         $values = [];
         foreach ($index->getColumns() as $column) {
-            $values[] = $this->getPropertyValue($column);
+            $values[] = (string)$this->getPropertyValue($column);
         }
 
         return implode(self::ID_DELIMITER, $values);

@@ -2,9 +2,13 @@
 namespace Bravo3\Orm\Tests\Indices;
 
 use Bravo3\Orm\Exceptions\NotFoundException;
+use Bravo3\Orm\Proxy\OrmProxyInterface;
 use Bravo3\Orm\Services\Io\Reader;
 use Bravo3\Orm\Tests\AbstractOrmTest;
 use Bravo3\Orm\Tests\Entities\Indexed\IndexedEntity;
+use Bravo3\Orm\Tests\Entities\Indexed\SluggedArticle;
+use Bravo3\Orm\Tests\Entities\OneToOne\Address;
+use Bravo3\Orm\Tests\Entities\OneToOne\User;
 
 class IndexTest extends AbstractOrmTest
 {
@@ -63,5 +67,62 @@ class IndexTest extends AbstractOrmTest
         $this->assertSame('omega', $retrieved_by_index->getAlpha());
         $this->assertSame(200, $retrieved_by_index->getBravo());
         $this->assertSame(true, $retrieved_by_index->getCharlie());
+    }
+
+    public function testIndexDeletion()
+    {
+        $em = $this->getEntityManager();
+
+        $article = new SluggedArticle();
+        $article->setId(94)->setName('Mr Article')->setSlug('mr-article');
+
+        $em->persist($article)->flush();
+
+        /** @var SluggedArticle $mr_article */
+        $mr_article = $em->retrieveByIndex(SluggedArticle::class, 'slug', 'mr-article');
+        $this->assertEquals('Mr Article', $mr_article->getName());
+
+        $mr_article->setSlug('mrarticle');
+        $em->persist($mr_article)->flush();
+
+        // Index should no longer exist
+        $this->setExpectedException(NotFoundException::class);
+        $em->retrieveByIndex(SluggedArticle::class, 'slug', 'mr-article');
+    }
+
+    public function testRelatedIndexDeletion()
+    {
+        $em = $this->getEntityManager();
+
+        $home = new Address();
+        $home->setId(44)->setStreet('Oxford St');
+
+        $work = new Address();
+        $work->setId(45)->setStreet('George St');
+
+        $user = new User();
+        $user->setId(23)->setName('Barry')->setAddress($home);
+
+        $em->persist($user)->persist($home)->persist($work)->flush();
+
+        /** @var User|OrmProxyInterface $user_home */
+        $user_home = $em->retrieveByIndex(User::class, 'slug', $user->getId().'.'.$home->getId());
+        $this->assertEquals(23, $user_home->getId());
+        $this->assertEquals('Oxford St', $user_home->getAddress()->getStreet());
+
+        $slug = $user_home->getIndexOriginalValue('slug');
+        $this->assertEquals('23.44', $slug);
+
+        $user_home->setName('Other Barry');
+        $user_home->setAddress($work);
+        $em->persist($user_home)->flush();
+
+        /** @var User $user_work */
+        $user_work = $em->retrieveByIndex(User::class, 'slug', $user->getId().'.'.$work->getId());
+        $this->assertEquals(23, $user_work->getId());
+        $this->assertEquals('George St', $user_work->getAddress()->getStreet());
+
+        $this->setExpectedException(NotFoundException::class);
+        $em->retrieveByIndex(User::class, 'slug', $user->getId().'.'.$home->getId());
     }
 }
