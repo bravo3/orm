@@ -123,6 +123,15 @@ class Writer
         // Save the original state of all indices so we can compare on consequent persist calls
         $proxy->setOriginalId($this->getReader()->getId());
         foreach ($this->metadata->getIndices() as $index) {
+            // If an index is a relationship, automatic hydration will not work due to AOP recursion
+            // Instead, check each index column for a relationship and hydrate it manually
+            foreach ($index->getColumns() as $column) {
+                if ($relationship = $this->metadata->getRelationshipByName($column)) {
+                    if (!isset($this->hydrated_methods[$relationship->getGetter()])) {
+                        $this->hydrateRelative($relationship);
+                    }
+                }
+            }
             $proxy->setIndexOriginalValue($index->getName(), $this->getReader()->getIndexValue($index));
         }
 

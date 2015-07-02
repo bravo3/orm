@@ -92,4 +92,9 @@ class Address
         $this->user = $user;
         return $this;
     }
+
+    function __toString()
+    {
+        return (string)$this->getId();
+    }
 }
