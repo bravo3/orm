@@ -104,6 +104,6 @@ class DummyClient implements ClientInterface
      */
     public function get($key)
     {
-        print_r($key);
+
     }
 }
