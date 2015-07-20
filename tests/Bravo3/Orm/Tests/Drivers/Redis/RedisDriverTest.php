@@ -4,6 +4,8 @@ namespace Bravo3\Orm\Tests\Drivers\Redis;
 use Bravo3\Orm\Drivers\Common\SerialisedData;
 use Bravo3\Orm\Exceptions\NotFoundException;
 use Bravo3\Orm\Tests\AbstractOrmTest;
+use Bravo3\Orm\Drivers\Redis\RedisDriver;
+use Prophecy\Argument;
 
 class RedisDriverTest extends AbstractOrmTest
 {
@@ -48,4 +50,42 @@ class RedisDriverTest extends AbstractOrmTest
             $this->assertContains($key, $e->getMessage());
         }
     }
+
+    /**
+     * @expectedException \Exception
+     */
+    public function testClientConnectionFaliure()
+    {
+        $client = $this->prophesize(DummyClient::class);
+        $driver = new RedisDriver(null, null, null, $client->reveal());
+
+        $client->exists('doc:article:1')->shouldBeCalledTimes(1)->willReturn(true);
+        $client->get('doc:article:1')->shouldBeCalledTimes(3)->willThrow(new \Exception);
+
+        $driver->retrieve('doc:article:1');
+    }
+
+    public function testClientConnectionSuccessOnFirstIteration()
+    {
+        $client = $this->prophesize(DummyClient::class);
+        $driver = new RedisDriver(null, null, null, $client->reveal());
+
+        $client->exists('doc:article:1')->shouldBeCalledTimes(1)->willReturn(true);
+        $client->get('doc:article:1')->shouldBeCalledTimes(1)->willReturn('Article');
+
+        $driver->retrieve('doc:article:1');
+    }
+
+    public function testClientConnectionSucceedOnSecondIteration()
+    {
+        $client = $this->prophesize(DummyClient::class);
+        $driver = new RedisDriver(null, null, null, $client->reveal());
+
+        $client->exists('doc:article:1')->shouldBeCalledTimes(1)->willReturn(true);
+        $client->get('doc:article:1')->shouldBeCalledTimes(1)->willThrow(new \Exception);
+        $client->get('doc:article:1')->shouldBeCalledTimes(1)->willReturn('Article');
+
+        $driver->retrieve('doc:article:1');
+    }
+
 }

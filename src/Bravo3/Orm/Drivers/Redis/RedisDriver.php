@@ -12,7 +12,7 @@ use Bravo3\Orm\KeySchemes\StandardKeyScheme;
 use Bravo3\Orm\Services\ScoreNormaliser;
 use Bravo3\Orm\Traits\DebugTrait;
 use Predis\Command\CommandInterface;
-use Predis\Client;
+use Predis\ClientInterface;
 use Predis\Command\KeyScan;
 use Predis\Connection\Aggregate\PredisCluster;
 use Predis\Connection\Aggregate\ReplicationInterface;
@@ -66,9 +66,9 @@ class RedisDriver implements DriverInterface
      * @param mixed       $params
      * @param mixed       $options
      * @param mixed       $sentinels
-     * @param Client|null $client
+     * @param ClientInterface|null $client
      */
-    public function __construct($params = null, $options = null, $sentinel_params = null, Client $client = null)
+    public function __construct($params = null, $options = null, $sentinel_params = null, ClientInterface $client = null)
     {
         if (null === $client) {
             $this->client = PredisConnectionFactory::create($params, $options, $sentinel_params);
@@ -540,7 +540,8 @@ class RedisDriver implements DriverInterface
             }
 
         } catch (\Exception $e) {
-            if ($retry_iteration <= $this->max_connection_retries) {
+
+            if ($retry_iteration < $this->max_connection_retries) {
                 return $this->clientCmd($cmd, $params, ++$retry_iteration);
             }
 
