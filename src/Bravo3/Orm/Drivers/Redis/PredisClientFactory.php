@@ -34,7 +34,7 @@ class PredisClientFactory
             $masters = self::$sentinel->findMasters();
 
             if (!empty($masters)) {
-                $slaves = self::$sentinel->sentinel->findSlaves();
+                $slaves = self::$sentinel->findSlaves();
             }
 
             // List of possible connections to redis instances
