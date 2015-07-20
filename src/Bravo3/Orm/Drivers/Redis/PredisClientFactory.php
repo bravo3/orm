@@ -5,6 +5,9 @@ use Predis\Client;
 
 class PredisClientFactory
 {
+    /**
+     * @var SentinelMonitor
+     */
     static $sentinel = null;
 
     /**
