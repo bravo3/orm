@@ -1,4 +1,5 @@
 <?php
+
 namespace Bravo3\Orm\Drivers\Redis;
 
 use Bravo3\Orm\Drivers\Common\Command;
@@ -18,8 +19,6 @@ use Predis\Connection\Aggregate\PredisCluster;
 use Predis\Connection\Aggregate\ReplicationInterface;
 use Predis\Connection\NodeConnectionInterface;
 use Predis\Pipeline\Pipeline;
-use Predis\Response\ServerException;
-use Predis\Connection\ConnectionException;
 
 class RedisDriver implements DriverInterface
 {
@@ -56,16 +55,16 @@ class RedisDriver implements DriverInterface
      * Maximum number of Predis connection retries to occur
      * if redis server doesn't respond.
      *
-     * @var integer
+     * @var int
      */
     protected $max_connection_retries = 3;
 
     /**
      * Create a new Redis driver
      *
-     * @param mixed       $params
-     * @param mixed       $options
-     * @param mixed       $sentinels
+     * @param mixed                $params
+     * @param mixed                $options
+     * @param mixed                $sentinel_params
      * @param ClientInterface|null $client
      */
     public function __construct($params = null, $options = null, $sentinel_params = null, ClientInterface $client = null)
@@ -85,6 +84,7 @@ class RedisDriver implements DriverInterface
      * @param string         $key
      * @param SerialisedData $data
      * @param int            $ttl
+     *
      * @return void
      */
     public function persist($key, SerialisedData $data, $ttl = null)
@@ -101,6 +101,7 @@ class RedisDriver implements DriverInterface
      * Delete a primitive document
      *
      * @param string $key
+     *
      * @return void
      */
     public function delete($key)
@@ -112,6 +113,7 @@ class RedisDriver implements DriverInterface
      * Retrieve an object, throwing an exception if not found
      *
      * @param string $key
+     *
      * @return SerialisedData
      */
     public function retrieve($key)
@@ -121,6 +123,7 @@ class RedisDriver implements DriverInterface
         }
 
         $data = $this->clientCmd('get', [$key]);
+
         return new SerialisedData(substr($data, 0, 4), substr($data, 4));
     }
 
@@ -153,7 +156,7 @@ class RedisDriver implements DriverInterface
             $this->clientCmd(
                 'executeCommand',
                 [
-                    $this->getPredisCommand($command)
+                    $this->getPredisCommand($command),
                 ]
             );
         }
@@ -166,9 +169,8 @@ class RedisDriver implements DriverInterface
     {
         $this->clientCmd(
             'pipeline',
-            function ($pipe)
-            {
-                /** @var Pipeline $pipe */
+            function ($pipe) {
+                /* @var Pipeline $pipe */
                 while ($command = $this->unit_of_work->getWork()) {
                     $pipe->executeCommand($this->getPredisCommand($command));
                 }
@@ -180,6 +182,7 @@ class RedisDriver implements DriverInterface
      * Build a Predis command from a Command object
      *
      * @param Command $command
+     *
      * @return CommandInterface
      */
     private function getPredisCommand($command)
@@ -189,6 +192,7 @@ class RedisDriver implements DriverInterface
         /** @var CommandInterface $predis_command */
         $predis_command = new $class();
         $predis_command->setArguments($command->getArguments());
+
         return $predis_command;
     }
 
@@ -216,6 +220,7 @@ class RedisDriver implements DriverInterface
      * Clear the value of a key-value index
      *
      * @param string $key
+     *
      * @return string
      */
     public function clearSingleValueIndex($key)
@@ -228,6 +233,7 @@ class RedisDriver implements DriverInterface
      *
      * @param string $key
      * @param string $value
+     *
      * @return void
      */
     public function setSingleValueIndex($key, $value)
@@ -241,6 +247,7 @@ class RedisDriver implements DriverInterface
      * If the key does not exist, null should be returned.
      *
      * @param string $key
+     *
      * @return string
      */
     public function getSingleValueIndex($key)
@@ -252,6 +259,7 @@ class RedisDriver implements DriverInterface
      * Clear all values from a set index
      *
      * @param string $key
+     *
      * @return void
      */
     public function clearMultiValueIndex($key)
@@ -264,6 +272,7 @@ class RedisDriver implements DriverInterface
      *
      * @param string       $key
      * @param string|array $value
+     *
      * @return void
      */
     public function addMultiValueIndex($key, $value)
@@ -276,6 +285,7 @@ class RedisDriver implements DriverInterface
      *
      * @param string       $key
      * @param string|array $value
+     *
      * @return void
      */
     public function removeMultiValueIndex($key, $value)
@@ -289,6 +299,7 @@ class RedisDriver implements DriverInterface
      * If the key does not exist, an empty array should be returned.
      *
      * @param string $key
+     *
      * @return string[]
      */
     public function getMultiValueIndex($key)
@@ -300,12 +311,13 @@ class RedisDriver implements DriverInterface
      * Scan key-value indices and return the value of all matching keys
      *
      * @param string $key
+     *
      * @return string[]
      */
     public function scan($key)
     {
-        $cursor     = 0;
-        $results    = [];
+        $cursor = 0;
+        $results = [];
         $connection = $this->client->getConnection();
 
         do {
@@ -313,14 +325,14 @@ class RedisDriver implements DriverInterface
                 $slaves = $connection->getSlaves();
                 /** @var NodeConnectionInterface $slave */
                 $slave = $slaves[rand(0, count($slaves) - 1)];
-                $cmd   = new KeyScan();
+                $cmd = new KeyScan();
                 $cmd->setArguments([$cursor, 'MATCH', $key]);
                 $set = $slave->executeCommand($cmd);
             } elseif ($connection instanceof PredisCluster) {
                 $iterator = $connection->getIterator();
                 /** @var NodeConnectionInterface $node */
                 $node = $iterator->current();
-                $cmd  = new KeyScan();
+                $cmd = new KeyScan();
                 $cmd->setArguments([$cursor, 'MATCH', $key]);
                 $set = $node->executeCommand($cmd);
             } else {
@@ -328,12 +340,12 @@ class RedisDriver implements DriverInterface
                     'scan',
                     [
                         $cursor,
-                        ['MATCH' => $key]
+                        ['MATCH' => $key],
                     ]
                 );
             }
 
-            $cursor  = $set[0];
+            $cursor = $set[0];
             $results = array_merge($results, $set[1]);
         } while ($cursor != 0);
 
@@ -344,6 +356,7 @@ class RedisDriver implements DriverInterface
      * Clear an entire sorted index
      *
      * @param string $key
+     *
      * @return void
      */
     public function clearSortedIndex($key)
@@ -357,6 +370,7 @@ class RedisDriver implements DriverInterface
      * @param string $key
      * @param mixed  $score
      * @param string $value
+     *
      * @return void
      */
     public function addSortedIndex($key, $score, $value)
@@ -369,6 +383,7 @@ class RedisDriver implements DriverInterface
      *
      * @param string $key
      * @param string $value
+     *
      * @return void
      */
     public function removeSortedIndex($key, $value)
@@ -385,6 +400,7 @@ class RedisDriver implements DriverInterface
      * @param bool   $reverse
      * @param int    $start
      * @param int    $stop
+     *
      * @return string[]
      */
     public function getSortedIndex($key, $reverse = false, $start = null, $stop = null)
@@ -395,7 +411,7 @@ class RedisDriver implements DriverInterface
                 [
                     $key,
                     $start === null ? 0 : $start,
-                    $stop === null ? -1 : $stop
+                    $stop === null ? -1 : $stop,
                 ]
             );
         } else {
@@ -404,7 +420,7 @@ class RedisDriver implements DriverInterface
                 [
                     $key,
                     $start === null ? 0 : $start,
-                    $stop === null ? -1 : $stop
+                    $stop === null ? -1 : $stop,
                 ]
             );
         }
@@ -414,6 +430,7 @@ class RedisDriver implements DriverInterface
      * Create a debug log
      *
      * @param string $msg
+     *
      * @return void
      */
     public function debugLog($msg)
@@ -447,6 +464,7 @@ class RedisDriver implements DriverInterface
      * Get the size of a sorted index, without any filters applied
      *
      * @param string $key
+     *
      * @return int
      */
     public function getSortedIndexSize($key)
@@ -458,6 +476,7 @@ class RedisDriver implements DriverInterface
      * Get all refs to an entity
      *
      * @param string $key Entity ref key
+     *
      * @return Ref[]
      */
     public function getRefs($key)
@@ -480,11 +499,12 @@ class RedisDriver implements DriverInterface
      *
      * @param string $key Entity ref key
      * @param Ref    $ref Reference to add
+     *
      * @return void
      */
     public function addRef($key, Ref $ref)
     {
-        $this->unit_of_work->addCommand('SetAdd', [$key, (string)$ref]);
+        $this->unit_of_work->addCommand('SetAdd', [$key, (string) $ref]);
     }
 
     /**
@@ -494,17 +514,19 @@ class RedisDriver implements DriverInterface
      *
      * @param string $key Entity ref key
      * @param Ref    $ref Reference to remove
+     *
      * @return void
      */
     public function removeRef($key, Ref $ref)
     {
-        $this->unit_of_work->addCommand('SetRemove', [$key, (string)$ref]);
+        $this->unit_of_work->addCommand('SetRemove', [$key, (string) $ref]);
     }
 
     /**
      * Clear all refs from an entity (delete a ref list)
      *
      * @param string $key
+     *
      * @return void
      */
     public function clearRefs($key)
@@ -516,16 +538,17 @@ class RedisDriver implements DriverInterface
      * A wrapper function to wrap Redis commands which go to Predis Client
      * in order to replay them if server connection issues occur.
      *
-     * @param  string          $cmd function to call against the Predis client
-     * @param  array|callable  $params
-     * @param  int             $retry_iteration
+     * @param string         $cmd             function to call against the Predis client
+     * @param array|callable $params
+     * @param int            $retry_iteration
+     *
      * @return mixed
      */
-    private function clientCmd($cmd, $params, $retry_iteration = 1) {
+    private function clientCmd($cmd, $params, $retry_iteration = 1)
+    {
         static $retry_delay = 200;
 
         try {
-
             if (1 > $retry_iteration) {
                 $retry_delay += $retry_delay * self::RETRY_DELAY_MULTIPLIER;
             }
@@ -538,9 +561,7 @@ class RedisDriver implements DriverInterface
             } else {
                 return call_user_func_array([$this->client, $cmd], $params);
             }
-
         } catch (\Exception $e) {
-
             if ($retry_iteration < $this->max_connection_retries) {
                 return $this->clientCmd($cmd, $params, ++$retry_iteration);
             }
@@ -548,5 +569,4 @@ class RedisDriver implements DriverInterface
             throw $e;
         }
     }
-
 }
