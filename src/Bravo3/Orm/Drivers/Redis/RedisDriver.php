@@ -11,8 +11,8 @@ use Bravo3\Orm\KeySchemes\KeySchemeInterface;
 use Bravo3\Orm\KeySchemes\StandardKeyScheme;
 use Bravo3\Orm\Services\ScoreNormaliser;
 use Bravo3\Orm\Traits\DebugTrait;
-use Predis\Client;
 use Predis\Command\CommandInterface;
+use Predis\Client;
 use Predis\Command\KeyScan;
 use Predis\Connection\Aggregate\PredisCluster;
 use Predis\Connection\Aggregate\ReplicationInterface;
@@ -63,52 +63,17 @@ class RedisDriver implements DriverInterface
     /**
      * Create a new Redis driver
      *
-     * @param mixed $params
-     * @param mixed $options
-     * @param mixed $sentinels
+     * @param mixed       $params
+     * @param mixed       $options
+     * @param mixed       $sentinels
+     * @param Client|null $client
      */
-    public function __construct($params = null, $options = null, $sentinel_params = null)
+    public function __construct($params = null, $options = null, $sentinel_params = null, Client $client = null)
     {
-        // If sentinel params are defined use sentinel to find out about
-        // redis servers.
-        if (!empty($sentinel_params)) {
-            $slaves = [];
-
-            $this->sentinel = new SentinelMonitor($sentinel_params);
-            $masters = $this->sentinel->findMasters();
-
-            if (!empty($masters)) {
-                $slaves = $this->sentinel->findSlaves();
-            }
-
-            // List of possible connections to redis instances
-            $redis_connections = [];
-
-            // Merge fixed connections to redis with discovered masters
-            if (is_array($params)) {
-                $redis_connections = array_merge(
-                    $params,
-                    $masters
-                );
-            }
-
-            // Merge additional slaves discovered
-            $redis_connections = array_merge(
-                $redis_connections,
-                $slaves
-            );
-
-            // Enable replication if slave can be found within the Redis configuration
-            foreach ($redis_connections as $connection) {
-                if (isset($connection['alias']) && 'slave' === $connection['alias']) {
-                    $options = array_merge($options ?: [], ['replication' => true]);
-                    break;
-                }
-            }
-
-            $this->client = new Client($redis_connections, $options);
+        if (null === $client) {
+            $this->client = PredisConnectionFactory::create($params, $options, $sentinel_params);
         } else {
-            $this->client = new Client($params, $options);
+            $this->client = $client;
         }
 
         $this->unit_of_work = new UnitOfWork();
@@ -151,11 +116,11 @@ class RedisDriver implements DriverInterface
      */
     public function retrieve($key)
     {
-        if (!$this->redisRetry('exists', [$key])) {
+        if (!$this->clientCmd('exists', [$key])) {
             throw new NotFoundException('Key "'.$key.'" does not exist');
         }
 
-        $data = $this->redisRetry('get', [$key]);
+        $data = $this->clientCmd('get', [$key]);
         return new SerialisedData(substr($data, 0, 4), substr($data, 4));
     }
 
@@ -185,7 +150,7 @@ class RedisDriver implements DriverInterface
     {
         $command = $this->unit_of_work->getWork();
         if ($command) {
-            $this->redisRetry(
+            $this->clientCmd(
                 'executeCommand',
                 [
                     $this->getPredisCommand($command)
@@ -199,7 +164,7 @@ class RedisDriver implements DriverInterface
      */
     private function flushMulti()
     {
-        $this->redisRetry(
+        $this->clientCmd(
             'pipeline',
             function ($pipe)
             {
@@ -280,7 +245,7 @@ class RedisDriver implements DriverInterface
      */
     public function getSingleValueIndex($key)
     {
-        return $this->redisRetry('get', [$key]) ?: null;
+        return $this->clientCmd('get', [$key]) ?: null;
     }
 
     /**
@@ -328,7 +293,7 @@ class RedisDriver implements DriverInterface
      */
     public function getMultiValueIndex($key)
     {
-        return $this->redisRetry('smembers', [$key]);
+        return $this->clientCmd('smembers', [$key]);
     }
 
     /**
@@ -359,7 +324,7 @@ class RedisDriver implements DriverInterface
                 $cmd->setArguments([$cursor, 'MATCH', $key]);
                 $set = $node->executeCommand($cmd);
             } else {
-                $set = $this->redisRetry(
+                $set = $this->clientCmd(
                     'scan',
                     [
                         $cursor,
@@ -425,7 +390,7 @@ class RedisDriver implements DriverInterface
     public function getSortedIndex($key, $reverse = false, $start = null, $stop = null)
     {
         if ($reverse) {
-            return $this->redisRetry(
+            return $this->clientCmd(
                 'zrevrange',
                 [
                     $key,
@@ -434,7 +399,7 @@ class RedisDriver implements DriverInterface
                 ]
             );
         } else {
-            return $this->redisRetry(
+            return $this->clientCmd(
                 'zrange',
                 [
                     $key,
@@ -486,7 +451,7 @@ class RedisDriver implements DriverInterface
      */
     public function getSortedIndexSize($key)
     {
-        return $this->redisRetry('zcard', [$key]);
+        return $this->clientCmd('zcard', [$key]);
     }
 
     /**
@@ -497,7 +462,7 @@ class RedisDriver implements DriverInterface
      */
     public function getRefs($key)
     {
-        $members = $this->redisRetry('smembers', [$key]);
+        $members = $this->clientCmd('smembers', [$key]);
         if (!$members) {
             return [];
         }
@@ -553,33 +518,33 @@ class RedisDriver implements DriverInterface
      *
      * @param  string          $cmd function to call against the Predis client
      * @param  array|callable  $params
+     * @param  int             $retry_iteration
      * @return mixed
      */
-    private function redisRetry($cmd, $params) {
-        static $retry_iteration = 1;
-        static $retry_delay     = 200;
+    private function clientCmd($cmd, $params, $retry_iteration = 1) {
+        static $retry_delay = 200;
 
-        for (; $retry_iteration <= $this->max_connection_retries; $retry_iteration++)
-        {
-            try {
+        try {
 
-                if (1 > $retry_iteration) {
-                    $retry_delay += $retry_delay * self::RETRY_DELAY_MULTIPLIER;
-                }
-
-                // Since $retry_delay is in milliseconds multiply it by 1000
-                usleep($retry_delay * 1000);
-
-                if (is_callable($params)) {
-                    return call_user_func([$this->client, $cmd], $params);
-                } else {
-                    return call_user_func_array([$this->client, $cmd], $params);
-                }
-            } catch (ServerException $e) {
-                return $this->redisRetry($cmd, $params);
-            } catch (ConnectionException $e) {
-                return $this->redisRetry($cmd, $params);
+            if (1 > $retry_iteration) {
+                $retry_delay += $retry_delay * self::RETRY_DELAY_MULTIPLIER;
             }
+
+            // Since $retry_delay is in milliseconds multiply it by 1000
+            usleep($retry_delay * 1000);
+
+            if (is_callable($params)) {
+                return call_user_func([$this->client, $cmd], $params);
+            } else {
+                return call_user_func_array([$this->client, $cmd], $params);
+            }
+
+        } catch (\Exception $e) {
+            if ($retry_iteration <= $this->max_connection_retries) {
+                return $this->clientCmd($cmd, $params, ++$retry_iteration);
+            }
+
+            throw $e;
         }
     }
 
