@@ -29,7 +29,7 @@ class RedisDriver implements DriverInterface
      * upto $max_connection_retries times with delays between
      * each retry.
      */
-    const RETRY_DELAY_MULTIPLIER = 1.5;
+    protected $retry_delay_coefficient = 1.5;
 
     /**
      * @var UnitOfWork
@@ -535,6 +535,32 @@ class RedisDriver implements DriverInterface
     }
 
     /**
+     * Set retry delay between $client command retries.
+     *
+     * @param integer $delay_coefficient
+     *
+     * @return RedisDriver
+     */
+    public function setRetryDelayCoefficient($delay_coefficient)
+    {
+        $this->retry_delay_coefficient = $delay_coefficient;
+
+        return $this;
+    }
+
+    /**
+     * Returns the current retry delay coefficient set, which
+     * is the delay between each retry may happen if the requests
+     * to $client fails.
+     *
+     * @return int
+     */
+    public function getRetryDelayCoefficient($)
+    {
+        return $this->retry_delay_coefficient;
+    }
+
+    /**
      * A wrapper function to wrap Redis commands which go to Predis Client
      * in order to replay them if server connection issues occur.
      *
@@ -550,7 +576,7 @@ class RedisDriver implements DriverInterface
 
         try {
             if (1 > $retry_iteration) {
-                $retry_delay += $retry_delay * self::RETRY_DELAY_MULTIPLIER;
+                $retry_delay += $retry_delay * $this->retry_delay_coefficient;
             }
 
             // Since $retry_delay is in milliseconds multiply it by 1000
