@@ -28,8 +28,25 @@ class RedisDriver implements DriverInterface
      * Get/Write commands that fails will be retried again
      * upto $max_connection_retries times with delays between
      * each retry.
+     *
+     * @var int
      */
     protected $retry_delay_coefficient = 1.5;
+
+    /**
+     * Initial retry delay between failing $client commands.
+     *
+     * @var int
+     */
+    protected $initial_retry_delay = 200;
+
+    /**
+     * Maximum number of Predis connection retries to occur
+     * if redis server doesn't respond.
+     *
+     * @var int
+     */
+    protected $max_connection_retries = 2;
 
     /**
      * @var UnitOfWork
@@ -50,14 +67,6 @@ class RedisDriver implements DriverInterface
      * @var ScoreNormaliser
      */
     protected $score_normaliser = null;
-
-    /**
-     * Maximum number of Predis connection retries to occur
-     * if redis server doesn't respond.
-     *
-     * @var int
-     */
-    protected $max_connection_retries = 3;
 
     /**
      * Create a new Redis driver
@@ -555,7 +564,7 @@ class RedisDriver implements DriverInterface
      *
      * @return int
      */
-    public function getRetryDelayCoefficient($)
+    public function getRetryDelayCoefficient()
     {
         return $this->retry_delay_coefficient;
     }
@@ -570,15 +579,11 @@ class RedisDriver implements DriverInterface
      *
      * @return mixed
      */
-    private function clientCmd($cmd, $params, $retry_iteration = 1)
+    private function clientCmd($cmd, $params, $retry_iteration = 0)
     {
-        static $retry_delay = 200;
+        $retry_delay = $this->initial_retry_delay * $retry_iteration * $this->retry_delay_coefficient;
 
         try {
-            if (1 > $retry_iteration) {
-                $retry_delay += $retry_delay * $this->retry_delay_coefficient;
-            }
-
             // Since $retry_delay is in milliseconds multiply it by 1000
             usleep($retry_delay * 1000);
 
@@ -588,8 +593,8 @@ class RedisDriver implements DriverInterface
                 return call_user_func_array([$this->client, $cmd], $params);
             }
         } catch (\Exception $e) {
-            if ($retry_iteration < $this->max_connection_retries) {
-                return $this->clientCmd($cmd, $params, ++$retry_iteration);
+            if (++$retry_iteration <= $this->max_connection_retries) {
+                return $this->clientCmd($cmd, $params, $retry_iteration);
             }
 
             throw $e;
