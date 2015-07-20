@@ -37,7 +37,7 @@ class RedisDriver implements DriverInterface
     protected $unit_of_work;
 
     /**
-     * @var Client
+     * @var Predis\Client
      */
     protected $client;
 
