@@ -537,7 +537,7 @@ class RedisDriver implements DriverInterface
     /**
      * Set retry delay between $client command retries.
      *
-     * @param integer $delay_coefficient
+     * @param int $delay_coefficient
      *
      * @return RedisDriver
      */
