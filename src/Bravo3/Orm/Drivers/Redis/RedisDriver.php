@@ -71,7 +71,7 @@ class RedisDriver implements DriverInterface
     public function __construct($params = null, $options = null, $sentinel_params = null, ClientInterface $client = null)
     {
         if (null === $client) {
-            $this->client = PredisConnectionFactory::create($params, $options, $sentinel_params);
+            $this->client = PredisClientFactory::create($params, $options, $sentinel_params);
         } else {
             $this->client = $client;
         }

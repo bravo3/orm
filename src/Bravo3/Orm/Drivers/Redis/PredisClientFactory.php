@@ -3,7 +3,7 @@ namespace Bravo3\Orm\Drivers\Redis;
 
 use Predis\Client;
 
-class PredisConnectionFactory
+class PredisClientFactory
 {
     static $sentinel = null;
 
