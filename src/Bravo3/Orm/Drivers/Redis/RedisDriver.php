@@ -570,6 +570,56 @@ class RedisDriver implements DriverInterface
     }
 
     /**
+     * Gets the Initial retry delay between failing $client commands.
+     *
+     * @return int
+     */
+    public function getInitialRetryDelay()
+    {
+        return $this->initial_retry_delay;
+    }
+
+    /**
+     * Sets the Initial retry delay between failing $client commands.
+     *
+     * @param int $initial_retry_delay the initial retry delay
+     *
+     * @return self
+     */
+    public function setInitialRetryDelay($initial_retry_delay)
+    {
+        $this->initial_retry_delay = $initial_retry_delay;
+
+        return $this;
+    }
+
+    /**
+     * Gets the Maximum number of Predis connection retries to occur
+     * if redis server doesn't respond.
+     *
+     * @return int
+     */
+    public function getMaxConnectionRetries()
+    {
+        return $this->max_connection_retries;
+    }
+
+    /**
+     * Sets the Maximum number of Predis connection retries to occur
+     * if redis server doesn't respond.
+     *
+     * @param int $max_connection_retries the max connection retries
+     *
+     * @return self
+     */
+    public function setMaxConnectionRetries($max_connection_retries)
+    {
+        $this->max_connection_retries = $max_connection_retries;
+
+        return $this;
+    }
+
+    /**
      * A wrapper function to wrap Redis commands which go to Predis Client
      * in order to replay them if server connection issues occur.
      *
@@ -581,11 +631,12 @@ class RedisDriver implements DriverInterface
      */
     private function clientCmd($cmd, $params, $retry_iteration = 0)
     {
-        $retry_delay = $this->initial_retry_delay * $retry_iteration * $this->retry_delay_coefficient;
-
         try {
-            // Since $retry_delay is in milliseconds multiply it by 1000
-            usleep($retry_delay * 1000);
+
+            $delay = $this->calculateRetryDelay($retry_iteration);
+            if (!empty($delay)) {
+                usleep($delay);
+            }
 
             if (is_callable($params)) {
                 return call_user_func([$this->client, $cmd], $params);
@@ -600,4 +651,26 @@ class RedisDriver implements DriverInterface
             throw $e;
         }
     }
+
+    /**
+     * Calculate a retry delay to be used in the clientCmd() function
+     * to delay failing operations to $client.
+     *
+     * Note: Calculations are done in microseconds.
+     *
+     * @param  int $retry_iteration
+     * @return int
+     */
+    public function calculateRetryDelay($retry_iteration)
+    {
+        if ($retry_iteration > 0) {
+            $retry_delay = $retry_iteration * $this->initial_retry_delay * $this->retry_delay_coefficient;
+
+            // Since $retry_delay is in milliseconds multiply it by 1000 to return microseconds
+            return $retry_delay * 1000;
+        } else {
+            return 0;
+        }
+    }
+
 }
