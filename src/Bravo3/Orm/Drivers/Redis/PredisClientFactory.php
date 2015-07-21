@@ -25,6 +25,14 @@ class PredisClientFactory
      */
     public static function create($params = null, $options = null, $sentinel_params = null)
     {
+        $discover_slaves = true;
+
+        // Make sure slave discovery from sentinels flag is set
+        if (is_array($options) && isset($options['discover_slaves'])) {
+            $discover_slaves = (bool) $options['discover_slaves'];
+            unset($options['discover_slaves']);
+        }
+
         // If sentinel params are defined use sentinel to find out about
         // redis servers.
         if (!empty($sentinel_params)) {
@@ -36,7 +44,8 @@ class PredisClientFactory
 
             $masters = self::$sentinel->findMasters();
 
-            if (!empty($masters)) {
+            // Masters have been discovered and check slave discovery is requested.
+            if (!empty($masters) && true === $discover_slaves) {
                 $slaves = self::$sentinel->findSlaves();
             }
 
