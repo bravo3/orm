@@ -11,7 +11,7 @@ class RedisDriverTest extends AbstractOrmTest
 {
     public function testMultiSet()
     {
-        $driver = $this->getDriver();
+        $driver = $this->getRedisDriver();
         $key    = 'test:multi:'.rand(10000, 99999);
 
         $driver->persist($key, new SerialisedData('xxxx', 'foo'));
@@ -22,7 +22,7 @@ class RedisDriverTest extends AbstractOrmTest
 
     public function testSingleSet()
     {
-        $driver = $this->getDriver();
+        $driver = $this->getRedisDriver();
         $key    = 'test:single:'.rand(10000, 99999);
 
         $driver->persist($key, new SerialisedData('xxxx', 'bar'));
@@ -33,7 +33,7 @@ class RedisDriverTest extends AbstractOrmTest
 
     public function testDelete()
     {
-        $driver = $this->getDriver();
+        $driver = $this->getRedisDriver();
         $key    = 'test:delete:'.rand(10000, 99999);
 
         $driver->persist($key, new SerialisedData('xxxx', 'bar'));
@@ -90,7 +90,7 @@ class RedisDriverTest extends AbstractOrmTest
 
     public function testRetryDelay()
     {
-        $driver = $this->getDriver();
+        $driver = $this->getRedisDriver();
 
         $driver->setRetryDelayCoefficient(1.5);
         $driver->setInitialRetryDelay(200);

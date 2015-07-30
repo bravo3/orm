@@ -7,6 +7,7 @@ use Bravo3\Orm\Events\RetrieveEvent;
 use Bravo3\Orm\Exceptions\NotFoundException;
 use Bravo3\Orm\Proxy\OrmProxyInterface;
 use Bravo3\Orm\Query\SortedQuery;
+use Bravo3\Orm\Services\EntityManager;
 use Bravo3\Orm\Tests\Entities\BadEntity;
 use Bravo3\Orm\Tests\Entities\Indexed\IndexedEntity;
 use Bravo3\Orm\Tests\Entities\Indexed\SluggedArticle;
@@ -25,10 +26,12 @@ class EntityManagerTest extends AbstractOrmTest
     const ENTITY_ARTICLE = 'Bravo3\Orm\Tests\Entities\OneToMany\Article';
     const ENTITY_PRODUCT = 'Bravo3\Orm\Tests\Entities\Product';
 
-    public function testIo()
+    /**
+     * @dataProvider entityMangerDataProvider
+     * @param EntityManager $em
+     */
+    public function testIo(EntityManager $em)
     {
-        $em = $this->getEntityManager();
-
         $create_time = new \DateTime("2015-01-01 12:15:03+0000");
 
         $product = new Product();
@@ -50,10 +53,12 @@ class EntityManagerTest extends AbstractOrmTest
         $this->assertTrue($retrieved->getActive());
     }
 
-    public function testRefresh()
+    /**
+     * @dataProvider entityMangerDataProvider
+     * @param EntityManager $em
+     */
+    public function testRefresh(EntityManager $em)
     {
-        $em = $this->getEntityManager();
-
         $product = new Product();
         $product->setId(222)->setName('Test Product')->setDescription("lorem ipsum");
         $em->persist($product)->flush();
@@ -69,10 +74,12 @@ class EntityManagerTest extends AbstractOrmTest
         $this->assertTrue($product instanceof OrmProxyInterface);
     }
 
-    public function testCache()
+    /**
+     * @dataProvider entityMangerDataProvider
+     * @param EntityManager $em
+     */
+    public function testCache(EntityManager $em)
     {
-        $em = $this->getEntityManager();
-
         $product = new Product();
         $product->setId(212)->setName('Test Product')->setDescription("lorem ipsum");
         $em->persist($product)->flush();
@@ -92,10 +99,12 @@ class EntityManagerTest extends AbstractOrmTest
         $this->assertEquals('lorem ipsum', $r3->getDescription());
     }
 
-    public function testCacheIndex()
+    /**
+     * @dataProvider entityMangerDataProvider
+     * @param EntityManager $em
+     */
+    public function testCacheIndex(EntityManager $em)
     {
-        $em = $this->getEntityManager();
-
         $product = new IndexedEntity();
         $product->setId1(212)->setId2('test')->setAlpha('index-test')->setBravo(888);
         $em->persist($product)->flush();
@@ -289,10 +298,12 @@ class EntityManagerTest extends AbstractOrmTest
         }
     }
 
-    public function testIntercepts()
+    /**
+     * @dataProvider entityMangerDataProvider
+     * @param EntityManager $em
+     */
+    public function testIntercepts(EntityManager $em)
     {
-        $em = $this->getEntityManager();
-
         $em->getDispatcher()->addListener(
             Event::PRE_RETRIEVE,
             function (RetrieveEvent $event) {
@@ -324,10 +335,12 @@ class EntityManagerTest extends AbstractOrmTest
         $this->assertTrue($retrieved instanceof Article);
     }
 
-    public function testCreateModified()
+    /**
+     * @dataProvider entityMangerDataProvider
+     * @param EntityManager $em
+     */
+    public function testCreateModified(EntityManager $em)
     {
-        $em = $this->getEntityManager();
-
         $entity = new ModifiedEntity();
         $entity->setId(111)->setName('Create/Modify Entity');
 
@@ -351,18 +364,21 @@ class EntityManagerTest extends AbstractOrmTest
 
     /**
      * @expectedException \Bravo3\Orm\Exceptions\InvalidEntityException
+     * @dataProvider entityMangerDataProvider
+     * @param EntityManager $em
      */
-    public function testBadEntity()
+    public function testBadEntity(EntityManager $em)
     {
-        $em         = $this->getEntityManager();
         $bad_entity = new BadEntity();
         $em->persist($bad_entity);
     }
 
-    public function testSerialisation()
+    /**
+     * @dataProvider entityMangerDataProvider
+     * @param EntityManager $em
+     */
+    public function testSerialisation(EntityManager $em)
     {
-        $em = $this->getEntityManager();
-
         $product = new Product();
         $product->setId(700)->setEnum(Enum::BRAVO())->setList(['a', 'b', 'c']);
         $em->persist($product)->flush();
@@ -375,10 +391,12 @@ class EntityManagerTest extends AbstractOrmTest
         $this->assertEquals('c', $r_product->getList()[2]);
     }
 
-    public function testNullObjectSerialisation()
+    /**
+     * @dataProvider entityMangerDataProvider
+     * @param EntityManager $em
+     */
+    public function testNullObjectSerialisation(EntityManager $em)
     {
-        $em = $this->getEntityManager();
-
         $product = new Product();
         $product->setId(701)->setEnum(null);
         $em->persist($product)->flush();
@@ -388,9 +406,12 @@ class EntityManagerTest extends AbstractOrmTest
         $this->assertNull($r_product->getEnum());
     }
 
-    public function testRefs()
+    /**
+     * @dataProvider entityMangerDataProvider
+     * @param EntityManager $em
+     */
+    public function testRefs(EntityManager $em)
     {
-        $em      = $this->getEntityManager();
         $client  = $this->getRawRedisClient();
         $members = $client->smembers('ref:leaf:leaf1');
         $this->assertCount(0, $members);
