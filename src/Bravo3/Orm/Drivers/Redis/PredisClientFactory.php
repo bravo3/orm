@@ -18,9 +18,9 @@ class PredisClientFactory
      * Note: First connection made to the Sentinel will be persisted and used for all
      * consequent function calls.
      *
-     * @param  mixed  $params
-     * @param  mixed  $options
-     * @param  mixed  $sentinel_params
+     * @param  mixed $params
+     * @param  mixed $options
+     * @param  mixed $sentinel_params
      * @return Client
      */
     public static function create($params = null, $options = null, $sentinel_params = null)
@@ -29,7 +29,7 @@ class PredisClientFactory
 
         // Make sure slave discovery from sentinels flag is set
         if (is_array($options) && isset($options['discover_slaves'])) {
-            $discover_slaves = (bool) $options['discover_slaves'];
+            $discover_slaves = (bool)$options['discover_slaves'];
             unset($options['discover_slaves']);
         }
 
@@ -79,6 +79,5 @@ class PredisClientFactory
         } else {
             return new Client($params, $options);
         }
-
     }
 }

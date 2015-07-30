@@ -12,6 +12,7 @@ use Bravo3\Orm\KeySchemes\KeySchemeInterface;
 use Bravo3\Orm\KeySchemes\StandardKeyScheme;
 use Bravo3\Orm\Services\ScoreNormaliser;
 use Bravo3\Orm\Traits\DebugTrait;
+use Predis\Client;
 use Predis\Command\CommandInterface;
 use Predis\ClientInterface;
 use Predis\Command\KeyScan;
@@ -54,7 +55,7 @@ class RedisDriver implements DriverInterface
     protected $unit_of_work;
 
     /**
-     * @var Predis\Client
+     * @var Client
      */
     protected $client;
 
@@ -76,8 +77,12 @@ class RedisDriver implements DriverInterface
      * @param mixed                $sentinel_params
      * @param ClientInterface|null $client
      */
-    public function __construct($params = null, $options = null, $sentinel_params = null, ClientInterface $client = null)
-    {
+    public function __construct(
+        $params = null,
+        $options = null,
+        $sentinel_params = null,
+        ClientInterface $client = null
+    ) {
         if (null === $client) {
             $this->client = PredisClientFactory::create($params, $options, $sentinel_params);
         } else {
@@ -325,15 +330,23 @@ class RedisDriver implements DriverInterface
      */
     public function scan($key)
     {
-        $cursor = 0;
-        $results = [];
+        $cursor     = 0;
+        $results    = [];
         $connection = $this->client->getConnection();
 
         do {
             if ($connection instanceof ReplicationInterface) {
+                /** @var NodeConnectionInterface[] $slaves */
                 $slaves = $connection->getSlaves();
-                /** @var NodeConnectionInterface $slave */
-                $slave = $slaves[rand(0, count($slaves) - 1)];
+
+                if (count($slaves) == 1) {
+                    $slave = $slaves[0];
+                } elseif ($slaves) {
+                    $slave = $slaves[rand(0, count($slaves) - 1)];
+                } else {
+                    $slave = $connection->getMaster();
+                }
+
                 $cmd = new KeyScan();
                 $cmd->setArguments([$cursor, 'MATCH', $key]);
                 $set = $slave->executeCommand($cmd);
@@ -341,7 +354,7 @@ class RedisDriver implements DriverInterface
                 $iterator = $connection->getIterator();
                 /** @var NodeConnectionInterface $node */
                 $node = $iterator->current();
-                $cmd = new KeyScan();
+                $cmd  = new KeyScan();
                 $cmd->setArguments([$cursor, 'MATCH', $key]);
                 $set = $node->executeCommand($cmd);
             } else {
@@ -354,7 +367,7 @@ class RedisDriver implements DriverInterface
                 );
             }
 
-            $cursor = $set[0];
+            $cursor  = $set[0];
             $results = array_merge($results, $set[1]);
         } while ($cursor != 0);
 
@@ -513,7 +526,7 @@ class RedisDriver implements DriverInterface
      */
     public function addRef($key, Ref $ref)
     {
-        $this->unit_of_work->addCommand('SetAdd', [$key, (string) $ref]);
+        $this->unit_of_work->addCommand('SetAdd', [$key, (string)$ref]);
     }
 
     /**
@@ -528,7 +541,7 @@ class RedisDriver implements DriverInterface
      */
     public function removeRef($key, Ref $ref)
     {
-        $this->unit_of_work->addCommand('SetRemove', [$key, (string) $ref]);
+        $this->unit_of_work->addCommand('SetRemove', [$key, (string)$ref]);
     }
 
     /**
@@ -623,7 +636,7 @@ class RedisDriver implements DriverInterface
      * A wrapper function to wrap Redis commands which go to Predis Client
      * in order to replay them if server connection issues occur.
      *
-     * @param string         $cmd             function to call against the Predis client
+     * @param string         $cmd function to call against the Predis client
      * @param array|callable $params
      * @param int            $retry_iteration
      *
@@ -632,9 +645,8 @@ class RedisDriver implements DriverInterface
     private function clientCmd($cmd, $params, $retry_iteration = 0)
     {
         try {
-
             $delay = $this->calculateRetryDelay($retry_iteration);
-            if (!empty($delay)) {
+            if ($delay > 0) {
                 usleep($delay);
             }
 
