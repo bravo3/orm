@@ -30,14 +30,4 @@ class AddIndexWorker extends AbstractIndexWorker
 
         $this->writeData($filename, json_encode($content), $parameters['umask']);
     }
-
-    /**
-     * Returns a list of required parameters
-     *
-     * @return string[]
-     */
-    public function getRequiredParameters()
-    {
-        return ['filename', 'value', 'umask'];
-    }
 }

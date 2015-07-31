@@ -7,7 +7,10 @@ use Bravo3\Orm\Drivers\Common\SerialisedData;
 use Bravo3\Orm\Drivers\Common\UnitOfWork;
 use Bravo3\Orm\Drivers\Common\WorkerPool;
 use Bravo3\Orm\Drivers\DriverInterface;
+use Bravo3\Orm\Drivers\Filesystem\Workers\AddIndexWorker;
 use Bravo3\Orm\Drivers\Filesystem\Workers\DeleteWorker;
+use Bravo3\Orm\Drivers\Filesystem\Workers\RemoveIndexWorker;
+use Bravo3\Orm\Drivers\Filesystem\Workers\RetrieveIndexWorker;
 use Bravo3\Orm\Drivers\Filesystem\Workers\WriteWorker;
 use Bravo3\Orm\Drivers\Filesystem\Workers\ReadWorker;
 use Bravo3\Orm\Drivers\Filesystem\Workers\RetrieveWorker;
@@ -56,10 +59,13 @@ class FilesystemDriver implements DriverInterface
         $this->unit_of_work = new UnitOfWork();
         $this->worker_pool  = new WorkerPool(
             [
-                'read'     => ReadWorker::class,
-                'write'    => WriteWorker::class,
-                'retrieve' => RetrieveWorker::class,
-                'delete'   => DeleteWorker::class,
+                'read'           => ReadWorker::class,
+                'write'          => WriteWorker::class,
+                'retrieve'       => RetrieveWorker::class,
+                'delete'         => DeleteWorker::class,
+                'add_index'      => AddIndexWorker::class,
+                'remove_index'   => RemoveIndexWorker::class,
+                'retrieve_index' => RetrieveIndexWorker::class,
             ]
         );
     }
@@ -328,7 +334,14 @@ class FilesystemDriver implements DriverInterface
      */
     public function addMultiValueIndex($key, $value)
     {
-        // TODO: Implement addMultiValueIndex() method.
+        $this->worker_pool->execute(
+            new Command('add_index',
+                        [
+                            'filename' => $this->keyToFilename($key, false),
+                            'value'    => $value,
+                            'umask'    => $this->getUmask()
+                        ])
+        );
     }
 
     /**
@@ -340,7 +353,14 @@ class FilesystemDriver implements DriverInterface
      */
     public function removeMultiValueIndex($key, $value)
     {
-        // TODO: Implement removeMultiValueIndex() method.
+        $this->worker_pool->execute(
+            new Command('remove_index',
+                        [
+                            'filename' => $this->keyToFilename($key, false),
+                            'value'    => $value,
+                            'umask'    => $this->getUmask()
+                        ])
+        );
     }
 
     /**
@@ -353,7 +373,9 @@ class FilesystemDriver implements DriverInterface
      */
     public function getMultiValueIndex($key)
     {
-        // TODO: Implement getMultiValueIndex() method.
+        $this->worker_pool->execute(
+            new Command('retrieve_index', ['filename' => $this->keyToFilename($key, false)])
+        );
     }
 
     /**
