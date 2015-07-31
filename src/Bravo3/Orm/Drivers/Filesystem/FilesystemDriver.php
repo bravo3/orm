@@ -7,8 +7,11 @@ use Bravo3\Orm\Drivers\Common\SerialisedData;
 use Bravo3\Orm\Drivers\Common\UnitOfWork;
 use Bravo3\Orm\Drivers\Common\WorkerPool;
 use Bravo3\Orm\Drivers\DriverInterface;
-use Bravo3\Orm\Drivers\Filesystem\Workers\PersistWorker;
+use Bravo3\Orm\Drivers\Filesystem\Workers\DeleteWorker;
+use Bravo3\Orm\Drivers\Filesystem\Workers\WriteWorker;
+use Bravo3\Orm\Drivers\Filesystem\Workers\ReadWorker;
 use Bravo3\Orm\Drivers\Filesystem\Workers\RetrieveWorker;
+use Bravo3\Orm\KeySchemes\FilesystemKeyScheme;
 use Bravo3\Orm\KeySchemes\KeySchemeInterface;
 use Bravo3\Orm\Traits\DebugTrait;
 
@@ -53,8 +56,10 @@ class FilesystemDriver implements DriverInterface
         $this->unit_of_work = new UnitOfWork();
         $this->worker_pool  = new WorkerPool(
             [
-                'persist'  => PersistWorker::class,
+                'read'     => ReadWorker::class,
+                'write'    => WriteWorker::class,
                 'retrieve' => RetrieveWorker::class,
+                'delete'   => DeleteWorker::class,
             ]
         );
     }
@@ -171,7 +176,7 @@ class FilesystemDriver implements DriverInterface
 
         $this->unit_of_work->queueCommand(
             new Command(
-                'persist',
+                'write',
                 [
                     'filename' => $this->keyToFilename($key),
                     'payload'  => $data->getSerialisationCode().self::DATA_DELIMITER.
@@ -191,11 +196,9 @@ class FilesystemDriver implements DriverInterface
      */
     public function delete($key)
     {
-        $fn = $this->keyToFilename($key, false);
-
-        if (file_exists($fn)) {
-            unlink($fn);
-        }
+        $this->worker_pool->execute(
+            new Command('delete', ['filename' => $this->keyToFilename($key, false)])
+        );
     }
 
     /**
@@ -251,7 +254,7 @@ class FilesystemDriver implements DriverInterface
      */
     public function getPreferredKeyScheme()
     {
-        // TODO: Implement getPreferredKeyScheme() method.
+        return new FilesystemKeyScheme();
     }
 
     /**
@@ -263,7 +266,16 @@ class FilesystemDriver implements DriverInterface
      */
     public function setSingleValueIndex($key, $value)
     {
-        // TODO: Implement setSingleValueIndex() method.
+        $this->unit_of_work->queueCommand(
+            new Command(
+                'write',
+                [
+                    'filename' => $this->keyToFilename($key),
+                    'payload'  => $value,
+                    'umask'    => $this->getUmask()
+                ]
+            )
+        );
     }
 
     /**
@@ -276,7 +288,9 @@ class FilesystemDriver implements DriverInterface
      */
     public function getSingleValueIndex($key)
     {
-        // TODO: Implement getSingleValueIndex() method.
+        return $this->worker_pool->execute(
+            new Command('read', ['filename' => $this->keyToFilename($key, false)])
+        );
     }
 
     /**
@@ -287,7 +301,9 @@ class FilesystemDriver implements DriverInterface
      */
     public function clearSingleValueIndex($key)
     {
-        // TODO: Implement clearSingleValueIndex() method.
+        $this->worker_pool->execute(
+            new Command('delete', ['filename' => $this->keyToFilename($key, false)])
+        );
     }
 
     /**
@@ -298,7 +314,9 @@ class FilesystemDriver implements DriverInterface
      */
     public function clearMultiValueIndex($key)
     {
-        // TODO: Implement clearMultiValueIndex() method.
+        $this->worker_pool->execute(
+            new Command('delete', ['filename' => $this->keyToFilename($key, false)])
+        );
     }
 
     /**
@@ -346,7 +364,9 @@ class FilesystemDriver implements DriverInterface
      */
     public function clearSortedIndex($key)
     {
-        // TODO: Implement clearSortedIndex() method.
+        $this->worker_pool->execute(
+            new Command('delete', ['filename' => $this->keyToFilename($key, false)])
+        );
     }
 
     /**
@@ -446,7 +466,9 @@ class FilesystemDriver implements DriverInterface
      */
     public function clearRefs($key)
     {
-        // TODO: Implement clearRefs() method.
+        $this->worker_pool->execute(
+            new Command('delete', ['filename' => $this->keyToFilename($key, false)])
+        );
     }
 
     /**

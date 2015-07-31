@@ -4,8 +4,6 @@ namespace Bravo3\Orm\Tests;
 use Bravo3\Orm\Drivers\DriverInterface;
 use Bravo3\Orm\Drivers\Filesystem\FilesystemDriver;
 use Bravo3\Orm\Drivers\Redis\RedisDriver;
-use Bravo3\Orm\KeySchemes\FilesystemKeyScheme;
-use Bravo3\Orm\KeySchemes\StandardKeyScheme;
 use Bravo3\Orm\Mappers\Annotation\AnnotationMapper;
 use Bravo3\Orm\Services\EntityManager;
 use Bravo3\Properties\Conf;
@@ -42,20 +40,17 @@ abstract class AbstractOrmTest extends \PHPUnit_Framework_TestCase
     protected function entityManagerDataProvider()
     {
         $drivers = [
-            [$this->getRedisDriver(), new StandardKeyScheme()],
-            [$this->getFsDriver(), new FilesystemKeyScheme()],
+            $this->getRedisDriver(),
+            $this->getFsDriver(),
         ];
 
         $ems = [];
 
-        foreach ($drivers as $index => $driver_arr) {
-            /** @var DriverInterface $driver */
-            $driver     = $driver_arr[0];
-            $key_scheme = $driver_arr[1];
-
+        /** @var DriverInterface $driver */
+        foreach ($drivers as $index => $driver) {
             $driver->setDebugMode(true);
             $mapper = new AnnotationMapper();
-            $em     = EntityManager::build($driver, $mapper, null, $key_scheme);
+            $em     = EntityManager::build($driver, $mapper, null, $driver->getPreferredKeyScheme());
 
             $temp = sys_get_temp_dir().'/bravo3-orm/'.$index;
             if (!file_exists($temp)) {
@@ -71,7 +66,22 @@ abstract class AbstractOrmTest extends \PHPUnit_Framework_TestCase
 
     protected function getFsDriver()
     {
-        return new FilesystemDriver();
+        $db_path = sys_get_temp_dir().'/bravo3-orm/fs-db/';
+
+        if (file_exists($db_path)) {
+            $this->delTree($db_path);
+        }
+
+        return new FilesystemDriver($db_path);
+    }
+
+    private function delTree($dir)
+    {
+        $files = array_diff(scandir($dir), array('.', '..'));
+        foreach ($files as $file) {
+            (is_dir("$dir/$file")) ? $this->delTree("$dir/$file") : unlink("$dir/$file");
+        }
+        return rmdir($dir);
     }
 
     protected function getRedisDriver()

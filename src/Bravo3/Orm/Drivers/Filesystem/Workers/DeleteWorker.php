@@ -3,7 +3,10 @@ namespace Bravo3\Orm\Drivers\Filesystem\Workers;
 
 use Bravo3\Orm\Drivers\Common\WorkerInterface;
 
-class PersistWorker implements WorkerInterface
+/**
+ * Delete an object from the filesystem
+ */
+class DeleteWorker implements WorkerInterface
 {
     /**
      * Execute the command
@@ -14,15 +17,9 @@ class PersistWorker implements WorkerInterface
     public function execute(array $parameters)
     {
         $filename = $parameters['filename'];
-        $payload  = $parameters['payload'];
 
         if (file_exists($filename)) {
-            // Write file, maintaining permissions
-            file_put_contents($filename, $payload);
-        } else {
-            // Write file and set the requested umask
-            file_put_contents($filename, $payload);
-            chmod($filename, $parameters['umask']);
+            unlink($filename);
         }
     }
 
@@ -33,6 +30,6 @@ class PersistWorker implements WorkerInterface
      */
     public function getRequiredParameters()
     {
-        return ['filename', 'payload', 'umask'];
+        return ['filename'];
     }
 }

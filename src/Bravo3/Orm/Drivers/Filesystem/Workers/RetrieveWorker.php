@@ -7,7 +7,12 @@ use Bravo3\Orm\Drivers\Filesystem\FilesystemDriver;
 use Bravo3\Orm\Exceptions\NotFoundException;
 use Bravo3\Orm\Exceptions\UnexpectedValueException;
 
-class RetrieveWorker implements WorkerInterface
+/**
+ * Read and parse an entity object, returning SerialisedData
+ *
+ * This class will honour the TTL, throwing a NotFoundException if the TTL has expired.
+ */
+class RetrieveWorker extends AbstractWorker
 {
     /**
      * Execute the command
@@ -17,18 +22,19 @@ class RetrieveWorker implements WorkerInterface
      */
     public function execute(array $parameters)
     {
-        $key = $parameters['key'];
-        $fn  = $parameters['filename'];
+        $key     = $parameters['key'];
+        $payload = $this->readData($parameters['filename']);
 
-        if (is_readable($fn)) {
-            $data = explode(FilesystemDriver::DATA_DELIMITER, file_get_contents($fn), 3);
+        if ($payload !== null) {
+            $data = explode(FilesystemDriver::DATA_DELIMITER, $payload, 3);
+
             if (count($data) != 3) {
                 throw new UnexpectedValueException("Object data is corrupted: ".$key);
             }
 
             $ttl = (int)$data[1];
             if ($ttl > 0 && $ttl < time()) {
-                unlink($fn);
+                unlink($parameters['filename']);
                 throw new NotFoundException("Object has expired: ".$key);
             }
 
