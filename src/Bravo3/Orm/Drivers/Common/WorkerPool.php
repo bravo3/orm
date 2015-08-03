@@ -78,7 +78,7 @@ class WorkerPool
      */
     protected function getWorker($name)
     {
-        if ($this->hasWorker($name)) {
+        if (!$this->hasWorker($name)) {
             throw new UnexpectedValueException("Command '".$name."' does not have a worker");
         }
 

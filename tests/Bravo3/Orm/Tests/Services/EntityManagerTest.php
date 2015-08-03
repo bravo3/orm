@@ -6,28 +6,18 @@ use Bravo3\Orm\Events\PersistEvent;
 use Bravo3\Orm\Events\RetrieveEvent;
 use Bravo3\Orm\Exceptions\NotFoundException;
 use Bravo3\Orm\Proxy\OrmProxyInterface;
-use Bravo3\Orm\Query\SortedQuery;
 use Bravo3\Orm\Services\EntityManager;
 use Bravo3\Orm\Tests\Entities\BadEntity;
 use Bravo3\Orm\Tests\Entities\Indexed\IndexedEntity;
-use Bravo3\Orm\Tests\Entities\Indexed\SluggedArticle;
 use Bravo3\Orm\Tests\Entities\ModifiedEntity;
 use Bravo3\Orm\Tests\Entities\OneToMany\Article;
-use Bravo3\Orm\Tests\Entities\OneToMany\Category;
-use Bravo3\Orm\Tests\Entities\Refs\Article as RefArticle;
-use Bravo3\Orm\Tests\Entities\Refs\Category as RefCategory;
 use Bravo3\Orm\Tests\Entities\Product;
-use Bravo3\Orm\Tests\Entities\Refs\Leaf;
-use Bravo3\Orm\Tests\Entities\Refs\Owner;
 use Bravo3\Orm\Tests\Resources\Enum;
 
 class EntityManagerTest extends AbstractOrmTest
 {
-    const ENTITY_ARTICLE = 'Bravo3\Orm\Tests\Entities\OneToMany\Article';
-    const ENTITY_PRODUCT = 'Bravo3\Orm\Tests\Entities\Product';
-
     /**
-     * @dataProvider entityMangerDataProvider
+     * @dataProvider entityManagerDataProvider
      * @param EntityManager $em
      */
     public function testIo(EntityManager $em)
@@ -42,7 +32,7 @@ class EntityManagerTest extends AbstractOrmTest
         $em->flush();
 
         /** @var Product|OrmProxyInterface $retrieved */
-        $retrieved = $em->retrieve(self::ENTITY_PRODUCT, 123);
+        $retrieved = $em->retrieve(Product::class, 123);
         $this->validateProxyInterface($retrieved);
 
         $this->assertEquals($product->getId(), $retrieved->getId());
@@ -54,7 +44,7 @@ class EntityManagerTest extends AbstractOrmTest
     }
 
     /**
-     * @dataProvider entityMangerDataProvider
+     * @dataProvider entityManagerDataProvider
      * @param EntityManager $em
      */
     public function testRefresh(EntityManager $em)
@@ -75,7 +65,7 @@ class EntityManagerTest extends AbstractOrmTest
     }
 
     /**
-     * @dataProvider entityMangerDataProvider
+     * @dataProvider entityManagerDataProvider
      * @param EntityManager $em
      */
     public function testCache(EntityManager $em)
@@ -100,7 +90,7 @@ class EntityManagerTest extends AbstractOrmTest
     }
 
     /**
-     * @dataProvider entityMangerDataProvider
+     * @dataProvider entityManagerDataProvider
      * @param EntityManager $em
      */
     public function testCacheIndex(EntityManager $em)
@@ -124,182 +114,28 @@ class EntityManagerTest extends AbstractOrmTest
         $this->assertEquals(888, $r3->getBravo());
     }
 
-    public function testDeleteRelationships()
-    {
-        $em     = $this->getEntityManager();
-        $client = $this->getRawRedisClient();
-
-        $article1 = new Article();
-        $article1->setId(301)->setTitle('Article 301');
-
-        $article2 = new Article();
-        $article2->setId(302)->setTitle('Article 302');
-
-        $category1 = new Category();
-        $category1->setId(351)->setName('Category 351');
-
-        $category1->addArticle($article1)->addArticle($article2);
-
-        $em->persist($category1)->persist($article1)->persist($article2)->flush();
-
-        $this->assertTrue($client->exists('doc:article:301'));
-        $this->assertEquals('351', $client->get('mto:article-category:301:canonical_category'));
-
-        /** @var Article $article */
-        $article = $em->retrieve(self::ENTITY_ARTICLE, 301);
-        $article->setId(399);
-
-        $em->delete($article)->flush();
-
-        $this->assertFalse($client->exists('doc:article:301'));
-        $this->assertFalse($client->exists('mto:article-category:301:canonical_category'));
-    }
-
-    public function testDeleteIndices()
-    {
-        $em     = $this->getEntityManager();
-        $client = $this->getRawRedisClient();
-
-        $article = new SluggedArticle();
-        $article->setId(401)->setName('slugged article')->setSlug('some-slug');
-
-        $em->persist($article)->flush();
-        $this->assertTrue($client->exists('doc:slugged_article:401'));
-        $this->assertEquals('401', $client->get('idx:slugged_article:slug:some-slug'));
-        $this->assertEquals('401', $client->get('idx:slugged_article:name:slugged article'));
-
-        $em->delete($article)->flush();
-        $this->assertFalse($client->exists('doc:slugged_article:401'));
-        $this->assertFalse($client->exists('idx:slugged_article:slug:some-slug'));
-        $this->assertFalse($client->exists('idx:slugged_article:name:slugged article'));
-    }
-
     /**
-     * Use ref's to delete non-inversed relationships
+     * @dataProvider entityManagerDataProvider
+     * @group        integration
+     * @param EntityManager $em
      */
-    public function testDeleteIndicesAndRelationships()
+    public function testTtl(EntityManager $em)
     {
-        $em     = $this->getEntityManager();
-        $client = $this->getRawRedisClient();
-
-        $article1 = new RefArticle();
-        $article1->setId(501)->setTitle('Ref Article 501');
-
-        $category1 = new RefCategory();
-        $category1->setId(532)->setName('Ref Category 532');
-
-        $article1->setCanonicalCategory($category1);
-
-        $em->persist($category1)->persist($article1)->flush();
-
-        $this->assertTrue($client->exists('doc:article:501'));
-        $this->assertEquals('532', $client->get('mto:article-category:501:canonical_category'));
-
-        // Not inversed:
-        $this->assertFalse(in_array('501', $client->smembers('otm:category-article:532:articles')));
-
-        // Ref exists:
-        $this->assertTrue($client->exists('ref:category:532'));
-        $this->assertTrue(
-            in_array(
-                'Bravo3\Orm\Tests\Entities\Refs\Article:501:canonical_category',
-                $client->smembers('ref:category:532')
-            )
-        );
-
-        /** @var RefArticle $article */
-        $article = $em->retrieve(RefArticle::class, 501);
-        $em->delete($article)->flush();
-
-        $this->assertFalse($client->exists('doc:article:501'));
-        $this->assertFalse($client->exists('mto:article-category:501:canonical_category'));
-        $this->assertFalse(in_array('501', $client->smembers('otm:category-article:532:articles')));
-
-        // Ref no longer needed:
-        $this->assertFalse(
-            in_array(
-                'Bravo3\Orm\Tests\Entities\Refs\Article:501:canonical_category',
-                $client->smembers('ref:category:532')
-            )
-        );
-    }
-
-    /**
-     * Same as above test, except we'll delete the category
-     */
-    public function testDeleteIndicesAndRelationshipsAlt()
-    {
-        $em     = $this->getEntityManager();
-        $client = $this->getRawRedisClient();
-
-        $article1 = new RefArticle();
-        $article1->setId(502)->setTitle('Ref Article 502');
-
-        $category1 = new RefCategory();
-        $category1->setId(533)->setName('Ref Category 533');
-
-        $article1->setCanonicalCategory($category1);
-
-        $em->persist($category1)->persist($article1)->flush();
-
-        $this->assertTrue($client->exists('doc:article:502'));
-        $this->assertEquals('533', $client->get('mto:article-category:502:canonical_category'));
-
-        // Not inversed:
-        $this->assertFalse(in_array('502', $client->smembers('otm:category-article:533:articles')));
-
-        // Ref exists:
-        $this->assertTrue($client->exists('ref:category:533'));
-        $this->assertTrue(
-            in_array(
-                'Bravo3\Orm\Tests\Entities\Refs\Article:502:canonical_category',
-                $client->smembers('ref:category:533')
-            )
-        );
-
-        /** @var RefCategory $category */
-        $category = $em->retrieve(RefCategory::class, 533);
-        $em->delete($category)->flush();
-
-        $this->assertFalse($client->exists('doc:category:533'));
-        $this->assertFalse($client->exists('mto:article-category:502:canonical_category'));
-        $this->assertFalse(in_array('502', $client->smembers('otm:category-article:533:articles')));
-
-        // Ref no longer needed:
-        $this->assertFalse(
-            in_array(
-                'Bravo3\Orm\Tests\Entities\Refs\Article:502:canonical_category',
-                $client->smembers('ref:category:533')
-            )
-        );
-    }
-
-    /**
-     * @group integration
-     */
-    public function testTtl()
-    {
-        $em = $this->getEntityManager();
-
         $article = new Article();
         $article->setId(499)->setTitle('Cached Article');
         $em->persist($article, 2)->flush();
 
-        $r_article = $em->retrieve(self::ENTITY_ARTICLE, '499');
+        $r_article = $em->retrieve(Article::class, '499', false);
         $this->assertEquals('Cached Article', $r_article->getTitle());
 
         sleep(3);
 
-        try {
-            $em->retrieve(self::ENTITY_ARTICLE, '499');
-            $this->fail("Entity did not expire");
-        } catch (NotFoundException $e) {
-            // good
-        }
+        $this->setExpectedException(NotFoundException::class);
+        $em->retrieve(Article::class, '499', false);
     }
 
     /**
-     * @dataProvider entityMangerDataProvider
+     * @dataProvider entityManagerDataProvider
      * @param EntityManager $em
      */
     public function testIntercepts(EntityManager $em)
@@ -331,12 +167,12 @@ class EntityManagerTest extends AbstractOrmTest
 
         $this->assertEquals('Persisted Product', $product->getName());
 
-        $retrieved = $em->retrieve(self::ENTITY_PRODUCT, 111);
+        $retrieved = $em->retrieve(Product::class, 111);
         $this->assertTrue($retrieved instanceof Article);
     }
 
     /**
-     * @dataProvider entityMangerDataProvider
+     * @dataProvider entityManagerDataProvider
      * @param EntityManager $em
      */
     public function testCreateModified(EntityManager $em)
@@ -364,7 +200,7 @@ class EntityManagerTest extends AbstractOrmTest
 
     /**
      * @expectedException \Bravo3\Orm\Exceptions\InvalidEntityException
-     * @dataProvider entityMangerDataProvider
+     * @dataProvider entityManagerDataProvider
      * @param EntityManager $em
      */
     public function testBadEntity(EntityManager $em)
@@ -374,7 +210,7 @@ class EntityManagerTest extends AbstractOrmTest
     }
 
     /**
-     * @dataProvider entityMangerDataProvider
+     * @dataProvider entityManagerDataProvider
      * @param EntityManager $em
      */
     public function testSerialisation(EntityManager $em)
@@ -384,7 +220,7 @@ class EntityManagerTest extends AbstractOrmTest
         $em->persist($product)->flush();
 
         /** @var Product $r_product */
-        $r_product = $em->retrieve(self::ENTITY_PRODUCT, '700');
+        $r_product = $em->retrieve(Product::class, '700');
         $this->assertEquals(Enum::BRAVO(), $r_product->getEnum());
         $this->assertCount(3, $r_product->getList());
         $this->assertEquals('a', $r_product->getList()[0]);
@@ -392,7 +228,7 @@ class EntityManagerTest extends AbstractOrmTest
     }
 
     /**
-     * @dataProvider entityMangerDataProvider
+     * @dataProvider entityManagerDataProvider
      * @param EntityManager $em
      */
     public function testNullObjectSerialisation(EntityManager $em)
@@ -402,52 +238,7 @@ class EntityManagerTest extends AbstractOrmTest
         $em->persist($product)->flush();
 
         /** @var Product $r_product */
-        $r_product = $em->retrieve(self::ENTITY_PRODUCT, '701');
+        $r_product = $em->retrieve(Product::class, '701');
         $this->assertNull($r_product->getEnum());
-    }
-
-    /**
-     * @dataProvider entityMangerDataProvider
-     * @param EntityManager $em
-     */
-    public function testRefs(EntityManager $em)
-    {
-        $client  = $this->getRawRedisClient();
-        $members = $client->smembers('ref:leaf:leaf1');
-        $this->assertCount(0, $members);
-
-        $leaf  = (new Leaf())->setId('leaf1');
-        $owner = (new Owner())->setId('owner1')->setLeaf([$leaf]);
-
-        $em->persist($leaf)->persist($owner)->flush();
-
-        $client  = $this->getRawRedisClient();
-        $members = $client->smembers('ref:leaf:leaf1');
-
-        $this->assertCount(1, $members);
-        $this->assertEquals('Bravo3\Orm\Tests\Entities\Refs\Owner:owner1:leaf', $members[0]);
-
-        $leaves = $em->sortedQuery(new SortedQuery($owner, 'leaf', 'id'));
-        $this->assertCount(1, $leaves);
-
-        $em->refresh($owner);
-        $em->refresh($leaf);
-
-        $leaf->setPublished(false);
-        $em->persist($leaf)->flush();
-
-        $leaves = $em->sortedQuery(new SortedQuery($owner, 'leaf', 'id'));
-        $this->assertCount(0, $leaves);
-
-        $leaf->setPublished(true);
-        $em->persist($leaf)->flush();
-
-        $leaves = $em->sortedQuery(new SortedQuery($owner, 'leaf', 'id'));
-        $this->assertCount(1, $leaves);
-
-        $em->delete($leaf)->flush();
-
-        $leaves = $em->sortedQuery(new SortedQuery($owner, 'leaf', 'id'));
-        $this->assertCount(0, $leaves);
     }
 }

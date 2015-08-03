@@ -21,12 +21,7 @@ class AddIndexWorker extends AbstractIndexWorker
             $value = [$value];
         }
 
-        $content = $this->getCurrentValue($filename);
-        foreach ($value as $item) {
-            if (!in_array($item, $content)) {
-                $content[] = $item;
-            }
-        }
+        $content = array_unique(array_merge($this->getCurrentValue($filename), $value));
 
         $this->writeData($filename, json_encode($content), $parameters['umask']);
     }

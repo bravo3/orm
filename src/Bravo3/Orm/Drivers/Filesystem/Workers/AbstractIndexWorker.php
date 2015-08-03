@@ -4,7 +4,7 @@ namespace Bravo3\Orm\Drivers\Filesystem\Workers;
 abstract class AbstractIndexWorker extends AbstractWorker
 {
     /**
-     * Returns a list of required parameters
+     * Default requirements for index workers
      *
      * @return string[]
      */

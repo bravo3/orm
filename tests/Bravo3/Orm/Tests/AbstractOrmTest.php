@@ -37,7 +37,7 @@ abstract class AbstractOrmTest extends \PHPUnit_Framework_TestCase
      *
      * @return EntityManager[]
      */
-    protected function entityManagerDataProvider()
+    public function entityManagerDataProvider()
     {
         $drivers = [
             $this->getRedisDriver(),
@@ -58,7 +58,7 @@ abstract class AbstractOrmTest extends \PHPUnit_Framework_TestCase
             }
             $em->getConfig()->setCacheDir($temp);
 
-            $ems[] = $em;
+            $ems[] = [$em];
         }
 
         return $ems;

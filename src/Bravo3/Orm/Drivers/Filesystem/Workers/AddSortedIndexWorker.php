@@ -54,9 +54,9 @@ class AddSortedIndexWorker extends AbstractIndexWorker
 
                 if ($a_score == $b_score) {
                     return 0;
+                } else {
+                    return $a_score < $b_score ? -1 : 1;
                 }
-
-                return $a_score < $b_score ? -1 : 1;
             }
         );
 
