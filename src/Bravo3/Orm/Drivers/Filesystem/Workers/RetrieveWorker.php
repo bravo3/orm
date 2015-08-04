@@ -4,6 +4,7 @@ namespace Bravo3\Orm\Drivers\Filesystem\Workers;
 use Bravo3\Orm\Drivers\Common\SerialisedData;
 use Bravo3\Orm\Drivers\Common\WorkerInterface;
 use Bravo3\Orm\Drivers\Filesystem\FilesystemDriver;
+use Bravo3\Orm\Exceptions\CorruptedEntityException;
 use Bravo3\Orm\Exceptions\NotFoundException;
 use Bravo3\Orm\Exceptions\UnexpectedValueException;
 
@@ -29,7 +30,7 @@ class RetrieveWorker extends AbstractWorker
             $data = explode(FilesystemDriver::DATA_DELIMITER, $payload, 3);
 
             if (count($data) != 3) {
-                throw new UnexpectedValueException("Object data is corrupted: ".$key);
+                throw new CorruptedEntityException("Object data is corrupted: ".$key);
             }
 
             $ttl = (int)$data[1];

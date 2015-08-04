@@ -11,12 +11,14 @@ use Bravo3\Orm\Drivers\Filesystem\Workers\AddIndexWorker;
 use Bravo3\Orm\Drivers\Filesystem\Workers\AddSortedIndexWorker;
 use Bravo3\Orm\Drivers\Filesystem\Workers\DeleteWorker;
 use Bravo3\Orm\Drivers\Filesystem\Workers\GetIndexSizeWorker;
+use Bravo3\Orm\Drivers\Filesystem\Workers\ReadWorker;
 use Bravo3\Orm\Drivers\Filesystem\Workers\RemoveIndexWorker;
 use Bravo3\Orm\Drivers\Filesystem\Workers\RemoveSortedIndexWorker;
 use Bravo3\Orm\Drivers\Filesystem\Workers\RetrieveIndexWorker;
-use Bravo3\Orm\Drivers\Filesystem\Workers\WriteWorker;
-use Bravo3\Orm\Drivers\Filesystem\Workers\ReadWorker;
+use Bravo3\Orm\Drivers\Filesystem\Workers\RetrieveSortedIndexWorker;
 use Bravo3\Orm\Drivers\Filesystem\Workers\RetrieveWorker;
+use Bravo3\Orm\Drivers\Filesystem\Workers\ScanWorker;
+use Bravo3\Orm\Drivers\Filesystem\Workers\WriteWorker;
 use Bravo3\Orm\KeySchemes\FilesystemKeyScheme;
 use Bravo3\Orm\KeySchemes\KeySchemeInterface;
 use Bravo3\Orm\Traits\DebugTrait;
@@ -62,16 +64,18 @@ class FilesystemDriver implements DriverInterface
         $this->unit_of_work = new UnitOfWork();
         $this->worker_pool  = new WorkerPool(
             [
-                'read'                => ReadWorker::class,
-                'write'               => WriteWorker::class,
-                'retrieve'            => RetrieveWorker::class,
-                'delete'              => DeleteWorker::class,
-                'add_index'           => AddIndexWorker::class,
-                'remove_index'        => RemoveIndexWorker::class,
-                'add_sorted_index'    => AddSortedIndexWorker::class,
-                'remove_sorted_index' => RemoveSortedIndexWorker::class,
-                'retrieve_index'      => RetrieveIndexWorker::class,
-                'get_index_size'      => GetIndexSizeWorker::class,
+                'read'                  => ReadWorker::class,
+                'write'                 => WriteWorker::class,
+                'retrieve'              => RetrieveWorker::class,
+                'delete'                => DeleteWorker::class,
+                'add_sorted_index'      => AddSortedIndexWorker::class,
+                'remove_sorted_index'   => RemoveSortedIndexWorker::class,
+                'retrieve_sorted_index' => RetrieveSortedIndexWorker::class,
+                'add_index'             => AddIndexWorker::class,
+                'remove_index'          => RemoveIndexWorker::class,
+                'retrieve_index'        => RetrieveIndexWorker::class,
+                'get_index_size'        => GetIndexSizeWorker::class,
+                'scan'                  => ScanWorker::class,
             ]
         );
     }
@@ -256,7 +260,9 @@ class FilesystemDriver implements DriverInterface
      */
     public function scan($key)
     {
-        // TODO: Implement scan() method.
+        return $this->worker_pool->execute(
+            new Command('scan', ['query' => $this->keyToFilename($key)])
+        );
     }
 
     /**
@@ -451,7 +457,15 @@ class FilesystemDriver implements DriverInterface
     public function getSortedIndex($key, $reverse = false, $start = null, $stop = null)
     {
         return $this->worker_pool->execute(
-            new Command('retrieve_index', ['filename' => $this->keyToFilename($key, false)])
+            new Command(
+                'retrieve_sorted_index',
+                [
+                    'filename' => $this->keyToFilename($key, false),
+                    'reverse'  => $reverse,
+                    'start'    => $start,
+                    'stop'     => $stop,
+                ]
+            )
         );
     }
 

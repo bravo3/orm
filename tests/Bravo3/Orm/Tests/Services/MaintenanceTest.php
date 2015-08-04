@@ -1,6 +1,7 @@
 <?php
 namespace Bravo3\Orm\Tests\Services;
 
+use Bravo3\Orm\Services\EntityManager;
 use Bravo3\Orm\Services\Maintenance;
 use Bravo3\Orm\Tests\AbstractOrmTest;
 use Bravo3\Orm\Tests\Entities\Maintenance\Alpha;
@@ -17,10 +18,12 @@ use Bravo3\Orm\Tests\Entities\ProductMore;
 
 class MaintenanceTest extends AbstractOrmTest
 {
-    public function testRebuildSchema()
+    /**
+     * @dataProvider entityManagerDataProvider
+     * @param EntityManager $em
+     */
+    public function testRebuildSchema(EntityManager $em)
     {
-        $em = $this->getEntityManager();
-
         $create_time = new \DateTime("2015-01-01 12:15:03+0000");
 
         $product = new Product();
@@ -53,10 +56,12 @@ class MaintenanceTest extends AbstractOrmTest
         $this->assertEquals('Test Product', $p4->getName());
     }
 
-    public function testRebuildIndicesOneToOne()
+    /**
+     * @dataProvider entityManagerDataProvider
+     * @param EntityManager $em
+     */
+    public function testRebuildIndicesOneToOne(EntityManager $em)
     {
-        $em = $this->getEntityManager();
-
         $alpha = new Alpha();
         $alpha->setId('alpha')->setName('Alpha');
 
@@ -79,10 +84,12 @@ class MaintenanceTest extends AbstractOrmTest
         $this->assertEquals('Alpha', $b->getAlpha()->getName());
     }
 
-    public function testRebuildIndicesManyToMany()
+    /**
+     * @dataProvider entityManagerDataProvider
+     * @param EntityManager $em
+     */
+    public function testRebuildIndicesManyToMany(EntityManager $em)
     {
-        $em = $this->getEntityManager();
-
         $charlie = new Charlie();
         $charlie->setId('charlie')->setName('Charlie');
 

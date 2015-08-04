@@ -116,8 +116,10 @@ You can perform simple search queries on indexed fields to yield results similar
 You can only do this on *indices*, not field values themselves, as field values are serialised and would require a lot
 more effort to perform the query.
 
-Indexed Queries are not ideal for performance and subtracts from the benefits of a document model database. Use only 
-as a last resort - these queries are KEY SCANS.
+**WARNING:**
+
+    Indexed Queries are not ideal for performance and subtracts from the benefits of a document model database. 
+    Use only as a last resort - these queries are KEY SCANS.
 
 Assume the following entity:
 

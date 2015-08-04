@@ -2,13 +2,18 @@
 namespace Bravo3\Orm\Tests\Relationships;
 
 use Bravo3\Orm\Proxy\OrmProxyInterface;
+use Bravo3\Orm\Services\EntityManager;
 use Bravo3\Orm\Tests\AbstractOrmTest;
 use Bravo3\Orm\Tests\Entities\OneToOne\Address;
 use Bravo3\Orm\Tests\Entities\OneToOne\User;
 
 class OneToOneTest extends AbstractOrmTest
 {
-    public function testOneToOne()
+    /**
+     * @dataProvider entityManagerDataProvider
+     * @param EntityManager $em
+     */
+    public function testOneToOne(EntityManager $em)
     {
         $user = new User();
         $user->setId(100)->setName('Clem');
@@ -18,11 +23,10 @@ class OneToOneTest extends AbstractOrmTest
 
         $user->setAddress($address);
 
-        $em = $this->getEntityManager();
         $em->persist($address)->persist($user)->flush();
 
         /** @var User|OrmProxyInterface $r_user */
-        $r_user = $em->retrieve('Bravo3\Orm\Tests\Entities\OneToOne\User', 100);
+        $r_user = $em->retrieve(User::class, 100);
         $this->assertFalse($r_user->isProxyInitialized());
         $this->assertEquals(100, $r_user->getId());
         $this->assertEquals('Clem', $r_user->getName());
@@ -42,8 +46,10 @@ class OneToOneTest extends AbstractOrmTest
     /**
      * Testing race conditions of new entities, with a flush after persisting the first entity
      * @see: docs/RaceConditions.md
+     * @dataProvider entityManagerDataProvider
+     * @param EntityManager $em
      */
-    public function testOneToOneRaceFlush()
+    public function testOneToOneRaceFlush(EntityManager $em)
     {
         $user = new User();
         $user->setId(101)->setName('Steven');
@@ -53,11 +59,10 @@ class OneToOneTest extends AbstractOrmTest
 
         $user->setAddress($address);
 
-        $em = $this->getEntityManager();
         $em->persist($user)->flush()->persist($address)->flush();
 
         /** @var User|OrmProxyInterface $r_user */
-        $r_user = $em->retrieve('Bravo3\Orm\Tests\Entities\OneToOne\User', 101);
+        $r_user = $em->retrieve(User::class, 101);
         $this->assertEquals('Steven', $r_user->getName());
 
         // Should make DB query here
@@ -69,8 +74,10 @@ class OneToOneTest extends AbstractOrmTest
     /**
      * Testing race conditions of new entities, without a flush between persist calls
      * @see: docs/RaceConditions.md
+     * @dataProvider entityManagerDataProvider
+     * @param EntityManager $em
      */
-    public function testOneToOneRaceNoFlush()
+    public function testOneToOneRaceNoFlush(EntityManager $em)
     {
         $user = new User();
         $user->setId(102)->setName('Ray');
@@ -80,11 +87,10 @@ class OneToOneTest extends AbstractOrmTest
 
         $user->setAddress($address);
 
-        $em = $this->getEntityManager();
         $em->persist($user)->persist($address)->flush();
 
         /** @var User|OrmProxyInterface $r_user */
-        $r_user = $em->retrieve('Bravo3\Orm\Tests\Entities\OneToOne\User', 102);
+        $r_user = $em->retrieve(User::class, 102);
         $this->assertEquals('Ray', $r_user->getName());
 
         // Should make DB query here
@@ -93,7 +99,11 @@ class OneToOneTest extends AbstractOrmTest
         $this->assertTrue($r_address instanceof OrmProxyInterface);
     }
 
-    public function testOneToOneBreaking()
+    /**
+     * @dataProvider entityManagerDataProvider
+     * @param EntityManager $em
+     */
+    public function testOneToOneBreaking(EntityManager $em)
     {
         $ed = new User();
         $ed->setId(900)->setName('Ed');
@@ -106,7 +116,6 @@ class OneToOneTest extends AbstractOrmTest
 
         $ed->setAddress($address);
 
-        $em = $this->getEntityManager();
         $em->persist($address)->persist($ed)->persist($jane)->flush();
 
         $em->refresh($ed);
@@ -124,5 +133,4 @@ class OneToOneTest extends AbstractOrmTest
         $this->assertEquals('Howzer-Black St', $jane->getAddress()->getStreet());
         $this->assertEquals('Jane', $address->getUser()->getName());
     }
-
 }

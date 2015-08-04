@@ -2,15 +2,18 @@
 namespace Bravo3\Orm\Tests\Indices;
 
 use Bravo3\Orm\Query\SortedTableQuery;
+use Bravo3\Orm\Services\EntityManager;
 use Bravo3\Orm\Tests\AbstractOrmTest;
 use Bravo3\Orm\Tests\Entities\SortedUser;
 
 class SortedTableTest extends AbstractOrmTest
 {
-    public function testTableSorting()
+    /**
+     * @dataProvider entityManagerDataProvider
+     * @param EntityManager $em
+     */
+    public function testTableSorting(EntityManager $em)
     {
-        $em = $this->getEntityManager();
-
         $user1 = new SortedUser();
         $user1->setId(1)->setName('User 1')->setActive(true);
 

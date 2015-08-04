@@ -32,7 +32,7 @@ abstract class AbstractWorker implements WorkerInterface
      */
     protected function readData($filename)
     {
-        if (is_readable($filename)) {
+        if (is_readable($filename) && !is_dir($filename)) {
             return file_get_contents($filename);
         } else {
             return null;

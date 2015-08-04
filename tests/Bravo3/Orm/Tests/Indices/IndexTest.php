@@ -3,6 +3,7 @@ namespace Bravo3\Orm\Tests\Indices;
 
 use Bravo3\Orm\Exceptions\NotFoundException;
 use Bravo3\Orm\Proxy\OrmProxyInterface;
+use Bravo3\Orm\Services\EntityManager;
 use Bravo3\Orm\Services\Io\Reader;
 use Bravo3\Orm\Tests\AbstractOrmTest;
 use Bravo3\Orm\Tests\Entities\Indexed\IndexedEntity;
@@ -14,10 +15,12 @@ class IndexTest extends AbstractOrmTest
 {
     const INDEXED_ENTITY = 'Bravo3\Orm\Tests\Entities\Indexed\IndexedEntity';
 
-    public function testIndex()
+    /**
+     * @dataProvider entityManagerDataProvider
+     * @param EntityManager $em
+     */
+    public function testIndex(EntityManager $em)
     {
-        $em = $this->getEntityManager();
-
         $entity = new IndexedEntity();
         $entity->setId1(100)->setId2('id2');
         $entity->setAlpha('alpha')->setBravo('200')->setCharlie(true);
@@ -69,10 +72,12 @@ class IndexTest extends AbstractOrmTest
         $this->assertSame(true, $retrieved_by_index->getCharlie());
     }
 
-    public function testIndexDeletion()
+    /**
+     * @dataProvider entityManagerDataProvider
+     * @param EntityManager $em
+     */
+    public function testIndexDeletion(EntityManager $em)
     {
-        $em = $this->getEntityManager();
-
         $article = new SluggedArticle();
         $article->setId(94)->setName('Mr Article')->setSlug('mr-article');
 
@@ -90,10 +95,12 @@ class IndexTest extends AbstractOrmTest
         $em->retrieveByIndex(SluggedArticle::class, 'slug', 'mr-article');
     }
 
-    public function testRelatedIndexDeletion()
+    /**
+     * @dataProvider entityManagerDataProvider
+     * @param EntityManager $em
+     */
+    public function testRelatedIndexDeletion(EntityManager $em)
     {
-        $em = $this->getEntityManager();
-
         $home = new Address();
         $home->setId(44)->setStreet('Oxford St');
 
