@@ -261,7 +261,7 @@ class FilesystemDriver implements DriverInterface
     public function scan($key)
     {
         return $this->worker_pool->execute(
-            new Command('scan', ['query' => $this->keyToFilename($key)])
+            new Command('scan', ['query' => $this->keyToFilename($key), 'base' => dirname($key)])
         );
     }
 

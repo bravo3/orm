@@ -37,6 +37,7 @@ class IndexedQueryTest extends AbstractOrmTest
         foreach ($result as $entity) {
             $this->assertContains($entity->getName(), $names);
             $count++;
+            $names = array_diff($names, [$entity->getName()]);
         }
         $this->assertEquals(2, $count);
 

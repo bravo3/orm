@@ -22,7 +22,7 @@ abstract class AbstractIndexWorker extends AbstractWorker
     protected function getCurrentValue($filename)
     {
         if (file_exists($filename)) {
-            return json_decode(file_get_contents($filename), false);
+            return json_decode(file_get_contents($filename), true);
         } else {
             return [];
         }

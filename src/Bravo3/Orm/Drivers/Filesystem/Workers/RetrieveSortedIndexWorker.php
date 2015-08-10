@@ -22,6 +22,16 @@ class RetrieveSortedIndexWorker extends AbstractIndexWorker
 
         $start = $parameters['start'];
         $stop  = $parameters['stop'];
+        $count = count($current);
+
+        // Negative start/stop index
+        if ($start < 0) {
+            $start = $count + $start - 1;
+        }
+
+        if ($stop < 0) {
+            $stop = $count + $stop;
+        }
 
         // Slice the result if required
         if ($start || $stop) {
@@ -34,7 +44,7 @@ class RetrieveSortedIndexWorker extends AbstractIndexWorker
                 $start = 0;
             }
 
-            $current = array_slice($current, $start, $stop);
+            $current = array_slice($current, $start, $stop + 1);
         }
 
         // We need an array of values only, ditch the score data

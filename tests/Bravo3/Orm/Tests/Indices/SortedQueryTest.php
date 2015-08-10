@@ -100,6 +100,8 @@ class SortedQueryTest extends AbstractOrmTest
         $this->assertEquals(15, $results->getFullSize());
         $article = $results[0];
         $this->assertEquals('Art 610', $article->getTitle());
+        $article = $results[4];
+        $this->assertEquals('Art 606', $article->getTitle());
 
         $results = $em->sortedQuery(new SortedQuery($category, 'articles', 'sort_date', Direction::ASC(), 2, 5));
         $this->assertCount(4, $results);

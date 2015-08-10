@@ -16,16 +16,15 @@ class ScanWorker extends AbstractWorker
      */
     public function execute(array $parameters)
     {
-        $query = $parameters['query'];
-        $exp   = basename($query);
-        $base  = dirname($query);
-
-        $files = scandir($base);
+        $query     = $parameters['query'];
+        $key_base  = $parameters['base'];
+        $exp       = basename($query);
+        $file_base = dirname($query);
 
         $out = [];
-        foreach ($files as $file) {
-            if (is_file($base.DIRECTORY_SEPARATOR.$file) && $this->expMatch($file, $exp)) {
-                $out[] = $file;
+        foreach (scandir($file_base) as $file) {
+            if (is_file($file_base.DIRECTORY_SEPARATOR.$file) && $this->expMatch($file, $exp)) {
+                $out[] = $key_base.DIRECTORY_SEPARATOR.$file;
             }
         }
 
@@ -57,6 +56,6 @@ class ScanWorker extends AbstractWorker
      */
     public function getRequiredParameters()
     {
-        return ['query'];
+        return ['query', 'base'];
     }
 }
