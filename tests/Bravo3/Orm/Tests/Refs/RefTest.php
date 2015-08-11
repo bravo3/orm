@@ -3,6 +3,7 @@ namespace Bravo3\Orm\Tests;
 
 use Bravo3\Orm\Drivers\Common\Ref;
 use Bravo3\Orm\Enum\RelationshipType;
+use Bravo3\Orm\Exceptions\NotFoundException;
 use Bravo3\Orm\Query\SortedQuery;
 use Bravo3\Orm\Services\EntityManager;
 use Bravo3\Orm\Tests\Entities\Indexed\SluggedArticle;
@@ -89,7 +90,8 @@ class RefTest extends AbstractOrmTest
         $em->delete($article)->flush();
 
         $this->assertFalse($this->exists($em, 'article', '301'));
-        $this->assertNull($em->getDriver()->retrieve($key));
+        $this->setExpectedException(NotFoundException::class);
+        $em->getDriver()->retrieve($key);
     }
 
     /**
@@ -150,8 +152,10 @@ class RefTest extends AbstractOrmTest
 
         // Ref exists:
         $refs = $em->getDriver()->getRefs($this->getEntityRefKey($em, 'category', '532'));
-        $ref  = new Ref(RefArticle::class, '501', 'canonical_category');
-        $this->assertContains($ref, $refs);
+        $ref  = (string)(new Ref(RefArticle::class, '501', 'canonical_category'));
+
+        $this->assertCount(1, $refs);
+        $this->assertEquals($ref, (string)$refs[0]);
 
         /** @var RefArticle $article */
         $article = $em->retrieve(RefArticle::class, 501);
@@ -194,11 +198,12 @@ class RefTest extends AbstractOrmTest
         $otm = $this->getRelKey($em, 'category', 'article', '533', 'articles', RelationshipType::ONETOMANY());
         $this->assertNotContains('502', $em->getDriver()->getMultiValueIndex($otm));
 
-
         // Ref exists:
-        $refs = $em->getDriver()->getRefs($this->getEntityRefKey($em, 'category', '534'));
-        $ref  = new Ref(RefArticle::class, '502', 'canonical_category');
-        $this->assertContains($ref, $refs);
+        $refs = $em->getDriver()->getRefs($this->getEntityRefKey($em, 'category', '533'));
+        $ref  = (string)(new Ref(RefArticle::class, '502', 'canonical_category'));
+
+        $this->assertCount(1, $refs);
+        $this->assertEquals($ref, (string)$refs[0]);
 
         /** @var RefCategory $category */
         $category = $em->retrieve(RefCategory::class, 533);

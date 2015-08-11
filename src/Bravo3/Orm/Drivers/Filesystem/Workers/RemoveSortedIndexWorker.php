@@ -27,7 +27,7 @@ class RemoveSortedIndexWorker extends AbstractIndexWorker
             $payload[] = [null, $item];
         }
 
-        array_udiff(
+        $content = array_udiff(
             $content,
             $payload,
             function (array $a, array $b) {
