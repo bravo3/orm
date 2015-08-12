@@ -55,7 +55,11 @@ class PharIoDriver extends AbstractIoDriver
             $ext = uniqid();
             $fn  = substr($this->filename, 0, strrpos($this->filename, '.') ?: null);
             $this->archive->compress((int)$this->compression->value(), $ext);
-            rename($fn.".".$ext, $this->filename);
+
+            // New archive does not get created on empty databases
+            if (file_exists($fn.'.'.$ext)) {
+                rename($fn.'.'.$ext, $this->filename);
+            }
         }
     }
 

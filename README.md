@@ -190,6 +190,9 @@ Bundled Strategies
 ### Databases
 * Redis
 * Native filesystem
+* Tar or zip archives
+
+See [drivers](docs/Drivers.md) for more info on database implementations.
 
 ### Serialisation
 * JSON
@@ -204,6 +207,7 @@ Bundled Strategies
 Major Planned Additions
 -----------------------
 * Additional mappers (YAML, XML, etc)
+* Validation service
 
 Known Issues
 ------------

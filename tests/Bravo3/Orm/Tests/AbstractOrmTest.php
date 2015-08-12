@@ -3,6 +3,7 @@ namespace Bravo3\Orm\Tests;
 
 use Bravo3\Orm\Drivers\DriverInterface;
 use Bravo3\Orm\Drivers\Filesystem\Enum\ArchiveType;
+use Bravo3\Orm\Drivers\Filesystem\Enum\Compression;
 use Bravo3\Orm\Drivers\Filesystem\FilesystemDriver;
 use Bravo3\Orm\Drivers\Filesystem\Io\NativeIoDriver;
 use Bravo3\Orm\Drivers\Filesystem\Io\PharIoDriver;
@@ -60,7 +61,7 @@ abstract class AbstractOrmTest extends \PHPUnit_Framework_TestCase
         foreach ($drivers as $index => $driver) {
             $driver->setDebugMode(true);
             $mapper = new AnnotationMapper();
-            $em     = EntityManager::build($driver, $mapper, null, $driver->getPreferredKeyScheme());
+            $em     = EntityManager::build($driver, $mapper);
 
             $temp = sys_get_temp_dir().'/bravo3-orm/'.$index;
             if (!file_exists($temp)) {
@@ -74,9 +75,9 @@ abstract class AbstractOrmTest extends \PHPUnit_Framework_TestCase
         return $ems;
     }
 
-    private function getFsDriver()
+    protected function getFsDriver($name = 'fs-db')
     {
-        $db_path = sys_get_temp_dir().'/bravo3-orm/fs-db/';
+        $db_path = sys_get_temp_dir().'/bravo3-orm/'.$name;
 
         if (file_exists($db_path)) {
             $this->delTree($db_path);
@@ -85,7 +86,7 @@ abstract class AbstractOrmTest extends \PHPUnit_Framework_TestCase
         return new FilesystemDriver(new NativeIoDriver($db_path));
     }
 
-    private function getTarDriver()
+    protected function getTarDriver()
     {
         $fn = sys_get_temp_dir().'/bravo3-orm/tar.db';
 
@@ -93,10 +94,10 @@ abstract class AbstractOrmTest extends \PHPUnit_Framework_TestCase
             unlink($fn);
         }
 
-        return new FilesystemDriver(new PharIoDriver($fn, ArchiveType::TAR()));
+        return new FilesystemDriver(new PharIoDriver($fn, ArchiveType::TAR(), Compression::BZIP2()));
     }
 
-    private function getZipDriver()
+    protected function getZipDriver()
     {
         $fn = sys_get_temp_dir().'/bravo3-orm/zip.db';
 
