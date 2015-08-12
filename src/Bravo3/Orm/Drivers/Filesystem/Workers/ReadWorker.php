@@ -4,7 +4,7 @@ namespace Bravo3\Orm\Drivers\Filesystem\Workers;
 /**
  * Read the raw contents of an object, if the object does not exist, null will be returned
  */
-class ReadWorker extends AbstractWorker
+class ReadWorker extends AbstractFilesystemWorker
 {
     /**
      * Execute the command
@@ -14,7 +14,7 @@ class ReadWorker extends AbstractWorker
      */
     public function execute(array $parameters)
     {
-        return $this->readData($parameters['filename']);
+        return $this->io_driver->read($parameters['key']);
     }
 
     /**
@@ -24,6 +24,6 @@ class ReadWorker extends AbstractWorker
      */
     public function getRequiredParameters()
     {
-        return ['filename'];
+        return ['key'];
     }
 }

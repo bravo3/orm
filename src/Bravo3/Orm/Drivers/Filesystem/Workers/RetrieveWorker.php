@@ -2,18 +2,16 @@
 namespace Bravo3\Orm\Drivers\Filesystem\Workers;
 
 use Bravo3\Orm\Drivers\Common\SerialisedData;
-use Bravo3\Orm\Drivers\Common\WorkerInterface;
 use Bravo3\Orm\Drivers\Filesystem\FilesystemDriver;
 use Bravo3\Orm\Exceptions\CorruptedEntityException;
 use Bravo3\Orm\Exceptions\NotFoundException;
-use Bravo3\Orm\Exceptions\UnexpectedValueException;
 
 /**
  * Read and parse an entity object, returning SerialisedData
  *
  * This class will honour the TTL, throwing a NotFoundException if the TTL has expired.
  */
-class RetrieveWorker extends AbstractWorker
+class RetrieveWorker extends AbstractFilesystemWorker
 {
     /**
      * Execute the command
@@ -24,7 +22,7 @@ class RetrieveWorker extends AbstractWorker
     public function execute(array $parameters)
     {
         $key     = $parameters['key'];
-        $payload = $this->readData($parameters['filename']);
+        $payload = $this->io_driver->read($key);
 
         if ($payload !== null) {
             $data = explode(FilesystemDriver::DATA_DELIMITER, $payload, 3);
@@ -35,7 +33,7 @@ class RetrieveWorker extends AbstractWorker
 
             $ttl = (int)$data[1];
             if ($ttl > 0 && $ttl < time()) {
-                unlink($parameters['filename']);
+                $this->io_driver->delete($key);
                 throw new NotFoundException("Object has expired: ".$key);
             }
 
@@ -52,6 +50,6 @@ class RetrieveWorker extends AbstractWorker
      */
     public function getRequiredParameters()
     {
-        return ['key', 'filename'];
+        return ['key'];
     }
 }

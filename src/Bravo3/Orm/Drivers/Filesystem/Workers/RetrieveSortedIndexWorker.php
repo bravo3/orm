@@ -4,7 +4,7 @@ namespace Bravo3\Orm\Drivers\Filesystem\Workers;
 /**
  * Retrieve the value of a multi-value index
  */
-class RetrieveSortedIndexWorker extends AbstractIndexWorker
+class RetrieveSortedIndexWorker extends AbstractFilesystemWorker
 {
     /**
      * Execute the command
@@ -14,7 +14,7 @@ class RetrieveSortedIndexWorker extends AbstractIndexWorker
      */
     public function execute(array $parameters)
     {
-        $current = $this->getCurrentValue($parameters['filename']);
+        $current = $this->getJsonValue($parameters['key']);
 
         if ($parameters['reverse']) {
             $current = array_reverse($current);
@@ -63,6 +63,6 @@ class RetrieveSortedIndexWorker extends AbstractIndexWorker
      */
     public function getRequiredParameters()
     {
-        return ['filename', 'reverse', 'start', 'stop'];
+        return ['key', 'reverse', 'start', 'stop'];
     }
 }

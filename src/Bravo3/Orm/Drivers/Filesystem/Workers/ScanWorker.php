@@ -1,12 +1,10 @@
 <?php
 namespace Bravo3\Orm\Drivers\Filesystem\Workers;
 
-use Bravo3\Orm\Exceptions\NotSupportedException;
-
 /**
  * Performs a key scan
  */
-class ScanWorker extends AbstractWorker
+class ScanWorker extends AbstractFilesystemWorker
 {
     /**
      * Execute the command
@@ -16,38 +14,11 @@ class ScanWorker extends AbstractWorker
      */
     public function execute(array $parameters)
     {
-        $query     = $parameters['query'];
-        $key_base  = $parameters['base'];
-        $exp       = basename($query);
-        $file_base = dirname($query);
+        $query = $parameters['query'];
 
-        $out = [];
-        foreach (scandir($file_base) as $file) {
-            if (is_file($file_base.DIRECTORY_SEPARATOR.$file) && $this->expMatch($file, $exp)) {
-                $out[] = $key_base.DIRECTORY_SEPARATOR.$file;
-            }
-        }
-
-        return $out;
+        return $this->io_driver->scan(dirname($query), basename($query));
     }
 
-    /**
-     * Check that $file matches the expression $exp
-     *
-     * @param string $test
-     * @param string $exp
-     * @return bool
-     */
-    protected function expMatch($test, $exp)
-    {
-        if (!function_exists('fnmatch')) {
-            throw new NotSupportedException(
-                "'fnmatch' is not supported on this system and therefore cannot perform a key scan"
-            );
-        }
-
-        return fnmatch($exp, $test);
-    }
 
     /**
      * Returns a list of required parameters
@@ -56,6 +27,6 @@ class ScanWorker extends AbstractWorker
      */
     public function getRequiredParameters()
     {
-        return ['query', 'base'];
+        return ['query'];
     }
 }

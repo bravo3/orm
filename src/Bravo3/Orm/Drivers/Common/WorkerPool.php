@@ -12,16 +12,23 @@ class WorkerPool
     protected $workers;
 
     /**
+     * @var mixed
+     */
+    protected $worker_data;
+
+    /**
      * Creates a lazy-loading worker pool
      *
      * If any of the workers passed in $workers are a string, it is considered the class name for a WorkerInterface
      * that is lazy-loaded on demand.
      *
-     * @param WorkerInterface[]|string[] $workers
+     * @param WorkerInterface[]|string[] $workers     Preload the pool with some workers
+     * @param mixed                      $worker_data Data to pass to worker constructors
      */
-    public function __construct(array $workers = [])
+    public function __construct(array $workers = [], $worker_data = null)
     {
-        $this->workers = $workers;
+        $this->workers     = $workers;
+        $this->worker_data = $worker_data;
     }
 
     /**
@@ -85,7 +92,7 @@ class WorkerPool
         $worker = $this->workers[$name];
 
         if (is_string($worker)) {
-            $worker               = new $worker();
+            $worker               = new $worker($this->worker_data);
             $this->workers[$name] = $worker;
         }
 

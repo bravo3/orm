@@ -4,7 +4,7 @@ namespace Bravo3\Orm\Drivers\Filesystem\Workers;
 /**
  * Add one or more values to a sorted index
  */
-class AddSortedIndexWorker extends AbstractIndexWorker
+class AddSortedIndexWorker extends AbstractFilesystemWorker
 {
     /**
      * Execute the command
@@ -14,11 +14,11 @@ class AddSortedIndexWorker extends AbstractIndexWorker
      */
     public function execute(array $parameters)
     {
-        $filename = $parameters['filename'];
-        $value    = $parameters['value'];
-        $score    = $parameters['score'];
+        $key   = $parameters['key'];
+        $value = $parameters['value'];
+        $score = $parameters['score'];
 
-        $content = $this->getCurrentValue($filename);
+        $content = $this->getJsonValue($key);
 
         // Search existing content
         foreach ($content as $index => $item_data) {
@@ -27,24 +27,23 @@ class AddSortedIndexWorker extends AbstractIndexWorker
             if ($item == $value) {
                 // Overwrite existing value
                 $content[$index] = [$score, $item];
-                $this->sortAndWrite($content, $filename, $parameters['umask']);
+                $this->sortAndWrite($content, $key);
                 return;
             }
         }
 
         // Append new value
         $content[] = [$score, $value];
-        $this->sortAndWrite($content, $filename, $parameters['umask']);
+        $this->sortAndWrite($content, $key);
     }
 
     /**
      * Sort the data and write it to the filesystem
      *
      * @param array  $content
-     * @param string $filename
-     * @param int    $umask
+     * @param string $key
      */
-    protected function sortAndWrite(array $content, $filename, $umask)
+    protected function sortAndWrite(array $content, $key)
     {
         usort(
             $content,
@@ -60,7 +59,7 @@ class AddSortedIndexWorker extends AbstractIndexWorker
             }
         );
 
-        $this->writeData($filename, json_encode($content), $umask);
+        $this->io_driver->write($key, json_encode($content));
     }
 
     /**
@@ -70,6 +69,6 @@ class AddSortedIndexWorker extends AbstractIndexWorker
      */
     public function getRequiredParameters()
     {
-        return ['filename', 'value', 'score', 'umask'];
+        return ['key', 'value', 'score'];
     }
 }

@@ -7,6 +7,7 @@ use Bravo3\Orm\Drivers\Common\SerialisedData;
 use Bravo3\Orm\Drivers\Common\UnitOfWork;
 use Bravo3\Orm\Drivers\Common\WorkerPool;
 use Bravo3\Orm\Drivers\DriverInterface;
+use Bravo3\Orm\Drivers\Filesystem\Io\IoDriverInterface;
 use Bravo3\Orm\Drivers\Filesystem\Workers\AddIndexWorker;
 use Bravo3\Orm\Drivers\Filesystem\Workers\AddSortedIndexWorker;
 use Bravo3\Orm\Drivers\Filesystem\Workers\DeleteWorker;
@@ -23,6 +24,12 @@ use Bravo3\Orm\KeySchemes\FilesystemKeyScheme;
 use Bravo3\Orm\KeySchemes\KeySchemeInterface;
 use Bravo3\Orm\Traits\DebugTrait;
 
+/**
+ * Filesystem (literal filesystem or any key/value store) driver
+ *
+ * When using any I/O driver that works with actual files, it is important to use the FilesystemKeyScheme else file
+ * manipulations will have unexpected results.
+ */
 class FilesystemDriver implements DriverInterface
 {
     use DebugTrait;
@@ -32,16 +39,6 @@ class FilesystemDriver implements DriverInterface
      * delimited by this key.
      */
     const DATA_DELIMITER = ';';
-
-    /**
-     * @var string
-     */
-    protected $data_dir;
-
-    /**
-     * @var int
-     */
-    protected $umask;
 
     /**
      * @var UnitOfWork
@@ -54,15 +51,22 @@ class FilesystemDriver implements DriverInterface
     protected $worker_pool;
 
     /**
-     * @param string $data_dir Base directory for database
-     * @param int    $umask    Filesystem umask
+     * @param IoDriverInterface $io_driver Filesystem IO driver
      */
-    public function __construct($data_dir, $umask = 0660)
+    public function __construct(IoDriverInterface $io_driver)
     {
-        $this->setDataDir($data_dir);
-        $this->umask        = $umask;
         $this->unit_of_work = new UnitOfWork();
-        $this->worker_pool  = new WorkerPool(
+        $this->createWorkerPool($io_driver);
+    }
+
+    /**
+     * Create a worker pool with all workers registered
+     *
+     * @param IoDriverInterface $io_driver
+     */
+    protected function createWorkerPool(IoDriverInterface $io_driver)
+    {
+        $this->worker_pool = new WorkerPool(
             [
                 'read'                  => ReadWorker::class,
                 'write'                 => WriteWorker::class,
@@ -76,87 +80,11 @@ class FilesystemDriver implements DriverInterface
                 'retrieve_index'        => RetrieveIndexWorker::class,
                 'get_index_size'        => GetIndexSizeWorker::class,
                 'scan'                  => ScanWorker::class,
+            ],
+            [
+                'io_driver' => $io_driver
             ]
         );
-    }
-
-    /**
-     * Get DataDir
-     *
-     * @return string
-     */
-    public function getDataDir()
-    {
-        return $this->data_dir;
-    }
-
-    /**
-     * Set DataDir
-     *
-     * @param string $data_dir
-     * @return $this
-     */
-    public function setDataDir($data_dir)
-    {
-        if (DIRECTORY_SEPARATOR == '/') {
-            $data_dir = str_replace('\\', '/', $data_dir);
-        } else {
-            $data_dir = str_replace('/', '\\', $data_dir);
-        }
-
-        if (substr($data_dir, -1) != DIRECTORY_SEPARATOR) {
-            $data_dir .= DIRECTORY_SEPARATOR;
-        }
-
-        $this->data_dir = $data_dir;
-        return $this;
-    }
-
-    /**
-     * Get Umask
-     *
-     * @param bool $directory True if you need a umask for a directory (executable)
-     * @return int
-     */
-    public function getUmask($directory = false)
-    {
-        if ($directory) {
-            return $this->addExecuteBit($this->umask);
-        } else {
-            return $this->umask;
-        }
-    }
-
-    /**
-     * Adds the execute bit (001) to an octal trio of RWX bits where each trio has the read (100) bit
-     *
-     * @param $umask
-     * @return int
-     */
-    private function addExecuteBit($umask)
-    {
-        for ($trio = 0; $trio < 3; $trio++) {
-            $r = 4 * pow(8, $trio);
-            $x = 1 * pow(8, $trio);
-
-            if (($umask | $r) == $umask) {
-                $umask = $umask | $x;
-            }
-        }
-
-        return $umask;
-    }
-
-    /**
-     * Set Umask
-     *
-     * @param int $umask
-     * @return $this
-     */
-    public function setUmask($umask)
-    {
-        $this->umask = $umask;
-        return $this;
     }
 
     /**
@@ -194,11 +122,10 @@ class FilesystemDriver implements DriverInterface
             new Command(
                 'write',
                 [
-                    'filename' => $this->keyToFilename($key),
-                    'payload'  => $data->getSerialisationCode().self::DATA_DELIMITER.
-                                  $ttl.self::DATA_DELIMITER.
-                                  $data->getData(),
-                    'umask'    => $this->getUmask()
+                    'key'     => $key,
+                    'payload' => $data->getSerialisationCode().self::DATA_DELIMITER.
+                                 $ttl.self::DATA_DELIMITER.
+                                 $data->getData(),
                 ]
             )
         );
@@ -213,7 +140,7 @@ class FilesystemDriver implements DriverInterface
     public function delete($key)
     {
         $this->worker_pool->execute(
-            new Command('delete', ['filename' => $this->keyToFilename($key, false)])
+            new Command('delete', ['key' => $key])
         );
     }
 
@@ -226,7 +153,7 @@ class FilesystemDriver implements DriverInterface
     public function retrieve($key)
     {
         return $this->worker_pool->execute(
-            new Command('retrieve', ['key' => $key, 'filename' => $this->keyToFilename($key, false)])
+            new Command('retrieve', ['key' => $key])
         );
     }
 
@@ -261,7 +188,7 @@ class FilesystemDriver implements DriverInterface
     public function scan($key)
     {
         return $this->worker_pool->execute(
-            new Command('scan', ['query' => $this->keyToFilename($key), 'base' => dirname($key)])
+            new Command('scan', ['query' => $key])
         );
     }
 
@@ -284,16 +211,7 @@ class FilesystemDriver implements DriverInterface
      */
     public function setSingleValueIndex($key, $value)
     {
-        $this->unit_of_work->queueCommand(
-            new Command(
-                'write',
-                [
-                    'filename' => $this->keyToFilename($key),
-                    'payload'  => $value,
-                    'umask'    => $this->getUmask()
-                ]
-            )
-        );
+        $this->unit_of_work->queueCommand(new Command('write', ['key' => $key, 'payload' => $value]));
     }
 
     /**
@@ -306,9 +224,7 @@ class FilesystemDriver implements DriverInterface
      */
     public function getSingleValueIndex($key)
     {
-        return $this->worker_pool->execute(
-            new Command('read', ['filename' => $this->keyToFilename($key, false)])
-        );
+        return $this->worker_pool->execute(new Command('read', ['key' => $key]));
     }
 
     /**
@@ -319,9 +235,7 @@ class FilesystemDriver implements DriverInterface
      */
     public function clearSingleValueIndex($key)
     {
-        $this->unit_of_work->queueCommand(
-            new Command('delete', ['filename' => $this->keyToFilename($key, false)])
-        );
+        $this->unit_of_work->queueCommand(new Command('delete', ['key' => $key]));
     }
 
     /**
@@ -332,9 +246,7 @@ class FilesystemDriver implements DriverInterface
      */
     public function clearMultiValueIndex($key)
     {
-        $this->unit_of_work->queueCommand(
-            new Command('delete', ['filename' => $this->keyToFilename($key, false)])
-        );
+        $this->unit_of_work->queueCommand(new Command('delete', ['key' => $key]));
     }
 
     /**
@@ -346,14 +258,7 @@ class FilesystemDriver implements DriverInterface
      */
     public function addMultiValueIndex($key, $value)
     {
-        $this->unit_of_work->queueCommand(
-            new Command('add_index',
-                        [
-                            'filename' => $this->keyToFilename($key),
-                            'value'    => $value,
-                            'umask'    => $this->getUmask()
-                        ])
-        );
+        $this->unit_of_work->queueCommand(new Command('add_index', ['key' => $key, 'value' => $value]));
     }
 
     /**
@@ -365,14 +270,7 @@ class FilesystemDriver implements DriverInterface
      */
     public function removeMultiValueIndex($key, $value)
     {
-        $this->unit_of_work->queueCommand(
-            new Command('remove_index',
-                        [
-                            'filename' => $this->keyToFilename($key),
-                            'value'    => $value,
-                            'umask'    => $this->getUmask()
-                        ])
-        );
+        $this->unit_of_work->queueCommand(new Command('remove_index', ['key' => $key, 'value' => $value]));
     }
 
     /**
@@ -386,7 +284,7 @@ class FilesystemDriver implements DriverInterface
     public function getMultiValueIndex($key)
     {
         return $this->worker_pool->execute(
-            new Command('retrieve_index', ['filename' => $this->keyToFilename($key, false)])
+            new Command('retrieve_index', ['key' => $key])
         );
     }
 
@@ -398,9 +296,7 @@ class FilesystemDriver implements DriverInterface
      */
     public function clearSortedIndex($key)
     {
-        $this->unit_of_work->queueCommand(
-            new Command('delete', ['filename' => $this->keyToFilename($key, false)])
-        );
+        $this->unit_of_work->queueCommand(new Command('delete', ['key' => $key]));
     }
 
     /**
@@ -414,13 +310,7 @@ class FilesystemDriver implements DriverInterface
     public function addSortedIndex($key, $score, $value)
     {
         $this->unit_of_work->queueCommand(
-            new Command('add_sorted_index',
-                        [
-                            'filename' => $this->keyToFilename($key),
-                            'value'    => $value,
-                            'score'    => $score,
-                            'umask'    => $this->getUmask()
-                        ])
+            new Command('add_sorted_index', ['key' => $key, 'value' => $value, 'score' => $score])
         );
     }
 
@@ -433,14 +323,7 @@ class FilesystemDriver implements DriverInterface
      */
     public function removeSortedIndex($key, $value)
     {
-        $this->unit_of_work->queueCommand(
-            new Command('remove_sorted_index',
-                        [
-                            'filename' => $this->keyToFilename($key),
-                            'value'    => $value,
-                            'umask'    => $this->getUmask()
-                        ])
-        );
+        $this->unit_of_work->queueCommand(new Command('remove_sorted_index', ['key' => $key, 'value' => $value]));
     }
 
     /**
@@ -459,12 +342,7 @@ class FilesystemDriver implements DriverInterface
         return $this->worker_pool->execute(
             new Command(
                 'retrieve_sorted_index',
-                [
-                    'filename' => $this->keyToFilename($key, false),
-                    'reverse'  => $reverse,
-                    'start'    => $start,
-                    'stop'     => $stop,
-                ]
+                ['key' => $key, 'reverse' => $reverse, 'start' => $start, 'stop' => $stop]
             )
         );
     }
@@ -477,9 +355,7 @@ class FilesystemDriver implements DriverInterface
      */
     public function getSortedIndexSize($key)
     {
-        return $this->worker_pool->execute(
-            new Command('get_index_size', ['filename' => $this->keyToFilename($key, false)])
-        );
+        return $this->worker_pool->execute(new Command('get_index_size', ['key' => $key]));
     }
 
     /**
@@ -490,9 +366,7 @@ class FilesystemDriver implements DriverInterface
      */
     public function getRefs($key)
     {
-        $current = $this->worker_pool->execute(
-            new Command('retrieve_index', ['filename' => $this->keyToFilename($key, false)])
-        );
+        $current = $this->worker_pool->execute(new Command('retrieve_index', ['key' => $key]));
 
         array_walk(
             $current,
@@ -513,14 +387,7 @@ class FilesystemDriver implements DriverInterface
      */
     public function addRef($key, Ref $ref)
     {
-        $this->unit_of_work->queueCommand(
-            new Command('add_index',
-                        [
-                            'filename' => $this->keyToFilename($key),
-                            'value'    => (string)$ref,
-                            'umask'    => $this->getUmask()
-                        ])
-        );
+        $this->unit_of_work->queueCommand(new Command('add_index', ['key' => $key, 'value' => (string)$ref]));
     }
 
     /**
@@ -534,14 +401,7 @@ class FilesystemDriver implements DriverInterface
      */
     public function removeRef($key, Ref $ref)
     {
-        $this->unit_of_work->queueCommand(
-            new Command('remove_index',
-                        [
-                            'filename' => $this->keyToFilename($key),
-                            'value'    => (string)$ref,
-                            'umask'    => $this->getUmask()
-                        ])
-        );
+        $this->unit_of_work->queueCommand(new Command('remove_index', ['key' => $key, 'value' => (string)$ref]));
     }
 
     /**
@@ -552,30 +412,6 @@ class FilesystemDriver implements DriverInterface
      */
     public function clearRefs($key)
     {
-        $this->unit_of_work->queueCommand(
-            new Command('delete', ['filename' => $this->keyToFilename($key, false)])
-        );
-    }
-
-    /**
-     * Get a filename for a key, validating the directory exists
-     *
-     * @param string $key          Object key
-     * @param bool   $validate_dir Set to false to skip directory creation
-     * @return string
-     */
-    private function keyToFilename($key, $validate_dir = true)
-    {
-        $fn = $this->data_dir.$key;
-
-        if ($validate_dir) {
-            $dir = dirname($fn);
-
-            if (!is_dir($dir)) {
-                mkdir(dirname($fn), $this->getUmask(true), true);
-            }
-        }
-
-        return $fn;
+        $this->unit_of_work->queueCommand(new Command('delete', ['key' => $key]));
     }
 }

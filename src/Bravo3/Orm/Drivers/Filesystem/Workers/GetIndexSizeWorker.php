@@ -4,7 +4,7 @@ namespace Bravo3\Orm\Drivers\Filesystem\Workers;
 /**
  * Get the size of a multi-value/sorted index
  */
-class GetIndexSizeWorker extends AbstractIndexWorker
+class GetIndexSizeWorker extends AbstractFilesystemWorker
 {
     /**
      * Execute the command
@@ -14,7 +14,7 @@ class GetIndexSizeWorker extends AbstractIndexWorker
      */
     public function execute(array $parameters)
     {
-        return count($this->getCurrentValue($parameters['filename']));
+        return count($this->getJsonValue($parameters['key']));
     }
 
     /**
@@ -24,6 +24,6 @@ class GetIndexSizeWorker extends AbstractIndexWorker
      */
     public function getRequiredParameters()
     {
-        return ['filename'];
+        return ['key'];
     }
 }

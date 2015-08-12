@@ -4,7 +4,7 @@ namespace Bravo3\Orm\Drivers\Filesystem\Workers;
 /**
  * Add one or more values to a multi-value index
  */
-class AddIndexWorker extends AbstractIndexWorker
+class AddIndexWorker extends AbstractFilesystemWorker
 {
     /**
      * Execute the command
@@ -14,15 +14,25 @@ class AddIndexWorker extends AbstractIndexWorker
      */
     public function execute(array $parameters)
     {
-        $filename = $parameters['filename'];
-        $value    = $parameters['value'];
+        $key   = $parameters['key'];
+        $value = $parameters['value'];
 
         if (!is_array($value)) {
             $value = [$value];
         }
 
-        $content = array_unique(array_merge($this->getCurrentValue($filename), $value));
+        $content = array_unique(array_merge($this->getJsonValue($key), $value));
 
-        $this->writeData($filename, json_encode($content), $parameters['umask']);
+        $this->io_driver->write($key, json_encode($content));
+    }
+
+    /**
+     * Returns a list of required parameters
+     *
+     * @return string[]
+     */
+    public function getRequiredParameters()
+    {
+        return ['key', 'value'];
     }
 }

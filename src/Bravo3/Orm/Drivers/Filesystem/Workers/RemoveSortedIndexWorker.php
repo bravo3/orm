@@ -4,7 +4,7 @@ namespace Bravo3\Orm\Drivers\Filesystem\Workers;
 /**
  * Remove one or more values from a sorted index
  */
-class RemoveSortedIndexWorker extends AbstractIndexWorker
+class RemoveSortedIndexWorker extends AbstractFilesystemWorker
 {
     /**
      * Execute the command
@@ -14,9 +14,9 @@ class RemoveSortedIndexWorker extends AbstractIndexWorker
      */
     public function execute(array $parameters)
     {
-        $filename = $parameters['filename'];
-        $value    = $parameters['value'];
-        $content  = $this->getCurrentValue($filename);
+        $key     = $parameters['key'];
+        $value   = $parameters['value'];
+        $content = $this->getJsonValue($key);
 
         if (!is_array($value)) {
             $value = [$value];
@@ -42,7 +42,7 @@ class RemoveSortedIndexWorker extends AbstractIndexWorker
             }
         );
 
-        $this->writeData($filename, json_encode($content), $parameters['umask']);
+        $this->io_driver->write($key, json_encode($content));
     }
 
     /**
@@ -52,6 +52,6 @@ class RemoveSortedIndexWorker extends AbstractIndexWorker
      */
     public function getRequiredParameters()
     {
-        return ['filename', 'value', 'umask'];
+        return ['key', 'value'];
     }
 }

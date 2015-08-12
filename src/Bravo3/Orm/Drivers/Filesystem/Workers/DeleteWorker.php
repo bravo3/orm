@@ -6,7 +6,7 @@ use Bravo3\Orm\Drivers\Common\WorkerInterface;
 /**
  * Delete an object from the filesystem
  */
-class DeleteWorker implements WorkerInterface
+class DeleteWorker extends AbstractFilesystemWorker implements WorkerInterface
 {
     /**
      * Execute the command
@@ -16,11 +16,7 @@ class DeleteWorker implements WorkerInterface
      */
     public function execute(array $parameters)
     {
-        $filename = $parameters['filename'];
-
-        if (file_exists($filename)) {
-            unlink($filename);
-        }
+        $this->io_driver->delete($parameters['key']);
     }
 
     /**
@@ -30,6 +26,6 @@ class DeleteWorker implements WorkerInterface
      */
     public function getRequiredParameters()
     {
-        return ['filename'];
+        return ['key'];
     }
 }

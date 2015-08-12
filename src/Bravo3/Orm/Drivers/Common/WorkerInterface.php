@@ -4,6 +4,13 @@ namespace Bravo3\Orm\Drivers\Common;
 interface WorkerInterface
 {
     /**
+     * Construct the worker with any optional implementation-specific dependencies
+     *
+     * @param mixed $data
+     */
+    public function __construct($data);
+
+    /**
      * Execute the command
      *
      * @param array $parameters

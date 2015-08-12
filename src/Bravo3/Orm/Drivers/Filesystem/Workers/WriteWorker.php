@@ -4,7 +4,7 @@ namespace Bravo3\Orm\Drivers\Filesystem\Workers;
 /**
  * Write raw content to the filesystem
  */
-class WriteWorker extends AbstractWorker
+class WriteWorker extends AbstractFilesystemWorker
 {
     /**
      * Execute the command
@@ -14,7 +14,7 @@ class WriteWorker extends AbstractWorker
      */
     public function execute(array $parameters)
     {
-        $this->writeData($parameters['filename'], $parameters['payload'], $parameters['umask']);
+        $this->io_driver->write($parameters['key'], $parameters['payload']);
     }
 
     /**
@@ -24,6 +24,6 @@ class WriteWorker extends AbstractWorker
      */
     public function getRequiredParameters()
     {
-        return ['filename', 'payload', 'umask'];
+        return ['key', 'payload'];
     }
 }

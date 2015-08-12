@@ -4,7 +4,7 @@ namespace Bravo3\Orm\Drivers\Filesystem\Workers;
 /**
  * Retrieve the value of a multi-value index
  */
-class RetrieveIndexWorker extends AbstractIndexWorker
+class RetrieveIndexWorker extends AbstractFilesystemWorker
 {
     /**
      * Execute the command
@@ -14,7 +14,7 @@ class RetrieveIndexWorker extends AbstractIndexWorker
      */
     public function execute(array $parameters)
     {
-        return $this->getCurrentValue($parameters['filename']);
+        return $this->getJsonValue($parameters['key']);
     }
 
     /**
@@ -24,6 +24,6 @@ class RetrieveIndexWorker extends AbstractIndexWorker
      */
     public function getRequiredParameters()
     {
-        return ['filename'];
+        return ['key'];
     }
 }

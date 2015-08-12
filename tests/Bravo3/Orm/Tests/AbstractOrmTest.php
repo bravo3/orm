@@ -2,7 +2,10 @@
 namespace Bravo3\Orm\Tests;
 
 use Bravo3\Orm\Drivers\DriverInterface;
+use Bravo3\Orm\Drivers\Filesystem\Enum\ArchiveType;
 use Bravo3\Orm\Drivers\Filesystem\FilesystemDriver;
+use Bravo3\Orm\Drivers\Filesystem\Io\NativeIoDriver;
+use Bravo3\Orm\Drivers\Filesystem\Io\PharIoDriver;
 use Bravo3\Orm\Drivers\Redis\RedisDriver;
 use Bravo3\Orm\Enum\RelationshipType;
 use Bravo3\Orm\Exceptions\NotFoundException;
@@ -47,6 +50,8 @@ abstract class AbstractOrmTest extends \PHPUnit_Framework_TestCase
         $drivers = [
             $this->getRedisDriver(),
             $this->getFsDriver(),
+            $this->getTarDriver(),
+            $this->getZipDriver(),
         ];
 
         $ems = [];
@@ -77,7 +82,29 @@ abstract class AbstractOrmTest extends \PHPUnit_Framework_TestCase
             $this->delTree($db_path);
         }
 
-        return new FilesystemDriver($db_path);
+        return new FilesystemDriver(new NativeIoDriver($db_path));
+    }
+
+    private function getTarDriver()
+    {
+        $fn = sys_get_temp_dir().'/bravo3-orm/tar.db';
+
+        if (file_exists($fn)) {
+            unlink($fn);
+        }
+
+        return new FilesystemDriver(new PharIoDriver($fn, ArchiveType::TAR()));
+    }
+
+    private function getZipDriver()
+    {
+        $fn = sys_get_temp_dir().'/bravo3-orm/zip.db';
+
+        if (file_exists($fn)) {
+            unlink($fn);
+        }
+
+        return new FilesystemDriver(new PharIoDriver($fn, ArchiveType::ZIP()));
     }
 
     private function delTree($dir)
