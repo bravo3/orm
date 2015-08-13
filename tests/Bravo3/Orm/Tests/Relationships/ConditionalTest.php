@@ -2,6 +2,7 @@
 namespace Bravo3\Orm\Tests\Relationships;
 
 use Bravo3\Orm\Query\SortedQuery;
+use Bravo3\Orm\Services\EntityManager;
 use Bravo3\Orm\Tests\AbstractOrmTest;
 use Bravo3\Orm\Tests\Entities\Conditional\Article;
 use Bravo3\Orm\Tests\Entities\Conditional\Asset;
@@ -9,10 +10,12 @@ use Bravo3\Orm\Tests\Entities\Conditional\Category;
 
 class ConditionalTest extends AbstractOrmTest
 {
-    public function testForwardConditionalRelationship()
+    /**
+     * @dataProvider entityManagerDataProvider
+     * @param EntityManager $em
+     */
+    public function testForwardConditionalRelationship(EntityManager $em)
     {
-        $em = $this->getEntityManager();
-
         $category = new Category();
         $category->setId(1000)->setName('Conditional Category');
 
@@ -83,10 +86,12 @@ class ConditionalTest extends AbstractOrmTest
         $this->assertCount(3, $assets);
     }
 
-    public function testReverseConditionalRelationship()
+    /**
+     * @dataProvider entityManagerDataProvider
+     * @param EntityManager $em
+     */
+    public function testReverseConditionalRelationship(EntityManager $em)
     {
-        $em = $this->getEntityManager();
-
         $category = new Category();
         $category->setId(2000)->setName('Conditional Category');
 

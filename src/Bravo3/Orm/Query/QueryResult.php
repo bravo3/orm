@@ -1,10 +1,9 @@
 <?php
 namespace Bravo3\Orm\Query;
 
-use Bravo3\Orm\Services\EntityManager;
+use Bravo3\Orm\Exceptions\CorruptedEntityException;
 use Bravo3\Orm\Exceptions\NotFoundException;
-use Bravo3\Orm\Events\HydrationExceptionEvent;
-use Bravo3\Orm\Enum\Event;
+use Bravo3\Orm\Services\EntityManager;
 
 /**
  * QueryResult objects are a traversable lazy-loading entity holder
@@ -99,26 +98,11 @@ class QueryResult implements \Countable, \Iterator, \ArrayAccess
      */
     public function getEntityById($id)
     {
-        if ($this->entity_manager->getConfig()->getHydrationExceptionsAsEvents()) {
-            try {
-                if (!array_key_exists($id, $this->entities)) {
-                    $this->hydrateEntity($id);
-                }
-
-                return $this->entities[$id];
-            } catch (NotFoundException $e) {
-                $dispatcher = $this->entity_manager->getDispatcher();
-                $dispatcher->dispatch(Event::HYDRATION_EXCEPTION, new HydrationExceptionEvent($e));
-
-                return null;
-            }
-        } else {
-            if (!array_key_exists($id, $this->entities)) {
-                $this->hydrateEntity($id);
-            }
-
-            return $this->entities[$id];
+        if (!array_key_exists($id, $this->entities)) {
+            $this->hydrateEntity($id);
         }
+
+        return $this->entities[$id];
     }
 
     /**
@@ -141,7 +125,11 @@ class QueryResult implements \Countable, \Iterator, \ArrayAccess
      */
     private function hydrateEntity($id)
     {
-        $this->entities[$id] = $this->entity_manager->retrieve($this->query->getClassName(), $id, $this->use_cache);
+        try {
+            $this->entities[$id] = $this->entity_manager->retrieve($this->query->getClassName(), $id, $this->use_cache);
+        } catch (NotFoundException $e) {
+            throw new CorruptedEntityException("Entity in sorted index not found: ".$e->getMessage(), 0, $e);
+        }
 
         return $this;
     }
@@ -153,12 +141,7 @@ class QueryResult implements \Countable, \Iterator, \ArrayAccess
      */
     public function current()
     {
-        if ($result = $this->getEntityById($this->iterator->current())) {
-            return $result;
-        } else {
-            $this->next();
-            return $this->current();
-        }
+        return $this->getEntityById($this->iterator->current());
     }
 
     /**

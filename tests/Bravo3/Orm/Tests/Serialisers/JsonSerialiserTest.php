@@ -2,6 +2,7 @@
 namespace Bravo3\Orm\Tests\Serialisers;
 
 use Bravo3\Orm\Serialisers\JsonSerialiser;
+use Bravo3\Orm\Services\EntityManager;
 use Bravo3\Orm\Tests\AbstractOrmTest;
 use Bravo3\Orm\Tests\Entities\Product;
 
@@ -9,9 +10,12 @@ class JsonSerialiserTest extends AbstractOrmTest
 {
     const DATE_FORMAT = 'Y-m-d H:i:s';
 
-    public function testComplexSerialisation()
+    /**
+     * @dataProvider entityManagerDataProvider
+     * @param EntityManager $em
+     */
+    public function testComplexSerialisation(EntityManager $em)
     {
-        $em         = $this->getEntityManager();
         $serialiser = new JsonSerialiser();
         $time       = new \DateTime();
 

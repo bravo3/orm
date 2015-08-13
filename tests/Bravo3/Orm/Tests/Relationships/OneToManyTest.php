@@ -2,13 +2,18 @@
 namespace Bravo3\Orm\Tests\Relationships;
 
 use Bravo3\Orm\Proxy\OrmProxyInterface;
+use Bravo3\Orm\Services\EntityManager;
 use Bravo3\Orm\Tests\AbstractOrmTest;
 use Bravo3\Orm\Tests\Entities\OneToMany\Article;
 use Bravo3\Orm\Tests\Entities\OneToMany\Category;
 
 class OneToManyTest extends AbstractOrmTest
 {
-    public function testOneToMany()
+    /**
+     * @dataProvider entityManagerDataProvider
+     * @param EntityManager $em
+     */
+    public function testOneToMany(EntityManager $em)
     {
         $time = new \DateTime();
 
@@ -23,7 +28,6 @@ class OneToManyTest extends AbstractOrmTest
 
         $category1->addArticle($article1)->addArticle($article2);
 
-        $em = $this->getEntityManager();
         $em->persist($category1)->persist($article1)->persist($article2)->flush();
     }
 
@@ -31,8 +35,10 @@ class OneToManyTest extends AbstractOrmTest
      * Testing race conditions of new entities, with a flush after persisting the first entity
      *
      * @see: docs/RaceConditions.md
+     * @dataProvider entityManagerDataProvider
+     * @param EntityManager $em
      */
-    public function testOneToManyRaceFlush()
+    public function testOneToManyRaceFlush(EntityManager $em)
     {
         $time = new \DateTime();
 
@@ -44,7 +50,6 @@ class OneToManyTest extends AbstractOrmTest
 
         $category1->addArticle($article1);
 
-        $em = $this->getEntityManager();
         $em->persist($category1)->flush()->persist($article1)->flush();
 
         /** @var Article|OrmProxyInterface $r_article */
@@ -71,8 +76,10 @@ class OneToManyTest extends AbstractOrmTest
      * Testing race conditions of new entities, without a flush between persist calls
      *
      * @see: docs/RaceConditions.md
+     * @dataProvider entityManagerDataProvider
+     * @param EntityManager $em
      */
-    public function testOneToManyRaceNoFlush()
+    public function testOneToManyRaceNoFlush(EntityManager $em)
     {
         $time = new \DateTime();
 
@@ -84,11 +91,10 @@ class OneToManyTest extends AbstractOrmTest
 
         $category1->addArticle($article1);
 
-        $em = $this->getEntityManager();
         $em->persist($category1)->persist($article1)->flush();
 
         /** @var Article|OrmProxyInterface $r_article */
-        $r_article = $em->retrieve('Bravo3\Orm\Tests\Entities\OneToMany\Article', 201);
+        $r_article = $em->retrieve(Article::class, 201);
         $this->assertEquals('Article 201', $r_article->getTitle());
 
         // Should make DB query here
@@ -97,7 +103,7 @@ class OneToManyTest extends AbstractOrmTest
 
         // Check inverse side too -
         /** @var Category|OrmProxyInterface $ir_category */
-        $ir_category = $em->retrieve('Bravo3\Orm\Tests\Entities\OneToMany\Category', 201);
+        $ir_category = $em->retrieve(Category::class, 201);
         $this->assertEquals('Category 201', $ir_category->getName());
 
         // Should make DB query here

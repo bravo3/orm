@@ -3,13 +3,18 @@ namespace Bravo3\Orm\Tests\Indices;
 
 use Bravo3\Orm\Enum\Direction;
 use Bravo3\Orm\Query\SortedQuery;
+use Bravo3\Orm\Services\EntityManager;
 use Bravo3\Orm\Tests\AbstractOrmTest;
 use Bravo3\Orm\Tests\Entities\OneToMany\Article;
 use Bravo3\Orm\Tests\Entities\OneToMany\Category;
 
 class SortedQueryTest extends AbstractOrmTest
 {
-    public function testPersist()
+    /**
+     * @dataProvider entityManagerDataProvider
+     * @param EntityManager $em
+     */
+    public function testPersist(EntityManager $em)
     {
         // Persist a forward relationship
         $time1 = new \DateTime();
@@ -34,7 +39,6 @@ class SortedQueryTest extends AbstractOrmTest
 
         $category1->addArticle($article1)->addArticle($article2);
 
-        $em = $this->getEntityManager();
         $em->persist($category1)
            ->persist($category2)
            ->persist($category3)
@@ -53,10 +57,12 @@ class SortedQueryTest extends AbstractOrmTest
         $em->persist($category3)->flush();
     }
 
-    public function testSortOrder()
+    /**
+     * @dataProvider entityManagerDataProvider
+     * @param EntityManager $em
+     */
+    public function testSortOrder(EntityManager $em)
     {
-        $em = $this->getEntityManager();
-
         $category = new Category();
         $category->setId(600);
         $em->persist($category);
@@ -94,6 +100,8 @@ class SortedQueryTest extends AbstractOrmTest
         $this->assertEquals(15, $results->getFullSize());
         $article = $results[0];
         $this->assertEquals('Art 610', $article->getTitle());
+        $article = $results[4];
+        $this->assertEquals('Art 606', $article->getTitle());
 
         $results = $em->sortedQuery(new SortedQuery($category, 'articles', 'sort_date', Direction::ASC(), 2, 5));
         $this->assertCount(4, $results);

@@ -189,6 +189,10 @@ Bundled Strategies
 ------------------
 ### Databases
 * Redis
+* Native filesystem
+* Tar or zip archives
+
+See [drivers](docs/Drivers.md) for more info on database implementations.
 
 ### Serialisation
 * JSON
@@ -197,13 +201,13 @@ Bundled Strategies
 * Annotation
 
 ### Key Schemes
-* Configurable delimiter, defaulting to Redis-style
+* Standard scheme: configurable delimiter, defaulting to Redis-style
+* Filesystem path scheme
 
 Major Planned Additions
 -----------------------
-* YAML metadata mapper
-* Proxy caching
-* Entity caching pool
+* Additional mappers (YAML, XML, etc)
+* Validation service
 
 Known Issues
 ------------
@@ -212,6 +216,10 @@ Known Issues
 
 Change Log
 ----------
+### 0.5.0
+* Removed 'entity hydration errors as events' due to its dangerous nature
+* Added a filesystem driver - designed for backup purposes but could also serve has a mini internal database
+
 ### 0.4.3
 * Added the ability to perform sorted, conditional queries on all items in a table
 * Added the ability to name sorted queries, allowing different configurations of conditions on the same column

@@ -2,16 +2,17 @@
 namespace Bravo3\Orm\Tests\Drivers\Redis;
 
 use Bravo3\Orm\Drivers\Common\SerialisedData;
+use Bravo3\Orm\Drivers\Redis\RedisDriver;
 use Bravo3\Orm\Exceptions\NotFoundException;
 use Bravo3\Orm\Tests\AbstractOrmTest;
-use Bravo3\Orm\Drivers\Redis\RedisDriver;
 use Prophecy\Argument;
+
 
 class RedisDriverTest extends AbstractOrmTest
 {
     public function testMultiSet()
     {
-        $driver = $this->getDriver();
+        $driver = $this->getRedisDriver();
         $key    = 'test:multi:'.rand(10000, 99999);
 
         $driver->persist($key, new SerialisedData('xxxx', 'foo'));
@@ -22,7 +23,7 @@ class RedisDriverTest extends AbstractOrmTest
 
     public function testSingleSet()
     {
-        $driver = $this->getDriver();
+        $driver = $this->getRedisDriver();
         $key    = 'test:single:'.rand(10000, 99999);
 
         $driver->persist($key, new SerialisedData('xxxx', 'bar'));
@@ -33,7 +34,7 @@ class RedisDriverTest extends AbstractOrmTest
 
     public function testDelete()
     {
-        $driver = $this->getDriver();
+        $driver = $this->getRedisDriver();
         $key    = 'test:delete:'.rand(10000, 99999);
 
         $driver->persist($key, new SerialisedData('xxxx', 'bar'));
@@ -54,7 +55,7 @@ class RedisDriverTest extends AbstractOrmTest
     /**
      * @expectedException \Exception
      */
-    public function testClientConnectionFaliure()
+    public function testClientConnectionFailure()
     {
         $client = $this->prophesize(DummyClient::class);
         $driver = new RedisDriver(null, null, null, $client->reveal());
@@ -90,7 +91,7 @@ class RedisDriverTest extends AbstractOrmTest
 
     public function testRetryDelay()
     {
-        $driver = $this->getDriver();
+        $driver = $this->getRedisDriver();
 
         $driver->setRetryDelayCoefficient(1.5);
         $driver->setInitialRetryDelay(200);

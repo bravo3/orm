@@ -119,6 +119,7 @@ class EntityManager
             $this->serialiser_map->addSerialiser(new JsonSerialiser());
         }
 
+        $this->instance_id = uniqid();
         $this->registerDefaultSubscribers();
     }
 
@@ -286,7 +287,7 @@ class EntityManager
     }
 
     /**
-     * Retrieve an entity
+     * Retrieve an entity, throwing a NotFoundException if the entity is not found
      *
      * @param string $class_name
      * @param string $id
@@ -315,7 +316,7 @@ class EntityManager
     }
 
     /**
-     * Retrieve an entity by ClassName + Id
+     * Retrieve an entity, returning null if the entity is not found
      *
      * @param string $class_name
      * @param int    $id
@@ -332,7 +333,9 @@ class EntityManager
     }
 
     /**
-     * Retrieve an entity by ClassName + Id or create a new Instance
+     * Retrieve an entity, creating a new instance if the entity is not found
+     *
+     * NB: The entity must be able to be constructed without constructor arguments.
      *
      * @param string $class_name
      * @param int    $id

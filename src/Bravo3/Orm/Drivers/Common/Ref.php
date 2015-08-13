@@ -11,6 +11,10 @@ class Ref
     const REF_DELIMITER = ':';
 
     /**
+     * TODO:
+     * Storing the class name in the database is a terrible idea. Ideally this needs to be a table name, however the
+     * ability to dereference a Ref requires class meta-data. This WILL be changed at some point.
+     *
      * @var string
      */
     protected $source_class;
