@@ -64,7 +64,7 @@ class IndexManager extends AbstractManagerUtility
 
                 if ($original_value == $index_value) {
                     // Don't skip if ID has changed, but no need to delete any keys
-                    if (!$new_id) {
+                    if (!$new_id && !$this->entity_manager->getMaintenanceMode()) {
                         // Persisted value is indifferent, nothing to do
                         continue;
                     }

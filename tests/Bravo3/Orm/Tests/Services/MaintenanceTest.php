@@ -1,9 +1,12 @@
 <?php
 namespace Bravo3\Orm\Tests\Services;
 
+use Bravo3\Orm\Exceptions\NotFoundException;
+use Bravo3\Orm\Mappers\Metadata\Index;
 use Bravo3\Orm\Services\EntityManager;
 use Bravo3\Orm\Services\Maintenance;
 use Bravo3\Orm\Tests\AbstractOrmTest;
+use Bravo3\Orm\Tests\Entities\Indexed\SluggedArticle;
 use Bravo3\Orm\Tests\Entities\Maintenance\Alpha;
 use Bravo3\Orm\Tests\Entities\Maintenance\AlphaRevised;
 use Bravo3\Orm\Tests\Entities\Maintenance\Bravo;
@@ -117,5 +120,62 @@ class MaintenanceTest extends AbstractOrmTest
         /** @var CharlieRevised $c */
         $c = $d->getCharlie()[0];
         $this->assertEquals('Charlie', $c->getName());
+    }
+
+    /**
+     * @dataProvider entityManagerDataProvider
+     * @param EntityManager $em
+     */
+    public function testRebuildIndex(EntityManager $em)
+    {
+        // Create an article with a slug
+        $article = new SluggedArticle();
+        $article->setId(8343)->setName('foo')->setSlug('bar');
+        $em->persist($article)->flush();
+
+        // Confirm slug works
+        /** @var SluggedArticle $article */
+        $article = $em->retrieveByIndex(SluggedArticle::class, 'slug', 'bar', false);
+        $this->assertEquals('foo', $article->getName());
+
+        $index = $em->getMapper()->getEntityMetadata($article)->getIndexByName('slug');
+
+        // Corrupt the slug, two steps required:
+        // 1. Set a new slug
+        $em->getDriver()->setSingleValueIndex(
+            $em->getKeyScheme()->getIndexKey($index, 'evil'),
+            $article->getId()
+        );
+
+        // 2. Remove the correct slug
+        $em->getDriver()->clearSingleValueIndex(
+            $em->getKeyScheme()->getIndexKey($index, 'bar')
+        );
+
+        $em->getDriver()->flush();
+
+        // Confirm old slug no longer works
+        try {
+            $em->retrieveByIndex(SluggedArticle::class, 'slug', 'bar', false);
+            $this->fail('Old index succeeded');
+        } catch (NotFoundException $e) {
+        }
+
+        // Confirm new slug does work
+        $article = $em->retrieveByIndex(SluggedArticle::class, 'slug', 'evil', false);
+        $this->assertEquals('foo', $article->getName());
+
+        // Run maintenance over the table, this should correct the slug
+        $maintenance = new Maintenance($em);
+        $maintenance->rebuild(SluggedArticle::class);
+
+        // Confirm correct slug works
+        $article = $em->retrieveByIndex(SluggedArticle::class, 'slug', 'bar', false);
+        $this->assertEquals('foo', $article->getName());
+
+        // The corrupted slug should still work, this is unideal, but there is no reference to it for the maintenance
+        // service to know to remove it
+        $article = $em->retrieveByIndex(SluggedArticle::class, 'slug', 'evil', false);
+        $this->assertEquals('foo', $article->getName());
     }
 }
