@@ -8,11 +8,11 @@ use Bravo3\Orm\Annotations\Index;
 
 /**
  * @Entity(indices={
- *      @Index(name="slug", columns={"slug"}),
- *      @Index(name="name", columns={"name"})
- * })
+ *      @Index(name="category__slug", columns={"category", "slug"}),
+ *      @Index(name="category__name", columns={"category", "name"})
+ * },table="slugged_article")
  */
-class SluggedArticle
+class SluggedArticleNewIndex
 {
     /**
      * @var int
