@@ -3,6 +3,7 @@ namespace Bravo3\Orm\Drivers;
 
 use Bravo3\Orm\Drivers\Common\Ref;
 use Bravo3\Orm\Drivers\Common\SerialisedData;
+use Bravo3\Orm\Exceptions\InvalidIdException;
 use Bravo3\Orm\KeySchemes\KeySchemeInterface;
 use Bravo3\Orm\Traits\DebugInterface;
 
@@ -209,4 +210,14 @@ interface DriverInterface extends DebugInterface
      * @return void
      */
     public function clearRefs($key);
+
+    /**
+     * Checks if a given entity ID is safe for the driver and returns an array of violation messages
+     *
+     * The ID should be considered valid if the returned array is empty.
+     *
+     * @param string $id
+     * @return string[]
+     */
+    public function validateId($id);
 }

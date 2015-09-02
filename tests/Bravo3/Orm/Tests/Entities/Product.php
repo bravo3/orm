@@ -3,9 +3,12 @@ namespace Bravo3\Orm\Tests\Entities;
 
 use Bravo3\Orm\Annotations as Orm;
 use Bravo3\Orm\Tests\Resources\Enum;
+use Doctrine\Common\Annotations\Annotation\IgnoreAnnotation;
 
 /**
+ * @IgnoreAnnotation("Foo\NotAnAnnotation")
  * @Orm\Entity(table="products")
+ * @Foo\NotAnAnnotation
  */
 class Product
 {

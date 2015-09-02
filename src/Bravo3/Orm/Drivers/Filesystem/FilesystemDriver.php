@@ -4,6 +4,7 @@ namespace Bravo3\Orm\Drivers\Filesystem;
 use Bravo3\Orm\Drivers\Common\Command;
 use Bravo3\Orm\Drivers\Common\Ref;
 use Bravo3\Orm\Drivers\Common\SerialisedData;
+use Bravo3\Orm\Drivers\Common\StandardIdValidatorTrait;
 use Bravo3\Orm\Drivers\Common\UnitOfWork;
 use Bravo3\Orm\Drivers\Common\WorkerPool;
 use Bravo3\Orm\Drivers\DriverInterface;
@@ -33,6 +34,7 @@ use Bravo3\Orm\Traits\DebugTrait;
 class FilesystemDriver implements DriverInterface
 {
     use DebugTrait;
+    use StandardIdValidatorTrait;
 
     /**
      * Files stored to the filesystem will contain the serialisation key, TTL and serialised data - these values are

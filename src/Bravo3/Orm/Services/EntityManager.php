@@ -4,6 +4,7 @@ namespace Bravo3\Orm\Services;
 use Bravo3\Orm\Config\Configuration;
 use Bravo3\Orm\Drivers\DriverInterface;
 use Bravo3\Orm\Exceptions\InvalidArgumentException;
+use Bravo3\Orm\Exceptions\InvalidIdException;
 use Bravo3\Orm\Exceptions\NotFoundException;
 use Bravo3\Orm\KeySchemes\KeySchemeInterface;
 use Bravo3\Orm\Mappers\MapperInterface;
@@ -231,16 +232,16 @@ class EntityManager
     }
 
     /**
-     * Throw an exception if an ID contains illegal chars
+     * Throw an InvalidIdException if an ID contains illegal chars
      *
      * @param string $id
+     * @throws InvalidIdException
      */
     private function validateId($id)
     {
-        $id = str_replace(['-', '.', '_', '~', '/', '\\'], '', $id);
-
-        if ($id && !ctype_alnum($id)) {
-            throw new InvalidArgumentException("Entity ID '".$id."' contains illegal characters");
+        $errors = $this->driver->validateId($id);
+        if (count($errors)) {
+            throw new InvalidIdException($id, $errors);
         }
     }
 

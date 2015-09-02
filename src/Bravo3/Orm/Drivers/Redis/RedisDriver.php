@@ -5,6 +5,7 @@ namespace Bravo3\Orm\Drivers\Redis;
 use Bravo3\Orm\Drivers\Common\Command;
 use Bravo3\Orm\Drivers\Common\Ref;
 use Bravo3\Orm\Drivers\Common\SerialisedData;
+use Bravo3\Orm\Drivers\Common\StandardIdValidatorTrait;
 use Bravo3\Orm\Drivers\Common\UnitOfWork;
 use Bravo3\Orm\Drivers\DriverInterface;
 use Bravo3\Orm\Exceptions\NotFoundException;
@@ -24,6 +25,7 @@ use Predis\Pipeline\Pipeline;
 class RedisDriver implements DriverInterface
 {
     use DebugTrait;
+    use StandardIdValidatorTrait;
 
     /**
      * Get/Write commands that fails will be retried again
@@ -684,5 +686,4 @@ class RedisDriver implements DriverInterface
             return 0;
         }
     }
-
 }
