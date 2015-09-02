@@ -209,11 +209,6 @@ Major Planned Additions
 * Additional mappers (YAML, XML, etc)
 * Validation service
 
-Known Issues
-------------
-* Using traits in entities may cause issues with proxies when attempting to retrieve the entity
-    * Caused by Zend MethodReflection claiming a comment is unterminated
-
 Change Log
 ----------
 ### 0.5.0
