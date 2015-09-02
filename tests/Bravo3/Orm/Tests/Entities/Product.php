@@ -3,24 +3,23 @@ namespace Bravo3\Orm\Tests\Entities;
 
 use Bravo3\Orm\Annotations as Orm;
 use Bravo3\Orm\Tests\Resources\Enum;
+use Doctrine\Common\Annotations\Annotation\IgnoreAnnotation;
 
 /**
+ * @IgnoreAnnotation("Foo\NotAnAnnotation")
  * @Orm\Entity(table="products")
+ * @Foo\NotAnAnnotation
  */
 class Product
 {
+    use NameTrait;
+
     /**
      * @var int
      * @Orm\Id
      * @Orm\Column(type="int")
      */
     protected $id;
-
-    /**
-     * @var string
-     * @Orm\Column(type="string")
-     */
-    protected $name;
 
     /**
      * @var string
@@ -82,28 +81,6 @@ class Product
     public function setId($id)
     {
         $this->id = $id;
-        return $this;
-    }
-
-    /**
-     * Get Name
-     *
-     * @return string
-     */
-    public function getName()
-    {
-        return $this->name;
-    }
-
-    /**
-     * Set Name
-     *
-     * @param string $name
-     * @return $this
-     */
-    public function setName($name)
-    {
-        $this->name = $name;
         return $this;
     }
 

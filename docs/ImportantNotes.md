@@ -4,9 +4,21 @@ Important Notes
 Illegal Characters
 ------------------
 * Table names must only contain alpha-numeric characters: a-z, 0-9
-* Entity IDs must only contain alpha-numeric characters, hyphen and underscores: a-z, 0-9, -, _
+* Entity IDs must only contain alpha-numeric characters, and the following: + - _ , . @ / \
 
 Entity IDs will inherit a period (.) as a delimiter when concatenating a multi-column ID.
+
+Custom Annotations
+------------------
+If you have annotations on your entities that aren't standard PHP annotations, or part of the ORM annotation mapping,
+you will need to exclude them using `@IgnoreAnnotation`:
+
+    /**
+     * @IgnoreAnnotation("Foo\NotAnAnnotation")
+     * @Foo\NotAnAnnotation
+     * @Orm\Entity(table="products")
+     */
+    class Product {}
 
 Serialisation
 -------------

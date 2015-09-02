@@ -7,7 +7,6 @@ use Bravo3\Orm\Annotations\Column as ColumnAnnotation;
 use Bravo3\Orm\Annotations\Condition as ConditionAnnotation;
 use Bravo3\Orm\Annotations\Entity as EntityAnnotation;
 use Bravo3\Orm\Annotations\Index as IndexAnnotation;
-use Bravo3\Orm\Annotations\Sortable as IndexSortable;
 use Bravo3\Orm\Annotations\ManyToMany;
 use Bravo3\Orm\Annotations\ManyToOne;
 use Bravo3\Orm\Annotations\OneToMany;
@@ -28,16 +27,16 @@ use Doctrine\Common\Inflector\Inflector;
 
 class AnnotationMetadataParser
 {
-    const ENTITY_ANNOTATION = 'Bravo3\Orm\Annotations\Entity';
-    const ID_ANNOTATION = 'Bravo3\Orm\Annotations\Id';
-    const COLUMN_ANNOTATION = 'Bravo3\Orm\Annotations\Column';
-    const OTO_ANNOTATION = 'Bravo3\Orm\Annotations\OneToOne';
-    const OTM_ANNOTATION = 'Bravo3\Orm\Annotations\OneToMany';
-    const MTO_ANNOTATION = 'Bravo3\Orm\Annotations\ManyToOne';
-    const MTM_ANNOTATION = 'Bravo3\Orm\Annotations\ManyToMany';
-    const ERR_UNKNOWN_CONDITION = "Unknown condition type, must be a Condition object";
-    const ERR_UNKNOWN_SORTABLE = "Unknown sortable type, must be a string or Sortable object";
-    const ERR_CONDITION_CONFLICT = "A condition cannot be tested against both a 'column' and a 'method'";
+    const ENTITY_ANNOTATION           = 'Bravo3\Orm\Annotations\Entity';
+    const ID_ANNOTATION               = 'Bravo3\Orm\Annotations\Id';
+    const COLUMN_ANNOTATION           = 'Bravo3\Orm\Annotations\Column';
+    const OTO_ANNOTATION              = 'Bravo3\Orm\Annotations\OneToOne';
+    const OTM_ANNOTATION              = 'Bravo3\Orm\Annotations\OneToMany';
+    const MTO_ANNOTATION              = 'Bravo3\Orm\Annotations\ManyToOne';
+    const MTM_ANNOTATION              = 'Bravo3\Orm\Annotations\ManyToMany';
+    const ERR_UNKNOWN_CONDITION       = "Unknown condition type, must be a Condition object";
+    const ERR_UNKNOWN_SORTABLE        = "Unknown sortable type, must be a string or Sortable object";
+    const ERR_CONDITION_CONFLICT      = "A condition cannot be tested against both a 'column' and a 'method'";
     const ERR_CONDITION_PREREQUISITES = "A condition must define either a 'column' or a 'method' to test against";
 
     /**
@@ -245,6 +244,7 @@ class AnnotationMetadataParser
     private function parseColumnAnnotation(ColumnAnnotation $column_annotation, $name)
     {
         $column = new Column($name);
+        /** @noinspection PhpParamsInspection */
         $column->setType(FieldType::memberByValue($column_annotation->type));
         $column->setName($column_annotation->name);
         $column->setGetter($column_annotation->getter);
@@ -339,8 +339,10 @@ class AnnotationMetadataParser
     {
         if ($this->entity_annotation === null) {
             /** @var EntityAnnotation $entity */
-            $this->entity_annotation
-                = $this->annotation_reader->getClassAnnotation($this->reflection_obj, self::ENTITY_ANNOTATION);
+            $this->entity_annotation = $this->annotation_reader->getClassAnnotation(
+                $this->reflection_obj,
+                self::ENTITY_ANNOTATION
+            );
 
             if (!$this->entity_annotation) {
                 throw new InvalidEntityException(
