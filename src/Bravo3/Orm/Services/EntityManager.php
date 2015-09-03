@@ -10,6 +10,7 @@ use Bravo3\Orm\Mappers\MapperInterface;
 use Bravo3\Orm\Proxy\OrmProxyInterface;
 use Bravo3\Orm\Query\IndexedQuery;
 use Bravo3\Orm\Query\QueryResult;
+use Bravo3\Orm\Query\ScoreFilterQuery;
 use Bravo3\Orm\Query\SortedQuery;
 use Bravo3\Orm\Serialisers\JsonSerialiser;
 use Bravo3\Orm\Serialisers\SerialiserMap;
@@ -401,6 +402,22 @@ class EntityManager
     public function sortedQuery(SortedQuery $query, $check_full_set_size = false, $use_cache = true)
     {
         return $this->getQueryManager()->sortedQuery($query, $check_full_set_size, $use_cache);
+    }
+
+    /**
+     * Get all foreign entities filtered by a given score range
+     *
+     * If you have applied a limit to the query but need to know the full size of the unfiltered set, you must set
+     * $check_full_set_size to true to gather this information at the expense of a second database query.
+     *
+     * @param ScoreFilterQuery $query
+     * @param bool             $check_full_set_size
+     * @param bool             $use_cache
+     * @return QueryResult
+     */
+    public function scoreFilterQuery(ScoreFilterQuery $query, $check_full_set_size = false, $use_cache = true)
+    {
+        return $this->getQueryManager()->scoreFilterQuery($query, $check_full_set_size, $use_cache);
     }
 
     /**

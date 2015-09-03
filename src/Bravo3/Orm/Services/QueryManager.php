@@ -6,6 +6,7 @@ use Bravo3\Orm\Exceptions\InvalidArgumentException;
 use Bravo3\Orm\Mappers\Metadata\Entity;
 use Bravo3\Orm\Query\IndexedQuery;
 use Bravo3\Orm\Query\QueryResult;
+use Bravo3\Orm\Query\ScoreFilterQuery;
 use Bravo3\Orm\Query\SortedQuery;
 use Bravo3\Orm\Services\Io\Reader;
 
@@ -94,6 +95,58 @@ class QueryManager extends AbstractManagerUtility
         $results = $this->getDriver()->getSortedIndex(
             $key,
             $query->getDirection() == Direction::DESC(),
+            $query->getStart(),
+            $query->getEnd()
+        );
+
+        if (!$query->getStart() && !$query->getEnd()) {
+            $full_size = count($results);
+        } elseif ($check_full_set_size) {
+            $full_size = $this->getDriver()->getSortedIndexSize($key);
+        } else {
+            $full_size = null;
+        }
+
+        return new QueryResult($this->entity_manager, $query, $results, $full_size, $use_cache);
+    }
+
+    /**
+     * Get all foreign entities filtered by the range provided
+     *
+     * If you have applied a limit to the query but need to know the full size of the unfiltered set, you must set
+     * $check_full_set_size to true to gather this information at the expense of a second database query.
+     *
+     * @param ScoreFilterQuery $query
+     * @param bool             $check_full_set_size
+     * @param bool             $use_cache
+     * @return QueryResult
+     */
+    public function scoreFilterQuery(ScoreFilterQuery $query, $check_full_set_size = false, $use_cache = true)
+    {
+        $metadata = $this->getMapper()->getEntityMetadata($query->getClassName());
+
+        if ($query->getRelationshipName()) {
+            // Entity relationship based query
+            $reader       = new Reader($metadata, $query->getEntity());
+            $relationship = $metadata->getRelationshipByName($query->getRelationshipName());
+
+            if (!$relationship) {
+                throw new InvalidArgumentException('Relationship "'.$query->getRelationshipName().'" does not exist');
+            }
+
+            // Important, else the QueryResult class will try to hydrate the wrong entity
+            $query->setClassName($relationship->getTarget());
+            $key = $this->getKeyScheme()->getSortIndexKey($relationship, $query->getSortBy(), $reader->getId());
+        } else {
+            // Table based query
+            $key = $this->getKeyScheme()->getTableSortKey($metadata->getTableName(), $query->getSortBy());
+        }
+
+        $results = $this->getDriver()->getSortedFilteredIndex(
+            $key,
+            $query->getDirection() == Direction::DESC(),
+            $query->getMinScore(),
+            $query->getMaxScore(),
             $query->getStart(),
             $query->getEnd()
         );

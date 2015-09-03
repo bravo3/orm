@@ -436,6 +436,52 @@ class RedisDriver implements DriverInterface
     }
 
     /**
+     * Get a range values in a sorted index filtered by member values values
+     *
+     * If $start/$stop are null then they are assumed to be the start/end of the entire set
+     *
+     * @param string $key
+     * @param bool   $reverse
+     * @param int    $min_score
+     * @param int    $max_score
+     * @param int    $start
+     * @param int    $stop
+     *
+     * @return string[]
+     */
+    public function getSortedFilteredIndex($key, $reverse = false, $min_score = '-inf', $max_score = '+inf',
+                                           $start = null, $stop = null)
+    {
+        if ($reverse) {
+            return $this->clientCmd(
+                'zrevrangebyscore',
+                [
+                    $key,
+                    $min_score === null ? '-inf' : $min_score,
+                    $max_score === null ? '+inf' : $max_score,
+                    'limit' => [
+                        $start === null ? 0 : $start,
+                        $stop === null ? -1 : $stop,
+                    ]
+                ]
+            );
+        } else {
+            return $this->clientCmd(
+                'zrangebyscore',
+                [
+                    $key,
+                    $min_score === null ? '-inf' : $min_score,
+                    $max_score === null ? '+inf' : $max_score,
+                    'limit' => [
+                        $start === null ? 0 : $start,
+                        $stop === null ? -1 : $stop,
+                    ]
+                ]
+            );
+        }
+    }
+
+    /**
      * Create a debug log
      *
      * @param string $msg

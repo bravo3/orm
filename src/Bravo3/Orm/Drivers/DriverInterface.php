@@ -167,6 +167,23 @@ interface DriverInterface extends DebugInterface
     public function getSortedIndex($key, $reverse = false, $start = null, $stop = null);
 
     /**
+     * Get a range values in a sorted index filtered by member values values
+     *
+     * If $start/$stop are null then they are assumed to be the start/end of the entire set
+     *
+     * @param string $key
+     * @param bool   $reverse
+     * @param int    $min_score
+     * @param int    $max_score
+     * @param int    $start
+     * @param int    $stop
+     *
+     * @return string[]
+     */
+    public function getSortedFilteredIndex($key, $reverse = false, $min_score = '-inf', $max_score = '+inf',
+                                           $start = null, $stop = null);
+
+    /**
      * Get the size of a sorted index, without any filters applied
      *
      * @param string $key
