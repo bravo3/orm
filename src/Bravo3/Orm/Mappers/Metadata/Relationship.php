@@ -56,6 +56,10 @@ class Relationship
      */
     protected $sortable_by = [];
 
+    /**
+     * @param string           $name
+     * @param RelationshipType $relationship_type
+     */
     public function __construct($name, RelationshipType $relationship_type)
     {
         $this->name              = $name;
@@ -223,7 +227,7 @@ class Relationship
      */
     public function getGetter()
     {
-        return $this->getter ?: 'get'.Inflector::classify($this->getName());
+        return $this->getter ?: 'get' . Inflector::classify($this->getName());
     }
 
     /**
@@ -245,7 +249,7 @@ class Relationship
      */
     public function getSetter()
     {
-        return $this->setter ?: 'set'.Inflector::classify($this->getName());
+        return $this->setter ?: 'set' . Inflector::classify($this->getName());
     }
 
     /**

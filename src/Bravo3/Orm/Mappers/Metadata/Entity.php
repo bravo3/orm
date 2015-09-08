@@ -45,6 +45,10 @@ class Entity
      */
     protected $property_map = null;
 
+    /**
+     * @param string $class_name
+     * @param string $table_name
+     */
     public function __construct($class_name, $table_name)
     {
         $this->class_name = $class_name;

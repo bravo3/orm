@@ -11,7 +11,7 @@ You can index fields other than the Id columns for purposes of retrieving entiti
     /**
      * @Entity(indices={
      *      @Index(name="slug", columns={"slug"}),
-     *      @Index(name="id_slug", columns={"id", "slug"}),
+     *      @Index(name="id_slug", methods={"getId", "getSlug"}),
      * })
      */
     class IndexedEntity
@@ -34,6 +34,22 @@ You can index fields other than the Id columns for purposes of retrieving entiti
          * @Column(type="string")
          */
         protected $title;
+        
+        /**
+         * @return string
+         */
+        public function getId()
+        {
+            return $this->id;
+        }
+        
+        /**
+         * @return string
+         */
+        public function getSlug()
+        {
+            return $this->slug;
+        }
     }
 
 The above example will save 2 indices to the database that can be used to retrieve the entity. The "slug" index would
@@ -47,3 +63,6 @@ However the second index demonstrates that an index can be a composition of fiel
     
 If you modify the ID column all indices will be updated when you next persist. If you change the value of the slug, 
 then the index for the former slug is removed and a new index created. 
+
+You can combine columns and methods in an index, however methods will always be appended to the index *after* 
+all columns. This cannot be changed.

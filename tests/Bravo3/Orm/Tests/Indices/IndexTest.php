@@ -41,8 +41,9 @@ class IndexTest extends AbstractOrmTest
 
         $bc = $metadata->getIndexByName('bc');
         $this->assertContains('bravo', $bc->getColumns());
-        $this->assertContains('charlie', $bc->getColumns());
-        $this->assertCount(2, $bc->getColumns());
+        $this->assertContains('getCharlie', $bc->getMethods());
+        $this->assertCount(1, $bc->getColumns());
+        $this->assertCount(1, $bc->getMethods());
         $this->assertEquals('200.1', $reader->getIndexValue($bc));
 
         $b = $metadata->getIndexByName('b');

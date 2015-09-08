@@ -18,6 +18,11 @@ class Sortable
      */
     protected $conditions;
 
+    /**
+     * @param string      $column
+     * @param Condition[] $conditions
+     * @param string      $name
+     */
     public function __construct($column, array $conditions = [], $name = null)
     {
         $this->name       = $name ?: $column;
@@ -63,7 +68,7 @@ class Sortable
      * @param Condition[] $conditions
      * @return $this
      */
-    public function setConditions($conditions)
+    public function setConditions(array $conditions)
     {
         $this->conditions = $conditions;
         return $this;

@@ -25,6 +25,12 @@ class Condition
      */
     protected $comparison;
 
+    /**
+     * @param string $column
+     * @param string $method
+     * @param string $value
+     * @param string $comparison
+     */
     public function __construct($column, $method, $value, $comparison = '=')
     {
         $this->column     = $column;
@@ -65,7 +71,6 @@ class Condition
         $this->method = $method;
         return $this;
     }
-
 
     /**
      * Get Value
