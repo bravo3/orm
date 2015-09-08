@@ -267,7 +267,8 @@ class AnnotationMetadataParser
         /** @var IndexAnnotation $annotation_index */
         foreach ($annotation_indices as $annotation_index) {
             $index = new Index($table_name, $annotation_index->name);
-            $index->setColumns($annotation_index->columns);
+            $index->setColumns($annotation_index->columns ?: []);
+            $index->setMethods($annotation_index->methods ?: []);
             $indices[] = $index;
         }
 

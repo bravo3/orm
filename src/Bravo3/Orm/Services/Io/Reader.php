@@ -73,7 +73,7 @@ class Reader
             return $this->entity->$name();
         }
 
-        throw new InvalidArgumentException("The method '".$name."' does not exist on " . get_class($this->entity));
+        throw new InvalidArgumentException("The method '".$name."' does not exist on ".get_class($this->entity));
     }
 
     /**
@@ -85,8 +85,13 @@ class Reader
     public function getIndexValue(Index $index)
     {
         $values = [];
+
         foreach ($index->getColumns() as $column) {
             $values[] = (string)$this->getPropertyValue($column);
+        }
+
+        foreach ($index->getMethods() as $method) {
+            $values[] = (string)$this->getMethodValue($method);
         }
 
         return implode(self::ID_DELIMITER, $values);

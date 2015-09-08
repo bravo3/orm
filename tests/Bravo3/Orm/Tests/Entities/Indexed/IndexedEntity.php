@@ -9,7 +9,7 @@ use Bravo3\Orm\Annotations\Index;
 /**
  * @Entity(indices={
  *      @Index(name="ab", columns={"alpha", "bravo"}),
- *      @Index(name="bc", columns={"bravo", "charlie"}),
+ *      @Index(name="bc", columns={"bravo"}, methods={"getCharlie"}),
  *      @Index(name="b", columns={"bravo"})
  * })
  */

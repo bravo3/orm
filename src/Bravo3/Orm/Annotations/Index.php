@@ -16,4 +16,9 @@ class Index
      * @var array
      */
     public $columns;
+
+    /**
+     * @var array
+     */
+    public $methods;
 }

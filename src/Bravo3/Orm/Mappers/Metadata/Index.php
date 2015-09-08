@@ -11,13 +11,22 @@ class Index
     /**
      * @var string[]
      */
-    protected $columns;
+    protected $columns = [];
+
+    /**
+     * @var string[]
+     */
+    protected $methods = [];
 
     /**
      * @var string
      */
     protected $table_name;
 
+    /**
+     * @param string $table_name
+     * @param string $index_name
+     */
     public function __construct($table_name, $index_name)
     {
         $this->table_name = $table_name;
@@ -62,7 +71,7 @@ class Index
      * @param string[] $columns
      * @return $this
      */
-    public function setColumns($columns)
+    public function setColumns(array $columns)
     {
         $this->columns = $columns;
         return $this;
@@ -77,6 +86,40 @@ class Index
     public function addColumn($column)
     {
         $this->columns[] = $column;
+        return $this;
+    }
+
+    /**
+     * Get Methods
+     *
+     * @return string[]
+     */
+    public function getMethods()
+    {
+        return $this->methods;
+    }
+
+    /**
+     * Set Methods
+     *
+     * @param string[] $methods
+     * @return $this
+     */
+    public function setMethods(array $methods)
+    {
+        $this->methods = $methods;
+        return $this;
+    }
+
+    /**
+     * Add a single method to the index
+     *
+     * @param string $method
+     * @return $this
+     */
+    public function addMethod($method)
+    {
+        $this->methods[] = $method;
         return $this;
     }
 

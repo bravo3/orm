@@ -41,6 +41,9 @@ class Column
      */
     protected $class_name;
 
+    /**
+     * @param string $property
+     */
     public function __construct($property)
     {
         $this->property = $property;
