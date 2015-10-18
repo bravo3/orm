@@ -11,6 +11,7 @@ use Bravo3\Orm\Drivers\Redis\RedisDriver;
 use Bravo3\Orm\Enum\RelationshipType;
 use Bravo3\Orm\Exceptions\NotFoundException;
 use Bravo3\Orm\Mappers\Annotation\AnnotationMapper;
+use Bravo3\Orm\Mappers\Chained\ChainedMapper;
 use Bravo3\Orm\Mappers\Metadata\Index;
 use Bravo3\Orm\Mappers\Metadata\Relationship;
 use Bravo3\Orm\Services\EntityManager;
@@ -29,7 +30,7 @@ abstract class AbstractOrmTest extends \PHPUnit_Framework_TestCase
     {
         $driver = $this->getRedisDriver();
         $driver->setDebugMode(true);
-        $mapper = new AnnotationMapper();
+        $mapper = new ChainedMapper([new AnnotationMapper()]);
         $em     = EntityManager::build($driver, $mapper);
 
         $temp = sys_get_temp_dir().'/bravo3-orm';

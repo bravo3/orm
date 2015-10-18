@@ -6,6 +6,9 @@ use Bravo3\Orm\Mappers\Metadata\Entity;
 use Bravo3\Orm\Services\Io\Reader;
 use Doctrine\Common\Annotations\AnnotationRegistry;
 
+/**
+ * Maps metadata stored in the form of annotations on class properties
+ */
 class AnnotationMapper implements MapperInterface
 {
     /**
@@ -13,6 +16,9 @@ class AnnotationMapper implements MapperInterface
      */
     protected $metadata_cache = [];
 
+    /**
+     * @param array $paths
+     */
     public function __construct($paths = [])
     {
         if (!$paths) {

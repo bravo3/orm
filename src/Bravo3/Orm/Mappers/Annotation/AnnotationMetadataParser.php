@@ -15,6 +15,7 @@ use Bravo3\Orm\Annotations\Sortable as SortableAnnotation;
 use Bravo3\Orm\Enum\FieldType;
 use Bravo3\Orm\Enum\RelationshipType;
 use Bravo3\Orm\Exceptions\InvalidEntityException;
+use Bravo3\Orm\Exceptions\NoMetadataException;
 use Bravo3\Orm\Exceptions\UnexpectedValueException;
 use Bravo3\Orm\Mappers\Metadata\Column;
 use Bravo3\Orm\Mappers\Metadata\Condition;
@@ -25,6 +26,9 @@ use Bravo3\Orm\Mappers\Metadata\Sortable;
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Inflector\Inflector;
 
+/**
+ * Parses the annotations on a class to return valid metadata
+ */
 class AnnotationMetadataParser
 {
     const ENTITY_ANNOTATION           = 'Bravo3\Orm\Annotations\Entity';
@@ -346,7 +350,7 @@ class AnnotationMetadataParser
             );
 
             if (!$this->entity_annotation) {
-                throw new InvalidEntityException(
+                throw new NoMetadataException(
                     'Entity "'.$this->class_name.'" does not contain an @Entity annotation'
                 );
             }
