@@ -29,7 +29,7 @@
         "ocramius/proxy-manager": "~1.0"
     },
     "require-dev": {
-        "phpunit/phpunit": ">=4.5",
+        "phpunit/phpunit": "^5.0",
         "predis/predis": "~1.0",
         "incenteev/composer-parameter-handler": "~2.0",
         "bravo3/properties": "~1.0"

@@ -1,6 +1,5 @@
 <?php
-
-namespace Nlm\KidspotBundle\Tests\Service;
+namespace Bravo3\Orm\Tests\Events;
 
 use Bravo3\Orm\Query\SortedQuery;
 use Bravo3\Orm\Services\EntityManager;
