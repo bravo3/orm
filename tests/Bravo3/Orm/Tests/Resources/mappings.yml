@@ -1,0 +1,17 @@
+article:
+    class: Bravo3\Orm\Tests\Entities\OneToMany\Article
+    columns:
+        id: { type: int, id: true }
+        title: { type: string }
+        time_created: { type: datetime }
+        last_modified: { type: datetime }
+        sort_date: { type: datetime }
+sorted_user:
+    class: Bravo3\Orm\Tests\Entities\SortedUser
+    columns:
+        id: { type: int, id: true }
+        name: { type: string }
+        active: { type: bool }
+    sortable:
+        name_active: { column: name, conditions: [{ value: true, column: active }] }
+        name_all: { column: name }

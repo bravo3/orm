@@ -31,7 +31,6 @@ Advanced/Internals
 ------------------
 * [Refs](docs/Advanced/Refs.md)
 
-
 Example
 -------
 If you intend to use Redis, please include Predis in your `composer.json`:
@@ -199,6 +198,7 @@ See [drivers](docs/Drivers.md) for more info on database implementations.
 
 ### Entity Metadata Mappers
 * Annotation
+* YAML
 
 ### Key Schemes
 * Standard scheme: configurable delimiter, defaulting to Redis-style
@@ -206,11 +206,17 @@ See [drivers](docs/Drivers.md) for more info on database implementations.
 
 Major Planned Additions
 -----------------------
-* Additional mappers (YAML, XML, etc)
 * Validation service
 
 Change Log
 ----------
+### 0.5.6
+* Added a YAML mapper
+* Added map portation to easily convert between mapping types
+
+### 0.5.5
+* Add a chained mapper, allowing you to examine multiple forms of entity mapping in a single project
+
 ### 0.5.0
 * Removed 'entity hydration errors as events' due to its dangerous nature
 * Added a filesystem driver - designed for backup purposes but could also serve has a mini internal database
