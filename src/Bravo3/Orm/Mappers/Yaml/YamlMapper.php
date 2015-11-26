@@ -2,13 +2,15 @@
 namespace Bravo3\Orm\Mappers\Yaml;
 
 use Bravo3\Orm\Enum\FieldType;
+use Bravo3\Orm\Enum\RelationshipType;
 use Bravo3\Orm\Exceptions\MappingViolationException;
 use Bravo3\Orm\Exceptions\NoMetadataException;
-use Bravo3\Orm\Mappers\MapperInterface;
+use Bravo3\Orm\Mappers\AbstractMapper;
 use Bravo3\Orm\Mappers\Metadata\Column;
 use Bravo3\Orm\Mappers\Metadata\Condition;
 use Bravo3\Orm\Mappers\Metadata\Entity;
 use Bravo3\Orm\Mappers\Metadata\Index;
+use Bravo3\Orm\Mappers\Metadata\Relationship;
 use Bravo3\Orm\Mappers\Metadata\Sortable;
 use Bravo3\Orm\Services\Io\Reader;
 use Symfony\Component\Yaml\Yaml;
@@ -16,7 +18,7 @@ use Symfony\Component\Yaml\Yaml;
 /**
  * YAML metadata mapper
  */
-class YamlMapper implements MapperInterface
+class YamlMapper extends AbstractMapper
 {
     /**
      * @var string[]
@@ -100,35 +102,15 @@ class YamlMapper implements MapperInterface
             // Columns
             $columns = $this->getNode($schema, Schema::COLUMNS);
             foreach ($columns as $property => $column_schema) {
-                $column = new Column($property);
 
-                if ($getter = $this->getNode($column_schema, Schema::GETTER, false)) {
-                    $column->setGetter($getter);
+                if ($this->getNode($column_schema, Schema::REL_ASSOCIATION, false)) {
+                    $rel = $this->createRelationship($property, $column_schema);
+                    $rel->setSource($class)->setSourceTable($table);
+                    $entity->addRelationship($rel);
+                } else {
+                    $entity->addColumn($this->createColumn($property, $column_schema));
                 }
-
-                if ($setter = $this->getNode($column_schema, Schema::SETTER, false)) {
-                    $column->setSetter($setter);
-                }
-
-                if ($col_class = $this->getNode($column_schema, Schema::COLUMN_CLASS, false)) {
-                    $column->setClassName($col_class);
-                }
-
-                if ($col_property = $this->getNode($column_schema, Schema::COLUMN_PROPERTY, false)) {
-                    $column->setProperty($col_property);
-                }
-
-                $column->setId($this->getNode($column_schema, Schema::COLUMN_ID, false, false));
-
-                /** @var FieldType $type */
-                $type = FieldType::memberByValue($this->getNode($column_schema, Schema::COLUMN_TYPE, false, 'string'));
-                $column->setType($type);
-
-                $entity->addColumn($column);
             }
-
-            // Relationships
-            // TODO: !!
 
             // Table sortables
             $sortables = $this->getNode($schema, Schema::SORT_INDICES, false, []);
@@ -161,6 +143,53 @@ class YamlMapper implements MapperInterface
             $this->entities[$class] = $entity;
         }
         return $this;
+    }
+
+    /**
+     * Create a column from schema
+     *
+     * @param string $property
+     * @param array  $column_schema
+     * @return Column
+     */
+    private function createColumn($property, array $column_schema)
+    {
+        $column = new Column($property);
+        $column->setId($this->getNode($column_schema, Schema::COLUMN_ID, false, false));
+        $column->setGetter($this->getNode($column_schema, Schema::GETTER, false));
+        $column->setSetter($this->getNode($column_schema, Schema::SETTER, false));
+        $column->setClassName($this->getNode($column_schema, Schema::COLUMN_CLASS, false));
+        $column->setProperty($property);
+
+        /** @var FieldType $type */
+        $type = FieldType::memberByValue($this->getNode($column_schema, Schema::COLUMN_TYPE, false, 'string'));
+        $column->setType($type);
+
+        return $column;
+    }
+
+    /**
+     * Create a relationship from schema
+     *
+     * @param string $property
+     * @param array  $column_schema
+     * @return Relationship
+     */
+    private function createRelationship($property, array $column_schema)
+    {
+        $assoc        = $this->getNode($column_schema, Schema::REL_ASSOCIATION, true);
+        $relationship = new Relationship($property, RelationshipType::memberByValue($assoc));
+
+        // FIXME: infinite loop with $this->getExternalMapper()
+        $relationship->setTarget($this->getNode($column_schema, Schema::REL_TARGET, true))
+                     ->setTargetTable($this->getExternalMapper()
+                                           ->getEntityMetadata($relationship->getTarget())
+                                           ->getTableName())
+                     ->setInversedBy($this->getNode($column_schema, Schema::REL_INVERSED_BY, false))
+                     ->setGetter($this->getNode($column_schema, Schema::GETTER, false))
+                     ->setSetter($this->getNode($column_schema, Schema::SETTER, false));
+
+        return $relationship;
     }
 
     /**

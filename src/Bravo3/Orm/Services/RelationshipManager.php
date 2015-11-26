@@ -626,9 +626,9 @@ class RelationshipManager extends AbstractManagerUtility
         $this->getDriver()->debugLog('Getting inverse relationship deltas: '.$key);
 
         if (RelationshipType::isMultiIndex($relationship->getRelationshipType())) {
-            return $this->getRelationshipDeltasMulti($key, $relationship, $new_value);
+            return $this->getRelationshipDeltasMulti($key, $new_value);
         } else {
-            return $this->getRelationshipDeltasSingle($key, $relationship, $new_value);
+            return $this->getRelationshipDeltasSingle($key, $new_value);
         }
     }
 
@@ -636,11 +636,10 @@ class RelationshipManager extends AbstractManagerUtility
      * Get the deltas for a to-many relationship
      *
      * @param string          $key          Local relationship key
-     * @param Relationship    $relationship Relationship in question
      * @param object|object[] $new_value    New local value containing foreign entities
      * @return array
      */
-    private function getRelationshipDeltasMulti($key, Relationship $relationship, $new_value)
+    private function getRelationshipDeltasMulti($key, $new_value)
     {
         $old_ids = $this->getDriver()->getMultiValueIndex($key);
 
@@ -657,12 +656,11 @@ class RelationshipManager extends AbstractManagerUtility
     /**
      * Get the deltas for a to-one relationship
      *
-     * @param string          $key          Local relationship key
-     * @param Relationship    $relationship Relationship in question
-     * @param object|object[] $new_value    New local value containing foreign entities
+     * @param string          $key       Local relationship key
+     * @param object|object[] $new_value New local value containing foreign entities
      * @return array
      */
-    private function getRelationshipDeltasSingle($key, Relationship $relationship, $new_value)
+    private function getRelationshipDeltasSingle($key, $new_value)
     {
         $old_id = $this->getDriver()->getSingleValueIndex($key);
         $new_id = $new_value ? $this->getEntityId($new_value) : null;

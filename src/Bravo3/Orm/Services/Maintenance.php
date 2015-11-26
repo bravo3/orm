@@ -54,7 +54,7 @@ class Maintenance
                     number_format($records->count()).' records to rebuild, '.number_format($batch_size).' at a time'
                 );
                 $ts = microtime(true);
-                $this->rebuildRecords($records, $metadata, $batch_size);
+                $this->rebuildRecords($records, $batch_size);
                 $delta = microtime(true) - $ts;
                 $this->logger->info(
                     "Rebuild of `".$metadata->getTableName()."` completed in ".number_format($delta, 2)." seconds"
@@ -82,11 +82,10 @@ class Maintenance
     /**
      * Re-persist an array of records
      *
-     * @param object[] $records
-     * @param Entity   $metadata
-     * @param int      $batch_size
+     * @param \Traversable $records
+     * @param int          $batch_size
      */
-    private function rebuildRecords($records, Entity $metadata, $batch_size)
+    private function rebuildRecords($records, $batch_size)
     {
         $count = 0;
         /** @var OrmProxyInterface $record */

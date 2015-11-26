@@ -52,9 +52,19 @@ class Reader
     {
         if ($column = $this->metadata->getColumnByProperty($name)) {
             $getter = $column->getGetter();
+
+            if (!method_exists($this->entity, $getter)) {
+                throw new InvalidArgumentException("Getter '".$getter."' does not exist for property '".$name."'");
+            }
+
             return $this->entity->$getter();
         } elseif ($relationship = $this->metadata->getRelationshipByName($name)) {
             $getter = $relationship->getGetter();
+
+            if (!method_exists($this->entity, $getter)) {
+                throw new InvalidArgumentException("Getter '".$getter."' does not exist for relationship '".$name."'");
+            }
+
             return $this->entity->$getter();
         } else {
             throw new InvalidArgumentException("No column/relationship found for property '".$name."'");

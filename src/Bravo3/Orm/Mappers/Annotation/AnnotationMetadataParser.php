@@ -17,6 +17,7 @@ use Bravo3\Orm\Enum\RelationshipType;
 use Bravo3\Orm\Exceptions\InvalidEntityException;
 use Bravo3\Orm\Exceptions\NoMetadataException;
 use Bravo3\Orm\Exceptions\UnexpectedValueException;
+use Bravo3\Orm\Mappers\MapperInterface;
 use Bravo3\Orm\Mappers\Metadata\Column;
 use Bravo3\Orm\Mappers\Metadata\Condition;
 use Bravo3\Orm\Mappers\Metadata\Entity;
@@ -63,9 +64,15 @@ class AnnotationMetadataParser
      */
     protected $class_name;
 
-    public function __construct($class_name)
+    /**
+     * @var MapperInterface
+     */
+    protected $external_mapper;
+
+    public function __construct($class_name, MapperInterface $external_mapper)
     {
         $this->class_name        = $class_name;
+        $this->external_mapper   = $external_mapper;
         $this->annotation_reader = new AnnotationReader();
         $this->reflection_obj    = new \ReflectionClass($this->class_name);
         $this->validateTableName();
@@ -177,13 +184,12 @@ class AnnotationMetadataParser
      */
     private function createRelationship($name, RelationshipType $type, AbstractRelationshipAnnotation $annotation)
     {
-        $target       = new AnnotationMetadataParser($annotation->target);
         $relationship = new Relationship($name, $type);
 
         $relationship->setSource($this->reflection_obj->name)
-                     ->setTarget($annotation->target)
                      ->setSourceTable($this->getTableName())
-                     ->setTargetTable($target->getTableName())
+                     ->setTarget($annotation->target)
+                     ->setTargetTable($this->external_mapper->getEntityMetadata($annotation->target)->getTableName())
                      ->setGetter($annotation->getter)
                      ->setSetter($annotation->setter)
                      ->setInversedBy($annotation->inversed_by);

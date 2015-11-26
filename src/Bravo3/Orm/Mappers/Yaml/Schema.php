@@ -25,4 +25,6 @@ final class Schema
     const CONDITION_VALUE      = 'value';
     const CONDITION_COMPARISON = 'comparison';
     const REL_ASSOCIATION      = 'association';
+    const REL_INVERSED_BY      = 'inversed_by';
+    const REL_TARGET           = 'target';
 }

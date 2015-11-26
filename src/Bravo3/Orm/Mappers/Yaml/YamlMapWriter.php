@@ -2,6 +2,7 @@
 namespace Bravo3\Orm\Mappers\Yaml;
 
 use Bravo3\Orm\Mappers\Metadata\Entity;
+use Bravo3\Orm\Mappers\Metadata\Sortable;
 use Bravo3\Orm\Mappers\Portation\AbstractMapWriter;
 use Doctrine\Common\Inflector\Inflector;
 use Symfony\Component\Yaml\Yaml;
@@ -103,17 +104,27 @@ class YamlMapWriter extends AbstractMapWriter
     }
 
     /**
-     * Compile all sortables
+     * Compile all sortable table indices
      *
      * @param Entity $md
      * @return array
      */
     private function compileSortIndices(Entity $md)
     {
-        $out     = [];
-        $indices = $md->getSortables();
+        return $this->compileSortables($md->getSortables());
+    }
 
-        foreach ($indices as $index) {
+    /**
+     * Compile sortables into an array
+     *
+     * @param Sortable[] $sortables
+     * @return array
+     */
+    private function compileSortables(array $sortables)
+    {
+        $out     = [];
+
+        foreach ($sortables as $index) {
             $data = [];
 
             if ($index->getColumn()) {
@@ -192,10 +203,6 @@ class YamlMapWriter extends AbstractMapWriter
                 $data[Schema::SETTER] = $column->getSetter();
             }
 
-            if ($column->getProperty() && ($column->getProperty() != $column->getName())) {
-                $data[Schema::COLUMN_PROPERTY] = $column->getProperty();
-            }
-
             if ($column->getClassName()) {
                 $data[Schema::COLUMN_CLASS] = $column->getClassName();
             }
@@ -206,9 +213,28 @@ class YamlMapWriter extends AbstractMapWriter
         $relationships = $md->getRelationships();
 
         foreach ($relationships as $relationship) {
-            $data = [Schema::REL_ASSOCIATION => $relationship->getRelationshipType()->value()];
+            $data = [
+                Schema::REL_ASSOCIATION => $relationship->getRelationshipType()->value(),
+                Schema::REL_TARGET => $relationship->getTarget(),
+            ];
 
-            //if ($relationship->get)
+            $default_getter = 'get'.Inflector::classify($relationship->getName());
+            if ($relationship->getGetter() && ($relationship->getGetter() != $default_getter)) {
+                $data[Schema::GETTER] = $relationship->getGetter();
+            }
+
+            $default_setter = 'set'.Inflector::classify($relationship->getName());
+            if ($relationship->getSetter() && ($relationship->getSetter() != $default_setter)) {
+                $data[Schema::SETTER] = $relationship->getSetter();
+            }
+
+            if ($relationship->getInversedBy()) {
+                $data[Schema::REL_INVERSED_BY] = $relationship->getInversedBy();
+            }
+
+            if ($relationship->getSortableBy()) {
+                $data[Schema::SORT_INDICES] = $this->compileSortables($relationship->getSortableBy());
+            }
 
             $out[$relationship->getName()] = $data;
         }
