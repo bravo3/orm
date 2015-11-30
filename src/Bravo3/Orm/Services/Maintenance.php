@@ -1,7 +1,6 @@
 <?php
 namespace Bravo3\Orm\Services;
 
-use Bravo3\Orm\Mappers\Metadata\Entity;
 use Bravo3\Orm\Proxy\OrmProxyInterface;
 use Bravo3\Orm\Query\IndexedQuery;
 use Psr\Log\LoggerInterface;

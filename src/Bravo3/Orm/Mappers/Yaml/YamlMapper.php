@@ -95,8 +95,9 @@ class YamlMapper extends AbstractMapper
     {
         // TODO: add some kind of caching
         $map = $this->getParser()->parse(file_get_contents($fn));
-        foreach ($map as $table => $schema) {
-            $class  = $this->getNode($schema, Schema::CLASS_NAME);
+        foreach ($map as $class => $schema) {
+            //$class  = $this->getNode($schema, Schema::CLASS_NAME);
+            $table = $this->getNode($schema, Schema::TABLE_NAME);
             $entity = new Entity($class, $table);
 
             // Columns
@@ -105,7 +106,7 @@ class YamlMapper extends AbstractMapper
 
                 if ($this->getNode($column_schema, Schema::REL_ASSOCIATION, false)) {
                     $rel = $this->createRelationship($property, $column_schema);
-                    $rel->setSource($class)->setSourceTable($table);
+                    $rel->setSource($class);
                     $entity->addRelationship($rel);
                 } else {
                     $entity->addColumn($this->createColumn($property, $column_schema));
@@ -113,22 +114,7 @@ class YamlMapper extends AbstractMapper
             }
 
             // Table sortables
-            $sortables = $this->getNode($schema, Schema::SORT_INDICES, false, []);
-            foreach ($sortables as $name => $sortable_schema) {
-                $conditions        = [];
-                $condition_schemas = $this->getNode($sortable_schema, Schema::INDEX_CONDITIONS, false, []);
-                foreach ($condition_schemas as $condition_schema) {
-                    $conditions[] = new Condition(
-                        $this->getNode($condition_schema, Schema::CONDITION_COLUMN, false),
-                        $this->getNode($condition_schema, Schema::CONDITION_METHOD, false),
-                        $this->getNode($condition_schema, Schema::CONDITION_VALUE),
-                        $this->getNode($condition_schema, Schema::CONDITION_COMPARISON, false, '=')
-                    );
-                }
-
-                $sortable = new Sortable($this->getNode($sortable_schema, 'column'), $conditions, $name);
-                $entity->addSortable($sortable);
-            }
+            $entity->setSortables($this->createSortables($schema));
 
             // Table indices
             $indices = $this->getNode($schema, Schema::STD_INDICES, false, []);
@@ -180,16 +166,41 @@ class YamlMapper extends AbstractMapper
         $assoc        = $this->getNode($column_schema, Schema::REL_ASSOCIATION, true);
         $relationship = new Relationship($property, RelationshipType::memberByValue($assoc));
 
-        // FIXME: infinite loop with $this->getExternalMapper()
         $relationship->setTarget($this->getNode($column_schema, Schema::REL_TARGET, true))
-                     ->setTargetTable($this->getExternalMapper()
-                                           ->getEntityMetadata($relationship->getTarget())
-                                           ->getTableName())
                      ->setInversedBy($this->getNode($column_schema, Schema::REL_INVERSED_BY, false))
                      ->setGetter($this->getNode($column_schema, Schema::GETTER, false))
-                     ->setSetter($this->getNode($column_schema, Schema::SETTER, false));
+                     ->setSetter($this->getNode($column_schema, Schema::SETTER, false))
+                     ->setSortableBy($this->createSortables($column_schema));
 
         return $relationship;
+    }
+
+    /**
+     * Create a set of sortables
+     *
+     * @param array $column_schema
+     * @return Sortable[]
+     */
+    private function createSortables(array $column_schema)
+    {
+        $out       = [];
+        $sortables = $this->getNode($column_schema, Schema::SORT_INDICES, false, []);
+        foreach ($sortables as $name => $sortable_schema) {
+            $conditions        = [];
+            $condition_schemas = $this->getNode($sortable_schema, Schema::INDEX_CONDITIONS, false, []);
+            foreach ($condition_schemas as $condition_schema) {
+                $conditions[] = new Condition(
+                    $this->getNode($condition_schema, Schema::CONDITION_COLUMN, false),
+                    $this->getNode($condition_schema, Schema::CONDITION_METHOD, false),
+                    $this->getNode($condition_schema, Schema::CONDITION_VALUE),
+                    $this->getNode($condition_schema, Schema::CONDITION_COMPARISON, false, '=')
+                );
+            }
+
+            $out[] = new Sortable($this->getNode($sortable_schema, 'column'), $conditions, $name);
+        }
+
+        return $out;
     }
 
     /**
@@ -221,6 +232,8 @@ class YamlMapper extends AbstractMapper
 
     /**
      * Get the metadata for an entity, including column information
+     *
+     * If you do not provide a $relative_mapper then relationship metadata will not be hydrated.
      *
      * @param string|object $entity Entity or class name of the entity
      * @return Entity

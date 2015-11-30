@@ -180,7 +180,12 @@ class Writer
         );
 
         $setter = $relative->getSetter();
-        $key    = $this->entity_manager->getKeyScheme()->getRelationshipKey($relative, $this->getReader()->getId());
+        $key    = $this->entity_manager->getKeyScheme()->getRelationshipKey(
+            $relative,
+            $this->entity_manager->getMapper()->getEntityMetadata($relative->getSource())->getTableName(),
+            $this->entity_manager->getMapper()->getEntityMetadata($relative->getTarget())->getTableName(),
+            $this->getReader()->getId()
+        );
 
         if (RelationshipType::isMultiIndex($relative->getRelationshipType())) {
             $items = [];

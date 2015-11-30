@@ -81,14 +81,16 @@ class StandardKeyScheme implements KeySchemeInterface
      * Get the key for a foreign relationship
      *
      * @param Relationship $relationship Relationship
+     * @param string       $source_table Source table name
+     * @param string       $target_table Target table name
      * @param string       $id           Source entity ID
      * @return string
      */
-    public function getRelationshipKey(Relationship $relationship, $id)
+    public function getRelationshipKey(Relationship $relationship, $source_table, $target_table, $id)
     {
         // otm:user-address:89726:home_address
         return (string)$relationship->getRelationshipType()->value().$this->delimiter.
-               $relationship->getSourceTable().'-'.$relationship->getTargetTable().$this->delimiter.
+               $source_table.'-'.$target_table.$this->delimiter.
                $id.$this->delimiter.
                $relationship->getName();
     }
@@ -113,15 +115,17 @@ class StandardKeyScheme implements KeySchemeInterface
      * Get the key for a sort index on a relationship
      *
      * @param Relationship $relationship Relationship
+     * @param string       $source_table Source table name
+     * @param string       $target_table Target table name
      * @param string       $sort_field   Property name on the inverse entity
      * @param string       $id           Local ID
      * @return string
      */
-    public function getSortIndexKey(Relationship $relationship, $sort_field, $id)
+    public function getSortIndexKey(Relationship $relationship, $source_table, $target_table, $sort_field, $id)
     {
         // srt:category-article:89726:title
         return static::SORT_NAMESPACE.$this->delimiter.
-               $relationship->getSourceTable().'-'.$relationship->getTargetTable().$this->delimiter.
+               $source_table.'-'.$target_table.$this->delimiter.
                $id.$this->delimiter.
                $relationship->getName().$this->delimiter.
                $sort_field;

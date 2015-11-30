@@ -56,7 +56,7 @@ class YamlMapWriter extends AbstractMapWriter
         $md = $this->manager->getMapper()->getEntityMetadata($entity);
 
         $data = [
-            Schema::CLASS_NAME => $md->getClassName(),
+            Schema::TABLE_NAME => $md->getTableName(),
             Schema::COLUMNS    => $this->compileColumns($md),
         ];
 
@@ -69,9 +69,9 @@ class YamlMapWriter extends AbstractMapWriter
         }
 
         if ($resource) {
-            $this->sub_buffers[$resource] = [$md->getTableName() => $data];
+            $this->sub_buffers[$resource] = [$md->getClassName() => $data];
         } else {
-            $this->main_buffer[$md->getTableName()] = $data;
+            $this->main_buffer[$md->getClassName()] = $data;
         }
     }
 
@@ -122,7 +122,7 @@ class YamlMapWriter extends AbstractMapWriter
      */
     private function compileSortables(array $sortables)
     {
-        $out     = [];
+        $out = [];
 
         foreach ($sortables as $index) {
             $data = [];
@@ -215,7 +215,7 @@ class YamlMapWriter extends AbstractMapWriter
         foreach ($relationships as $relationship) {
             $data = [
                 Schema::REL_ASSOCIATION => $relationship->getRelationshipType()->value(),
-                Schema::REL_TARGET => $relationship->getTarget(),
+                Schema::REL_TARGET      => $relationship->getTarget(),
             ];
 
             $default_getter = 'get'.Inflector::classify($relationship->getName());

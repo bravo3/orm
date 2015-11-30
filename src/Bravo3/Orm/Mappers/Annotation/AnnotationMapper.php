@@ -57,8 +57,7 @@ class AnnotationMapper extends AbstractMapper
         $class_name = Reader::getEntityClassName($entity);
 
         if (!isset($this->metadata_cache[$class_name])) {
-            // FIXME: infinite loop with $this->getExternalMapper()
-            $parser = new AnnotationMetadataParser($class_name, $this->getExternalMapper());
+            $parser = new AnnotationMetadataParser($class_name);
 
             $this->metadata_cache[$class_name] = $parser->getEntityMetadata();
         }

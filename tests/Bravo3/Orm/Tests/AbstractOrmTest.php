@@ -199,7 +199,6 @@ abstract class AbstractOrmTest extends \PHPUnit_Framework_TestCase
     protected function getRelKey(EntityManager $em, $from, $to, $id, $property, RelationshipType $type)
     {
         $rel = new Relationship($property, $type);
-        $rel->setSourceTable($from)->setTargetTable($to);
-        return $em->getKeyScheme()->getRelationshipKey($rel, $id);
+        return $em->getKeyScheme()->getRelationshipKey($rel, $from, $to, $id);
     }
 }
