@@ -6,6 +6,7 @@ use Bravo3\Orm\Enum\RelationshipType;
 use Bravo3\Orm\Exceptions\MappingViolationException;
 use Bravo3\Orm\Exceptions\NoMetadataException;
 use Bravo3\Orm\Mappers\AbstractMapper;
+use Bravo3\Orm\Mappers\DereferencingMapperInterface;
 use Bravo3\Orm\Mappers\Metadata\Column;
 use Bravo3\Orm\Mappers\Metadata\Condition;
 use Bravo3\Orm\Mappers\Metadata\Entity;
@@ -18,7 +19,7 @@ use Symfony\Component\Yaml\Yaml;
 /**
  * YAML metadata mapper
  */
-class YamlMapper extends AbstractMapper
+class YamlMapper extends AbstractMapper implements DereferencingMapperInterface
 {
     /**
      * @var string[]
@@ -95,7 +96,7 @@ class YamlMapper extends AbstractMapper
     {
         $map = $this->getParser()->parse(file_get_contents($fn));
         foreach ($map as $class => $schema) {
-            $table = $this->getNode($schema, Schema::TABLE_NAME);
+            $table  = $this->getNode($schema, Schema::TABLE_NAME);
             $entity = new Entity($class, $table);
 
             // Columns
@@ -251,5 +252,24 @@ class YamlMapper extends AbstractMapper
         } else {
             throw new NoMetadataException("No metadata is registered for class '".$class."'");
         }
+    }
+
+    /**
+     * Get an entities full class name from its table name
+     *
+     * @param string $table_name
+     * @return string
+     */
+    public function getClassFromTable($table_name)
+    {
+        $this->processMaps();
+
+        foreach ($this->entities as $metadata) {
+            if ($metadata->getTableName() == $table_name) {
+                return $metadata->getClassName();
+            }
+        }
+
+        throw new NoMetadataException("No metadata is registered for table '".$table_name."'");
     }
 }
