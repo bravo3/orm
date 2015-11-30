@@ -6,7 +6,6 @@ namespace Bravo3\Orm\Mappers\Yaml;
  */
 final class Schema
 {
-    const CLASS_NAME           = 'class';
     const TABLE_NAME           = 'table';
     const COLUMNS              = 'columns';
     const COLUMN_TYPE          = 'type';

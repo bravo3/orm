@@ -93,10 +93,8 @@ class YamlMapper extends AbstractMapper
      */
     protected function loadMap($fn)
     {
-        // TODO: add some kind of caching
         $map = $this->getParser()->parse(file_get_contents($fn));
         foreach ($map as $class => $schema) {
-            //$class  = $this->getNode($schema, Schema::CLASS_NAME);
             $table = $this->getNode($schema, Schema::TABLE_NAME);
             $entity = new Entity($class, $table);
 
