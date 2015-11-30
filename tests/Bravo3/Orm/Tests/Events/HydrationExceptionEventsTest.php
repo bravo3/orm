@@ -27,12 +27,11 @@ class HydrationExceptionEventsTest extends AbstractOrmTest
         $category->addArticle($article2);
         $category->addArticle($article3);
 
-        $em
-            ->persist($article1)
-            ->persist($article2)
-            ->persist($article3)
-            ->persist($category)
-            ->flush();
+        $em->persist($article1)
+           ->persist($article2)
+           ->persist($article3)
+           ->persist($category)
+           ->flush();
 
         // Forcefully break the relationship via the driver manually
         $em->getDriver()->delete($em->getKeyScheme()->getEntityKey('article', '5001'));

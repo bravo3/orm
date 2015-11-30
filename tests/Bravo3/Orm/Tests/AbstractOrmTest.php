@@ -14,6 +14,7 @@ use Bravo3\Orm\Mappers\Annotation\AnnotationMapper;
 use Bravo3\Orm\Mappers\Chained\ChainedMapper;
 use Bravo3\Orm\Mappers\Metadata\Index;
 use Bravo3\Orm\Mappers\Metadata\Relationship;
+use Bravo3\Orm\Mappers\Yaml\YamlMapper;
 use Bravo3\Orm\Services\EntityManager;
 use Bravo3\Properties\Conf;
 use Predis\Client;
@@ -73,6 +74,17 @@ abstract class AbstractOrmTest extends \PHPUnit_Framework_TestCase
             $ems[] = [$em];
         }
 
+        // Alternative mappers - run these against fresh filesystem databases
+        $mappers = [
+            new YamlMapper([__DIR__.'/Resources/mappings.yml']),
+            new ChainedMapper([new AnnotationMapper(), new YamlMapper([__DIR__.'/Resources/mappings.yml'])]),
+        ];
+
+        $index = 0;
+        foreach ($mappers as $mapper) {
+            $ems[] = [EntityManager::build($this->getFsDriver('fs-db-'.++$index), $mapper)];
+        }
+
         return $ems;
     }
 
@@ -90,6 +102,7 @@ abstract class AbstractOrmTest extends \PHPUnit_Framework_TestCase
     protected function getTarDriver()
     {
         $fn = sys_get_temp_dir().'/bravo3-orm/tar.db';
+        $this->dirExists($fn);
 
         if (file_exists($fn)) {
             unlink($fn);
@@ -101,12 +114,20 @@ abstract class AbstractOrmTest extends \PHPUnit_Framework_TestCase
     protected function getZipDriver()
     {
         $fn = sys_get_temp_dir().'/bravo3-orm/zip.db';
+        $this->dirExists($fn);
 
         if (file_exists($fn)) {
             unlink($fn);
         }
 
         return new FilesystemDriver(new PharIoDriver($fn, ArchiveType::ZIP()));
+    }
+
+    private function dirExists($fn) {
+        $dir = dirname($fn);
+        if (!file_exists($dir)) {
+            mkdir($dir, 0777, true);
+        }
     }
 
     private function delTree($dir)
@@ -178,7 +199,6 @@ abstract class AbstractOrmTest extends \PHPUnit_Framework_TestCase
     protected function getRelKey(EntityManager $em, $from, $to, $id, $property, RelationshipType $type)
     {
         $rel = new Relationship($property, $type);
-        $rel->setSourceTable($from)->setTargetTable($to);
-        return $em->getKeyScheme()->getRelationshipKey($rel, $id);
+        return $em->getKeyScheme()->getRelationshipKey($rel, $from, $to, $id);
     }
 }

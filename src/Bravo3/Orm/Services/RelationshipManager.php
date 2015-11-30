@@ -71,7 +71,7 @@ class RelationshipManager extends AbstractManagerUtility
         /** @var Relationship $relationship */
         foreach ($relationships as $relationship) {
             $inverse_relationship = $relationship->getInversedBy() ? $this->invertRelationship($relationship) : null;
-            $forward_key          = $this->getKeyScheme()->getRelationshipKey($relationship, $local_id);
+            $forward_key          = $this->getRelationshipKey($relationship, $local_id);
 
             if (!$inverse_relationship) {
                 $value = $reader->getPropertyValue($relationship->getName());
@@ -103,7 +103,7 @@ class RelationshipManager extends AbstractManagerUtility
 
             // Delete forward sort keys (inverse keys deleted in #deleteInvertedRelationship())
             foreach ($relationship->getSortableBy() as $sortable) {
-                $forward_sort_key = $this->getKeyScheme()->getSortIndexKey(
+                $forward_sort_key = $this->getSortIndexKey(
                     $relationship,
                     $sortable->getName(),
                     $local_id
@@ -122,7 +122,7 @@ class RelationshipManager extends AbstractManagerUtility
      */
     private function deleteInvertedRelationship(Relationship $inverse_relationship, $foreign_id, $local_id)
     {
-        $inverse_key = $this->getKeyScheme()->getRelationshipKey($inverse_relationship, $foreign_id);
+        $inverse_key = $this->getRelationshipKey($inverse_relationship, $foreign_id);
         if (RelationshipType::isMultiIndex($inverse_relationship->getRelationshipType())) {
             // Delete to-many inverse
             $this->getDriver()->removeMultiValueIndex($inverse_key, $local_id);
@@ -132,7 +132,7 @@ class RelationshipManager extends AbstractManagerUtility
         }
 
         foreach ($inverse_relationship->getSortableBy() as $sortable) {
-            $sort_key = $this->getKeyScheme()->getSortIndexKey(
+            $sort_key = $this->getSortIndexKey(
                 $inverse_relationship,
                 $sortable->getName(),
                 $foreign_id
@@ -155,7 +155,7 @@ class RelationshipManager extends AbstractManagerUtility
         $is_proxy      = $entity instanceof OrmProxyInterface;
 
         foreach ($relationships as $relationship) {
-            $key   = $this->getKeyScheme()->getRelationshipKey($relationship, $local_id);
+            $key   = $this->getRelationshipKey($relationship, $local_id);
             $value = $reader->getPropertyValue($relationship->getName());
 
             // Skip relationship rules:
@@ -242,7 +242,7 @@ class RelationshipManager extends AbstractManagerUtility
 
         $this->getDriver()->debugLog('@Setting forward sort indices for "'.$local_id.'"');
         foreach ($relationship->getSortableBy() as $sortable) {
-            $key = $this->getKeyScheme()->getSortIndexKey($relationship, $sortable->getName(), $local_id);
+            $key = $this->getSortIndexKey($relationship, $sortable->getName(), $local_id);
             $this->getDriver()->clearSortedIndex($key);
 
             foreach ($value as $entity) {
@@ -293,7 +293,7 @@ class RelationshipManager extends AbstractManagerUtility
 
         // Remove local from all foreigners no longer in the relationship
         foreach ($to_remove as $foreign_id) {
-            $inverse_key = $this->getKeyScheme()->getRelationshipKey($inverse_relationship, $foreign_id);
+            $inverse_key = $this->getRelationshipKey($inverse_relationship, $foreign_id);
 
             if (RelationshipType::isMultiIndex($inverse_relationship->getRelationshipType())) {
                 $this->getDriver()->removeMultiValueIndex($inverse_key, $local_id);
@@ -304,7 +304,7 @@ class RelationshipManager extends AbstractManagerUtility
             // If the inverted relationship has sorting, remove the local from the sorted index
             foreach ($inverse_relationship->getSortableBy() as $sortable) {
                 $this->getDriver()->removeSortedIndex(
-                    $this->getKeyScheme()->getSortIndexKey($inverse_relationship, $sortable->getName(), $foreign_id),
+                    $this->getSortIndexKey($inverse_relationship, $sortable->getName(), $foreign_id),
                     $local_id
                 );
             }
@@ -312,7 +312,7 @@ class RelationshipManager extends AbstractManagerUtility
 
         // Add local to all foreigners now added to the relationship
         foreach ($to_add as $foreign_id) {
-            $inverse_key = $this->getKeyScheme()->getRelationshipKey($inverse_relationship, $foreign_id);
+            $inverse_key = $this->getRelationshipKey($inverse_relationship, $foreign_id);
 
             if (RelationshipType::isMultiIndex($inverse_relationship->getRelationshipType())) {
                 $this->getDriver()->addMultiValueIndex($inverse_key, $local_id);
@@ -339,7 +339,7 @@ class RelationshipManager extends AbstractManagerUtility
 
                 // Add inverse index
                 $this->getDriver()->addSortedIndex(
-                    $this->getKeyScheme()->getSortIndexKey($inverse_relationship, $sortable->getName(), $foreign_id),
+                    $this->getSortIndexKey($inverse_relationship, $sortable->getName(), $foreign_id),
                     $reader->getPropertyValue($sortable->getColumn()),
                     $local_id
                 );
@@ -368,12 +368,12 @@ class RelationshipManager extends AbstractManagerUtility
         }
 
         foreach ($to_remove as $foreign_id) {
-            $ref_key = $this->getKeyScheme()->getEntityRefKey($relationship->getTargetTable(), $foreign_id);
+            $ref_key = $this->getKeyScheme()->getEntityRefKey($this->getTargetTable($relationship), $foreign_id);
             $this->getDriver()->removeRef($ref_key, $ref);
         }
 
         foreach ($to_add as $foreign_id) {
-            $ref_key = $this->getKeyScheme()->getEntityRefKey($relationship->getTargetTable(), $foreign_id);
+            $ref_key = $this->getKeyScheme()->getEntityRefKey($this->getTargetTable($relationship), $foreign_id);
             $this->getDriver()->addRef($ref_key, $ref);
         }
     }
@@ -397,7 +397,7 @@ class RelationshipManager extends AbstractManagerUtility
         foreach ($value as $foreign_entity) {
             if (null !== $foreign_entity) {
                 $foreign_id = $this->getEntityId($foreign_entity);
-                $ref_key    = $this->getKeyScheme()->getEntityRefKey($relationship->getTargetTable(), $foreign_id);
+                $ref_key    = $this->getKeyScheme()->getEntityRefKey($this->getTargetTable($relationship), $foreign_id);
                 $this->getDriver()->removeRef($ref_key, $ref);
             }
         }
@@ -445,7 +445,7 @@ class RelationshipManager extends AbstractManagerUtility
                                  ->getEntityMetadata($ref->getSourceClass())
                                  ->getRelationshipByName($ref->getRelationshipName());
 
-            $relationship_key = $this->getKeyScheme()->getRelationshipKey($relationship, $ref->getEntityId());
+            $relationship_key = $this->getRelationshipKey($relationship, $ref->getEntityId());
 
             switch ($relationship->getRelationshipType()) {
                 default:
@@ -463,7 +463,7 @@ class RelationshipManager extends AbstractManagerUtility
             }
 
             foreach ($relationship->getSortableBy() as $sortable) {
-                $sort_key = $this->getKeyScheme()->getSortIndexKey(
+                $sort_key = $this->getSortIndexKey(
                     $relationship,
                     $sortable->getName(),
                     $ref->getEntityId()
@@ -498,7 +498,7 @@ class RelationshipManager extends AbstractManagerUtility
         // Update unchanged relationships, as the sort-by column or conditions may have changed
         foreach ($maintain as $foreign_id) {
             foreach ($inverse_relationship->getSortableBy() as $sortable) {
-                $index_key = $this->getKeyScheme()->getSortIndexKey(
+                $index_key = $this->getSortIndexKey(
                     $inverse_relationship,
                     $sortable->getName(),
                     $foreign_id
@@ -554,7 +554,7 @@ class RelationshipManager extends AbstractManagerUtility
      */
     private function breakFormerRelationship(Relationship $relationship, $source_id)
     {
-        $key = $this->getKeyScheme()->getRelationshipKey($relationship, $source_id);
+        $key = $this->getRelationshipKey($relationship, $source_id);
         $this->getDriver()->debugLog('Checking for breakable former relationship: '.$key);
         $old_value = $this->getDriver()->getSingleValueIndex($key);
 
@@ -566,7 +566,7 @@ class RelationshipManager extends AbstractManagerUtility
         $inverse_relationship = $this->invertRelationship($relationship);
 
         // Relationship keys
-        $inverse_key = $this->getKeyScheme()->getRelationshipKey($inverse_relationship, $old_value);
+        $inverse_key = $this->getRelationshipKey($inverse_relationship, $old_value);
         $this->getDriver()->debugLog('@Breaking former relationship: '.$inverse_key);
         if ($inverse_relationship->getRelationshipType() == RelationshipType::MANYTOONE() ||
             $inverse_relationship->getRelationshipType() == RelationshipType::ONETOONE()
@@ -578,7 +578,7 @@ class RelationshipManager extends AbstractManagerUtility
 
         // Sorted index keys
         foreach ($inverse_relationship->getSortableBy() as $sortable) {
-            $sort_key = $this->getKeyScheme()->getSortIndexKey(
+            $sort_key = $this->getSortIndexKey(
                 $inverse_relationship,
                 $sortable->getName(),
                 $old_value
@@ -626,21 +626,20 @@ class RelationshipManager extends AbstractManagerUtility
         $this->getDriver()->debugLog('Getting inverse relationship deltas: '.$key);
 
         if (RelationshipType::isMultiIndex($relationship->getRelationshipType())) {
-            return $this->getRelationshipDeltasMulti($key, $relationship, $new_value);
+            return $this->getRelationshipDeltasMulti($key, $new_value);
         } else {
-            return $this->getRelationshipDeltasSingle($key, $relationship, $new_value);
+            return $this->getRelationshipDeltasSingle($key, $new_value);
         }
     }
 
     /**
      * Get the deltas for a to-many relationship
      *
-     * @param string          $key          Local relationship key
-     * @param Relationship    $relationship Relationship in question
-     * @param object|object[] $new_value    New local value containing foreign entities
+     * @param string          $key       Local relationship key
+     * @param object|object[] $new_value New local value containing foreign entities
      * @return array
      */
-    private function getRelationshipDeltasMulti($key, Relationship $relationship, $new_value)
+    private function getRelationshipDeltasMulti($key, $new_value)
     {
         $old_ids = $this->getDriver()->getMultiValueIndex($key);
 
@@ -657,12 +656,11 @@ class RelationshipManager extends AbstractManagerUtility
     /**
      * Get the deltas for a to-one relationship
      *
-     * @param string          $key          Local relationship key
-     * @param Relationship    $relationship Relationship in question
-     * @param object|object[] $new_value    New local value containing foreign entities
+     * @param string          $key       Local relationship key
+     * @param object|object[] $new_value New local value containing foreign entities
      * @return array
      */
-    private function getRelationshipDeltasSingle($key, Relationship $relationship, $new_value)
+    private function getRelationshipDeltasSingle($key, $new_value)
     {
         $old_id = $this->getDriver()->getSingleValueIndex($key);
         $new_id = $new_value ? $this->getEntityId($new_value) : null;

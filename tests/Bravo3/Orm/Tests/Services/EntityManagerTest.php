@@ -5,10 +5,12 @@ use Bravo3\Orm\Enum\Event;
 use Bravo3\Orm\Events\PersistEvent;
 use Bravo3\Orm\Events\RetrieveEvent;
 use Bravo3\Orm\Exceptions\NotFoundException;
+use Bravo3\Orm\Mappers\DereferencingMapperInterface;
 use Bravo3\Orm\Proxy\OrmProxyInterface;
 use Bravo3\Orm\Services\EntityManager;
 use Bravo3\Orm\Tests\Entities\BadEntity;
 use Bravo3\Orm\Tests\Entities\Indexed\IndexedEntity;
+use Bravo3\Orm\Tests\Entities\Indexed\SluggedArticle;
 use Bravo3\Orm\Tests\Entities\ModifiedEntity;
 use Bravo3\Orm\Tests\Entities\OneToMany\Article;
 use Bravo3\Orm\Tests\Entities\Product;
@@ -240,5 +242,18 @@ class EntityManagerTest extends AbstractOrmTest
         /** @var Product $r_product */
         $r_product = $em->retrieve(Product::class, '701');
         $this->assertNull($r_product->getEnum());
+    }
+
+    /**
+     * @dataProvider entityManagerDataProvider
+     * @param EntityManager $em
+     */
+    public function testDereferencing(EntityManager $em)
+    {
+        $mapper = $em->getMapper();
+        if ($mapper instanceof DereferencingMapperInterface) {
+            $class_name = $mapper->getClassFromTable('slugged_article');
+            $this->assertEquals(SluggedArticle::class, $class_name);
+        }
     }
 }

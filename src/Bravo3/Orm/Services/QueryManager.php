@@ -85,7 +85,7 @@ class QueryManager extends AbstractManagerUtility
 
             // Important, else the QueryResult class will try to hydrate the wrong entity
             $query->setClassName($relationship->getTarget());
-            $key = $this->getKeyScheme()->getSortIndexKey($relationship, $query->getSortBy(), $reader->getId());
+            $key = $this->getSortIndexKey($relationship, $query->getSortBy(), $reader->getId());
         } else {
             // Table based query
             $key = $this->getKeyScheme()->getTableSortKey($metadata->getTableName(), $query->getSortBy());

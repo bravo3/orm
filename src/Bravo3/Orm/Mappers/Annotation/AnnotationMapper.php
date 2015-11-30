@@ -1,7 +1,7 @@
 <?php
 namespace Bravo3\Orm\Mappers\Annotation;
 
-use Bravo3\Orm\Mappers\MapperInterface;
+use Bravo3\Orm\Mappers\AbstractMapper;
 use Bravo3\Orm\Mappers\Metadata\Entity;
 use Bravo3\Orm\Services\Io\Reader;
 use Doctrine\Common\Annotations\AnnotationRegistry;
@@ -9,7 +9,7 @@ use Doctrine\Common\Annotations\AnnotationRegistry;
 /**
  * Maps metadata stored in the form of annotations on class properties
  */
-class AnnotationMapper implements MapperInterface
+class AnnotationMapper extends AbstractMapper
 {
     /**
      * @var Entity[]
@@ -57,7 +57,8 @@ class AnnotationMapper implements MapperInterface
         $class_name = Reader::getEntityClassName($entity);
 
         if (!isset($this->metadata_cache[$class_name])) {
-            $parser                            = new AnnotationMetadataParser($class_name);
+            $parser = new AnnotationMetadataParser($class_name);
+
             $this->metadata_cache[$class_name] = $parser->getEntityMetadata();
         }
 

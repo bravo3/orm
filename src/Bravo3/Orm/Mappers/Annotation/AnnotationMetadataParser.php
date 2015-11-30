@@ -177,13 +177,10 @@ class AnnotationMetadataParser
      */
     private function createRelationship($name, RelationshipType $type, AbstractRelationshipAnnotation $annotation)
     {
-        $target       = new AnnotationMetadataParser($annotation->target);
         $relationship = new Relationship($name, $type);
 
         $relationship->setSource($this->reflection_obj->name)
                      ->setTarget($annotation->target)
-                     ->setSourceTable($this->getTableName())
-                     ->setTargetTable($target->getTableName())
                      ->setGetter($annotation->getter)
                      ->setSetter($annotation->setter)
                      ->setInversedBy($annotation->inversed_by);
@@ -323,13 +320,16 @@ class AnnotationMetadataParser
     /**
      * Get the Entity metadata object
      *
+     * @param bool $shallow
      * @return Entity
      */
-    public function getEntityMetadata()
+    public function getEntityMetadata($shallow = false)
     {
         $entity = new Entity($this->reflection_obj->name, $this->getTableName());
         $entity->setColumns($this->getColumns());
-        $entity->setRelationships($this->getRelationships());
+        if (!$shallow) {
+            $entity->setRelationships($this->getRelationships());
+        }
         $entity->setIndices($this->getIndices());
         $entity->setSortables($this->getSortables());
         return $entity;

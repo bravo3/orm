@@ -2,6 +2,7 @@
 namespace Bravo3\Orm\Mappers\Chained;
 
 use Bravo3\Orm\Exceptions\NoMetadataException;
+use Bravo3\Orm\Mappers\AbstractMapper;
 use Bravo3\Orm\Mappers\MapperInterface;
 use Bravo3\Orm\Mappers\Metadata\Entity;
 use Bravo3\Orm\Services\Io\Reader;
@@ -9,7 +10,7 @@ use Bravo3\Orm\Services\Io\Reader;
 /**
  * A mapper that will check multiple sub-mappers in order
  */
-class ChainedMapper implements MapperInterface
+class ChainedMapper extends AbstractMapper
 {
     /**
      * @var MapperInterface[]

@@ -1,3 +1,4 @@
 /vendor/
 /bin/
 /tests/config/parameters.yml
+/tests/Bravo3/Orm/Tests/Resources/mappings.yml

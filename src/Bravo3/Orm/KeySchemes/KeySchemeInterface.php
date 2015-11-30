@@ -28,10 +28,12 @@ interface KeySchemeInterface
      * Get the key for a foreign relationship
      *
      * @param Relationship $relationship Relationship
+     * @param string       $source_table Source table name
+     * @param string       $target_table Target table name
      * @param string       $id           Source entity ID
      * @return string
      */
-    public function getRelationshipKey(Relationship $relationship, $id);
+    public function getRelationshipKey(Relationship $relationship, $source_table, $target_table, $id);
 
     /**
      * Get the key for an standard index
@@ -46,11 +48,13 @@ interface KeySchemeInterface
      * Get the key for a sort index on a relationship
      *
      * @param Relationship $relationship Relationship
+     * @param string       $source_table Source table name
+     * @param string       $target_table Target table name
      * @param string       $sort_field   Property name on the inverse entity
      * @param string       $id           Local ID
      * @return string
      */
-    public function getSortIndexKey(Relationship $relationship, $sort_field, $id);
+    public function getSortIndexKey(Relationship $relationship, $source_table, $target_table, $sort_field, $id);
 
     /**
      * Get the key for a sort index on a table

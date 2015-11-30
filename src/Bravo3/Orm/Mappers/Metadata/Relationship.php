@@ -29,16 +29,6 @@ class Relationship
     /**
      * @var string
      */
-    protected $source_table;
-
-    /**
-     * @var string
-     */
-    protected $target_table;
-
-    /**
-     * @var string
-     */
     protected $inversed_by;
 
     /**
@@ -151,50 +141,6 @@ class Relationship
     public function setTarget($target)
     {
         $this->target = $target;
-        return $this;
-    }
-
-    /**
-     * Get source table name
-     *
-     * @return string
-     */
-    public function getSourceTable()
-    {
-        return $this->source_table;
-    }
-
-    /**
-     * Set source table name
-     *
-     * @param string $source_table
-     * @return $this
-     */
-    public function setSourceTable($source_table)
-    {
-        $this->source_table = $source_table;
-        return $this;
-    }
-
-    /**
-     * Get target table name
-     *
-     * @return string
-     */
-    public function getTargetTable()
-    {
-        return $this->target_table;
-    }
-
-    /**
-     * Set target table name
-     *
-     * @param string $target_table
-     * @return $this
-     */
-    public function setTargetTable($target_table)
-    {
-        $this->target_table = $target_table;
         return $this;
     }
 

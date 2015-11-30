@@ -43,8 +43,6 @@ class AnnotationMetadataTest extends AbstractOrmTest
         $address_relationship = $user_meta->getRelationshipByName('address');
         $this->assertEquals(User::class, $address_relationship->getSource());
         $this->assertEquals(Address::class, $address_relationship->getTarget());
-        $this->assertEquals('users', $address_relationship->getSourceTable());
-        $this->assertEquals('address', $address_relationship->getTargetTable());
         $this->assertEquals('user', $address_relationship->getInversedBy());
         $this->assertEquals(RelationshipType::ONETOONE(), $address_relationship->getRelationshipType());
     }
