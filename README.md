@@ -18,6 +18,7 @@ Table of Contents
 * [Queries](docs/Queries.md)
 * [Race Conditions](docs/RaceConditions.md)
 * [Serialisers](docs/Serialisers.md)
+* [Mappers - Yaml](docs/Mappers/Yaml.md)
 
 Further Examples
 ----------------
@@ -30,6 +31,7 @@ Further Examples
 Advanced/Internals
 ------------------
 * [Refs](docs/Advanced/Refs.md)
+* [Entity Locator](docs/Advanced/EntityLocator.md)
 
 Example
 -------
