@@ -6,7 +6,7 @@ use Bravo3\Orm\Exceptions\InvalidArgumentException;
 use Bravo3\Orm\Mappers\Metadata\Entity;
 use Bravo3\Orm\Query\IndexedQuery;
 use Bravo3\Orm\Query\QueryResult;
-use Bravo3\Orm\Query\SortedQuery;
+use Bravo3\Orm\Query\SortedQueryInterface;
 use Bravo3\Orm\Services\Io\Reader;
 
 class QueryManager extends AbstractManagerUtility
@@ -65,12 +65,12 @@ class QueryManager extends AbstractManagerUtility
      * If you have applied a limit to the query but need to know the full size of the unfiltered set, you must set
      * $check_full_set_size to true to gather this information at the expense of a second database query.
      *
-     * @param SortedQuery $query
-     * @param bool        $check_full_set_size
-     * @param bool        $use_cache
+     * @param SortedQueryInterface $query
+     * @param bool                 $check_full_set_size
+     * @param bool                 $use_cache
      * @return QueryResult
      */
-    public function sortedQuery(SortedQuery $query, $check_full_set_size = false, $use_cache = true)
+    public function sortedQuery(SortedQueryInterface $query, bool $check_full_set_size = false, bool $use_cache = true)
     {
         $metadata = $this->getMapper()->getEntityMetadata($query->getClassName());
 

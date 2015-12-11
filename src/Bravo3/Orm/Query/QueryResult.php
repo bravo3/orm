@@ -49,8 +49,8 @@ class QueryResult implements \Countable, \Iterator, \ArrayAccess
         EntityManager $entity_manager,
         QueryInterface $query,
         array $results,
-        $full_size = null,
-        $use_cache = true
+        int $full_size = null,
+        bool $use_cache = true
     ) {
         $this->entity_manager = $entity_manager;
         $this->query          = $query;
@@ -65,7 +65,7 @@ class QueryResult implements \Countable, \Iterator, \ArrayAccess
      *
      * @return string[]
      */
-    public function getIdList()
+    public function getIdList(): array
     {
         return $this->id_list;
     }
@@ -75,7 +75,7 @@ class QueryResult implements \Countable, \Iterator, \ArrayAccess
      *
      * @return int
      */
-    public function count()
+    public function count(): int
     {
         return count($this->id_list);
     }
@@ -85,7 +85,7 @@ class QueryResult implements \Countable, \Iterator, \ArrayAccess
      *
      * @return QueryInterface
      */
-    public function getQuery()
+    public function getQuery(): QueryInterface
     {
         return $this->query;
     }
@@ -96,7 +96,7 @@ class QueryResult implements \Countable, \Iterator, \ArrayAccess
      * @param string $id
      * @return object|null
      */
-    public function getEntityById($id)
+    public function getEntityById(string $id)
     {
         if (!array_key_exists($id, $this->entities)) {
             $this->hydrateEntity($id);
@@ -112,9 +112,9 @@ class QueryResult implements \Countable, \Iterator, \ArrayAccess
      *
      * @return int
      */
-    public function getFullSize()
+    public function getFullSize(): int
     {
-        return $this->full_size;
+        return $this->full_size ?? 0;
     }
 
     /**
@@ -123,7 +123,7 @@ class QueryResult implements \Countable, \Iterator, \ArrayAccess
      * @param string $id
      * @return $this
      */
-    private function hydrateEntity($id)
+    private function hydrateEntity($id): self
     {
         try {
             $this->entities[$id] = $this->entity_manager->retrieve($this->query->getClassName(), $id, $this->use_cache);
@@ -167,7 +167,7 @@ class QueryResult implements \Countable, \Iterator, \ArrayAccess
      *
      * @return boolean Returns true on success or false on failure.
      */
-    public function valid()
+    public function valid(): bool
     {
         return $this->iterator->valid();
     }
@@ -186,7 +186,7 @@ class QueryResult implements \Countable, \Iterator, \ArrayAccess
      * @param int $offset
      * @return bool
      */
-    public function offsetExists($offset)
+    public function offsetExists($offset): bool
     {
         return array_key_exists($offset, $this->id_list);
     }

@@ -3,7 +3,7 @@ namespace Bravo3\Orm\Query;
 
 use Bravo3\Orm\Services\Io\Reader;
 
-abstract class AbstractQuery
+abstract class AbstractQuery implements QueryInterface
 {
     /**
      * @var string
@@ -23,7 +23,7 @@ abstract class AbstractQuery
      *
      * @return string
      */
-    public function getClassName()
+    public function getClassName(): self
     {
         return $this->class_name;
     }

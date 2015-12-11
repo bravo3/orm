@@ -3,7 +3,7 @@ namespace Bravo3\Orm\Query;
 
 use Bravo3\Orm\Enum\Direction;
 
-class SortedTableQuery extends SortedQuery
+class SortedTableQuery extends AbstractSortedQuery
 {
     /**
      * @param string    $class_name Class name of table to query
@@ -13,11 +13,11 @@ class SortedTableQuery extends SortedQuery
      * @param int       $end        Stop index (inclusive), null/-1 for end of set, -2 for penultimate record
      */
     public function __construct(
-        $class_name,
-        $sort_by,
+        string $class_name,
+        string $sort_by,
         Direction $direction = null,
-        $start = null,
-        $end = null
+        int $start = null,
+        int $end = null
     ) {
         parent::__construct($class_name, null, $sort_by, $direction, $start, $end);
     }

@@ -11,7 +11,7 @@ use Bravo3\Orm\Mappers\MapperInterface;
 use Bravo3\Orm\Proxy\OrmProxyInterface;
 use Bravo3\Orm\Query\IndexedQuery;
 use Bravo3\Orm\Query\QueryResult;
-use Bravo3\Orm\Query\SortedQuery;
+use Bravo3\Orm\Query\SortedQueryInterface;
 use Bravo3\Orm\Serialisers\JsonSerialiser;
 use Bravo3\Orm\Serialisers\SerialiserMap;
 use Bravo3\Orm\Services\Aspect\CreateModifySubscriber;
@@ -23,6 +23,7 @@ use Bravo3\Orm\Services\Io\Writer;
 use Bravo3\Orm\Traits\ProxyAwareTrait;
 use ProxyManager\Factory\AccessInterceptorValueHolderFactory;
 use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class EntityManager
@@ -150,7 +151,8 @@ class EntityManager
         KeySchemeInterface $key_scheme = null,
         Configuration $configuration = null,
         EntityCachingInterface $cache = null
-    ) {
+    ): EntityManager
+    {
         $em_conf    = $configuration ?: new Configuration();
         $proxy_conf = new \ProxyManager\Configuration();
         $proxy_conf->setProxiesTargetDir($em_conf->getCacheDir());
@@ -175,7 +177,7 @@ class EntityManager
      *
      * @return SerialiserMap
      */
-    public function getSerialiserMap()
+    public function getSerialiserMap(): SerialiserMap
     {
         return $this->serialiser_map;
     }
@@ -186,7 +188,7 @@ class EntityManager
      * @param SerialiserMap $serialiser_map
      * @return $this
      */
-    public function setSerialiserMap($serialiser_map)
+    public function setSerialiserMap(SerialiserMap $serialiser_map): self
     {
         $this->serialiser_map = $serialiser_map;
         return $this->getProxy();
@@ -199,7 +201,7 @@ class EntityManager
      * @param int    $ttl    Optional TTL if the driver supports it, seconds past current time
      * @return $this
      */
-    public function persist($entity, $ttl = null)
+    public function persist($entity, int $ttl = null): self
     {
         $metadata   = $this->mapper->getEntityMetadata(Reader::getEntityClassName($entity));
         $serialiser = $this->getSerialiserMap()->getDefaultSerialiser();
@@ -237,7 +239,7 @@ class EntityManager
      * @param string $id
      * @throws InvalidIdException
      */
-    private function validateId($id)
+    private function validateId(string $id)
     {
         $errors = $this->driver->validateId($id);
         if (count($errors)) {
@@ -257,7 +259,7 @@ class EntityManager
      * @param object $entity
      * @return $this
      */
-    public function delete($entity)
+    public function delete($entity): self
     {
         $metadata = $this->mapper->getEntityMetadata($entity);
         $reader   = new Reader($metadata, $entity);
@@ -295,7 +297,7 @@ class EntityManager
      * @param bool   $use_cache
      * @return object
      */
-    public function retrieve($class_name, $id, $use_cache = true)
+    public function retrieve(string $class_name, string $id, bool $use_cache = true)
     {
         $this->validateId($id);
 
@@ -320,11 +322,11 @@ class EntityManager
      * Retrieve an entity, returning null if the entity is not found
      *
      * @param string $class_name
-     * @param int    $id
+     * @param string $id
      * @param bool   $use_cache
      * @return null|object
      */
-    public function retrieveEntityOrNull($class_name, $id, $use_cache = true)
+    public function retrieveEntityOrNull(string $class_name, string $id, bool $use_cache = true)
     {
         try {
             return $this->retrieve($class_name, $id, $use_cache);
@@ -339,16 +341,16 @@ class EntityManager
      * NB: The entity must be able to be constructed without constructor arguments.
      *
      * @param string $class_name
-     * @param int    $id
+     * @param string $id
      * @param bool   $use_cache
      * @return object
      */
-    public function retrieveEntityOrNew($class_name, $id, $use_cache = true)
+    public function retrieveEntityOrNew(string $class_name, string $id, bool $use_cache = true)
     {
         try {
             return $this->retrieve($class_name, $id, $use_cache);
         } catch (NotFoundException $e) {
-            return new $class_name;
+            return new $class_name();
         }
     }
 
@@ -386,7 +388,7 @@ class EntityManager
      * @param bool         $use_cache
      * @return QueryResult
      */
-    public function indexedQuery(IndexedQuery $query, $use_cache = true)
+    public function indexedQuery(IndexedQuery $query, bool $use_cache = true): QueryResult
     {
         return $this->getQueryManager()->indexedQuery($query, $use_cache);
     }
@@ -397,12 +399,12 @@ class EntityManager
      * If you have applied a limit to the query but need to know the full size of the unfiltered set, you must set
      * $check_full_set_size to true to gather this information at the expense of a second database query.
      *
-     * @param SortedQuery $query
-     * @param bool        $check_full_set_size
-     * @param bool        $use_cache
+     * @param SortedQueryInterface $query
+     * @param bool                 $check_full_set_size
+     * @param bool                 $use_cache
      * @return QueryResult
      */
-    public function sortedQuery(SortedQuery $query, $check_full_set_size = false, $use_cache = true)
+    public function sortedQuery(SortedQueryInterface $query, bool $check_full_set_size = false, bool $use_cache = true)
     {
         return $this->getQueryManager()->sortedQuery($query, $check_full_set_size, $use_cache);
     }
@@ -429,7 +431,7 @@ class EntityManager
      *
      * @return $this
      */
-    public function flush()
+    public function flush(): self
     {
         $this->driver->flush();
         return $this->getProxy();
@@ -440,7 +442,7 @@ class EntityManager
      *
      * @return $this
      */
-    public function purge()
+    public function purge(): self
     {
         $this->driver->purge();
         return $this->getProxy();
@@ -451,7 +453,7 @@ class EntityManager
      *
      * @return DriverInterface
      */
-    public function getDriver()
+    public function getDriver(): DriverInterface
     {
         return $this->driver;
     }
@@ -461,7 +463,7 @@ class EntityManager
      *
      * @return KeySchemeInterface
      */
-    public function getKeyScheme()
+    public function getKeyScheme(): KeySchemeInterface
     {
         return $this->key_scheme;
     }
@@ -471,7 +473,7 @@ class EntityManager
      *
      * @return MapperInterface
      */
-    public function getMapper()
+    public function getMapper(): MapperInterface
     {
         return $this->mapper;
     }
@@ -481,7 +483,7 @@ class EntityManager
      *
      * @return RelationshipManager
      */
-    protected function getRelationshipManager()
+    protected function getRelationshipManager(): RelationshipManager
     {
         if ($this->relationship_manager === null) {
             $this->relationship_manager = new RelationshipManager($this);
@@ -495,7 +497,7 @@ class EntityManager
      *
      * @return IndexManager
      */
-    protected function getIndexManager()
+    protected function getIndexManager(): IndexManager
     {
         if ($this->index_manager === null) {
             $this->index_manager = new IndexManager($this);
@@ -509,7 +511,7 @@ class EntityManager
      *
      * @return QueryManager
      */
-    protected function getQueryManager()
+    protected function getQueryManager(): QueryManager
     {
         if ($this->query_manager === null) {
             $this->query_manager = new QueryManager($this);
@@ -521,9 +523,9 @@ class EntityManager
     /**
      * Get the event dispatcher, lazy-loading
      *
-     * @return EventDispatcher
+     * @return EventDispatcherInterface
      */
-    public function getDispatcher()
+    public function getDispatcher(): EventDispatcherInterface
     {
         if ($this->dispatcher === null) {
             $this->dispatcher = new EventDispatcher();
@@ -533,25 +535,25 @@ class EntityManager
     }
 
     /**
-     * Get Config
+     * Get manager configuration
      *
      * @return Configuration
      */
-    public function getConfig()
+    public function getConfig(): Configuration
     {
         return $this->config;
     }
 
     /**
-     * Set Config
+     * Set manager configuration
      *
      * @param Configuration $config
      * @return $this
      */
-    public function setConfig($config)
+    public function setConfig(Configuration $config): self
     {
         $this->config = $config;
-        return $this;
+        return $this->getProxy();
     }
 
     /**
@@ -560,10 +562,10 @@ class EntityManager
      * @param EntityCachingInterface $cache
      * @return $this
      */
-    public function setCache(EntityCachingInterface $cache)
+    public function setCache(EntityCachingInterface $cache): self
     {
         $this->cache = $cache;
-        return $this;
+        return $this->getProxy();
     }
 
     /**
@@ -571,7 +573,7 @@ class EntityManager
      *
      * @return EntityCachingInterface
      */
-    public function getCache()
+    public function getCache(): EntityCachingInterface
     {
         return $this->cache;
     }
@@ -581,7 +583,7 @@ class EntityManager
      *
      * @return boolean
      */
-    public function getMaintenanceMode()
+    public function getMaintenanceMode(): bool
     {
         return $this->maintenance_mode;
     }
@@ -592,10 +594,10 @@ class EntityManager
      * @param bool $enabled
      * @return $this
      */
-    public function setMaintenanceMode($enabled = true)
+    public function setMaintenanceMode(bool $enabled = true): self
     {
         $this->maintenance_mode = $enabled;
-        return $this;
+        return $this->getProxy();
     }
 
     /**
