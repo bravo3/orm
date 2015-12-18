@@ -29,12 +29,8 @@ class Property
      * @param string|null $type
      * @param bool        $static
      */
-    public function __construct(
-        string $name,
-        int $visibility = Visibility::PUBLIC,
-        string $type = '',
-        bool $static = false
-    ) {
+    public function __construct($name, $visibility = Visibility::PUBLIC, $type = '', $static = false)
+    {
         $this->name       = $name;
         $this->visibility = $visibility;
         $this->type       = $type;
@@ -46,7 +42,7 @@ class Property
      *
      * @return string
      */
-    public function getName(): string
+    public function getName()
     {
         return $this->name;
     }
@@ -57,7 +53,7 @@ class Property
      * @param string $name
      * @return $this
      */
-    public function setName(string $name): self
+    public function setName($name)
     {
         $this->name = $name;
         return $this;
@@ -68,7 +64,7 @@ class Property
      *
      * @return int
      */
-    public function getVisibility(): int
+    public function getVisibility()
     {
         return $this->visibility;
     }
@@ -79,7 +75,7 @@ class Property
      * @param int $visibility
      * @return $this
      */
-    public function setVisibility(int $visibility): self
+    public function setVisibility($visibility)
     {
         $this->visibility = $visibility;
         return $this;
@@ -90,7 +86,7 @@ class Property
      *
      * @return string
      */
-    public function getType(): string
+    public function getType()
     {
         return $this->type;
     }
@@ -101,7 +97,7 @@ class Property
      * @param string $type
      * @return $this
      */
-    public function setType(string $type): self
+    public function setType($type)
     {
         $this->type = $type;
         return $this;
@@ -112,7 +108,7 @@ class Property
      *
      * @return boolean
      */
-    public function getStatic(): bool
+    public function getStatic()
     {
         return $this->static;
     }
@@ -123,7 +119,7 @@ class Property
      * @param boolean $static
      * @return $this
      */
-    public function setStatic(bool $static): self
+    public function setStatic($static)
     {
         $this->static = $static;
         return $this;

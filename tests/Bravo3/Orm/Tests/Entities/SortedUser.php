@@ -5,14 +5,14 @@ use Bravo3\Orm\Annotations\Column;
 use Bravo3\Orm\Annotations\Condition;
 use Bravo3\Orm\Annotations\Entity;
 use Bravo3\Orm\Annotations\Id;
-use Bravo3\Orm\Annotations\Sortable;
+use Bravo3\Orm\Annotations\SortedIndex;
 
 /**
- * @Entity(sortable_by={
- *      @Sortable(name="name_active", column="name", conditions={
+ * @Entity(sorted_indices={
+ *      @SortedIndex(name="name_active", column="name", conditions={
  *          @Condition(column="active", value=true)
  *      }),
- *      @Sortable(name="name_all", column="name")
+ *      @SortedIndex(name="name_all", column="name")
  * })
  */
 class SortedUser

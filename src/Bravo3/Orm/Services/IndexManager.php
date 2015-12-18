@@ -2,7 +2,7 @@
 namespace Bravo3\Orm\Services;
 
 use Bravo3\Orm\Mappers\Metadata\Entity;
-use Bravo3\Orm\Mappers\Metadata\Index;
+use Bravo3\Orm\Mappers\Metadata\UniqueIndex;
 use Bravo3\Orm\Proxy\OrmProxyInterface;
 use Bravo3\Orm\Services\Io\Reader;
 
@@ -21,7 +21,7 @@ class IndexManager extends AbstractManagerUtility
     {
         /** @var $metadata Entity */
         list($metadata, $reader, $local_id) = $this->buildPrerequisites($entity, $metadata, $reader, $local_id);
-        $this->traversePersistIndices($metadata->getIndices(), $entity, $reader, $local_id);
+        $this->traversePersistIndices($metadata->getUniqueIndices(), $entity, $reader, $local_id);
         return $this;
     }
 
@@ -38,17 +38,17 @@ class IndexManager extends AbstractManagerUtility
     {
         /** @var $metadata Entity */
         list($metadata, $reader, $local_id) = $this->buildPrerequisites($entity, $metadata, $reader, $local_id);
-        $this->traverseDeleteIndices($metadata->getIndices(), $entity, $reader, $local_id);
+        $this->traverseDeleteIndices($metadata->getUniqueIndices(), $entity, $reader, $local_id);
         return $this;
     }
 
     /**
      * Traverse an array of indices and persist them
      *
-     * @param Index[] $indices
-     * @param object  $entity
-     * @param Reader  $reader
-     * @param string  $local_id
+     * @param UniqueIndex[] $indices
+     * @param object        $entity
+     * @param Reader        $reader
+     * @param string        $local_id
      */
     private function traversePersistIndices(array $indices, $entity, Reader $reader, $local_id)
     {
@@ -87,10 +87,10 @@ class IndexManager extends AbstractManagerUtility
      *
      * FIXME: should we need $local_id?
      *
-     * @param Index[] $indices
-     * @param object  $entity
-     * @param Reader  $reader
-     * @param string  $local_id
+     * @param UniqueIndex[] $indices
+     * @param object        $entity
+     * @param Reader        $reader
+     * @param string        $local_id
      */
     private function traverseDeleteIndices(array $indices, $entity, Reader $reader, $local_id)
     {

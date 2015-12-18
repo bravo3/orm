@@ -12,7 +12,7 @@ use Bravo3\Orm\Enum\RelationshipType;
 use Bravo3\Orm\Exceptions\NotFoundException;
 use Bravo3\Orm\Mappers\Annotation\AnnotationMapper;
 use Bravo3\Orm\Mappers\Chained\ChainedMapper;
-use Bravo3\Orm\Mappers\Metadata\Index;
+use Bravo3\Orm\Mappers\Metadata\UniqueIndex;
 use Bravo3\Orm\Mappers\Metadata\Relationship;
 use Bravo3\Orm\Mappers\Yaml\YamlMapper;
 use Bravo3\Orm\Services\EntityManager;
@@ -193,7 +193,7 @@ abstract class AbstractOrmTest extends \PHPUnit_Framework_TestCase
 
     protected function getIndexKey(EntityManager $em, $table, $index, $key)
     {
-        return $em->getKeyScheme()->getIndexKey(new Index($table, $index), $key);
+        return $em->getKeyScheme()->getIndexKey(new UniqueIndex($table, $index), $key);
     }
 
     protected function getRelKey(EntityManager $em, $from, $to, $id, $property, RelationshipType $type)

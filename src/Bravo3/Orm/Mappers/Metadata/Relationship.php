@@ -42,9 +42,9 @@ class Relationship
     protected $setter;
 
     /**
-     * @var Sortable[]
+     * @var SortedIndex[]
      */
-    protected $sortable_by = [];
+    protected $sorted_indices = [];
 
     /**
      * @param string           $name
@@ -173,7 +173,7 @@ class Relationship
      */
     public function getGetter()
     {
-        return $this->getter ?: 'get' . Inflector::classify($this->getName());
+        return $this->getter ?: 'get'.Inflector::classify($this->getName());
     }
 
     /**
@@ -195,7 +195,7 @@ class Relationship
      */
     public function getSetter()
     {
-        return $this->setter ?: 'set' . Inflector::classify($this->getName());
+        return $this->setter ?: 'set'.Inflector::classify($this->getName());
     }
 
     /**
@@ -213,34 +213,34 @@ class Relationship
     /**
      * Get list of relative properties that this relationship can be sorted by
      *
-     * @return Sortable[]
+     * @return SortedIndex[]
      */
-    public function getSortableBy()
+    public function getSortedIndices()
     {
-        return $this->sortable_by;
+        return $this->sorted_indices;
     }
 
     /**
      * Set list of relative properties that this relationship can be sorted by
      *
-     * @param Sortable[] $sortable_by
+     * @param SortedIndex[] $sorted_indices
      * @return $this
      */
-    public function setSortableBy(array $sortable_by)
+    public function setSortedIndices(array $sorted_indices)
     {
-        $this->sortable_by = $sortable_by;
+        $this->sorted_indices = $sorted_indices;
         return $this;
     }
 
     /**
      * Add a property to be sortable by
      *
-     * @param Sortable $property_name
+     * @param SortedIndex $property_name
      * @return $this
      */
-    public function addSortableBy(Sortable $property_name)
+    public function addSortedIndex(SortedIndex $property_name)
     {
-        $this->sortable_by[] = $property_name;
+        $this->sorted_indices[] = $property_name;
         return $this;
     }
 }

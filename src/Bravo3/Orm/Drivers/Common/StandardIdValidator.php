@@ -29,6 +29,10 @@ class StandardIdValidator
      */
     public function validateId($id)
     {
+        if ($id === null || strlen($id) == 0) {
+            $errors[] = 'You cannot have a blank or null ID';
+        }
+
         $errors = [];
         $id     = str_replace($this->allowed_id_chars, '', $id);
 

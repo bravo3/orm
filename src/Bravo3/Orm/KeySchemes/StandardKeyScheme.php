@@ -1,7 +1,7 @@
 <?php
 namespace Bravo3\Orm\KeySchemes;
 
-use Bravo3\Orm\Mappers\Metadata\Index;
+use Bravo3\Orm\Mappers\Metadata\UniqueIndex;
 use Bravo3\Orm\Mappers\Metadata\Relationship;
 
 /**
@@ -98,11 +98,11 @@ class StandardKeyScheme implements KeySchemeInterface
     /**
      * Get the key for an standard index
      *
-     * @param Index  $index Index belonging to entity
-     * @param string $key   Index key
+     * @param UniqueIndex $index Index belonging to entity
+     * @param string      $key   Index key
      * @return string
      */
-    public function getIndexKey(Index $index, $key)
+    public function getIndexKey(UniqueIndex $index, $key)
     {
         // idx:article:slug:some-slug
         return static::INDEX_NAMESPACE.$this->delimiter.

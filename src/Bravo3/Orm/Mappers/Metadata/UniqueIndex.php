@@ -1,7 +1,7 @@
 <?php
 namespace Bravo3\Orm\Mappers\Metadata;
 
-class Index
+class UniqueIndex
 {
     /**
      * @var string

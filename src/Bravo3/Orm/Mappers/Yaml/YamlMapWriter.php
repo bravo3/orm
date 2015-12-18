@@ -2,7 +2,7 @@
 namespace Bravo3\Orm\Mappers\Yaml;
 
 use Bravo3\Orm\Mappers\Metadata\Entity;
-use Bravo3\Orm\Mappers\Metadata\Sortable;
+use Bravo3\Orm\Mappers\Metadata\SortedIndex;
 use Bravo3\Orm\Mappers\Portation\AbstractMapWriter;
 use Doctrine\Common\Inflector\Inflector;
 use Symfony\Component\Yaml\Yaml;
@@ -84,7 +84,7 @@ class YamlMapWriter extends AbstractMapWriter
     private function compileStdIndices(Entity $md)
     {
         $out     = [];
-        $indices = $md->getIndices();
+        $indices = $md->getUniqueIndices();
 
         foreach ($indices as $index) {
             $data = [];
@@ -111,13 +111,13 @@ class YamlMapWriter extends AbstractMapWriter
      */
     private function compileSortIndices(Entity $md)
     {
-        return $this->compileSortables($md->getSortables());
+        return $this->compileSortables($md->getSortedIndices());
     }
 
     /**
      * Compile sortables into an array
      *
-     * @param Sortable[] $sortables
+     * @param SortedIndex[] $sortables
      * @return array
      */
     private function compileSortables(array $sortables)
@@ -232,8 +232,8 @@ class YamlMapWriter extends AbstractMapWriter
                 $data[Schema::REL_INVERSED_BY] = $relationship->getInversedBy();
             }
 
-            if ($relationship->getSortableBy()) {
-                $data[Schema::SORT_INDICES] = $this->compileSortables($relationship->getSortableBy());
+            if ($relationship->getSortedindices()) {
+                $data[Schema::SORT_INDICES] = $this->compileSortables($relationship->getSortedindices());
             }
 
             $out[$relationship->getName()] = $data;

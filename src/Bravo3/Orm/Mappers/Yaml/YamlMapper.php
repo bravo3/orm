@@ -10,9 +10,9 @@ use Bravo3\Orm\Mappers\DereferencingMapperInterface;
 use Bravo3\Orm\Mappers\Metadata\Column;
 use Bravo3\Orm\Mappers\Metadata\Condition;
 use Bravo3\Orm\Mappers\Metadata\Entity;
-use Bravo3\Orm\Mappers\Metadata\Index;
+use Bravo3\Orm\Mappers\Metadata\UniqueIndex;
 use Bravo3\Orm\Mappers\Metadata\Relationship;
-use Bravo3\Orm\Mappers\Metadata\Sortable;
+use Bravo3\Orm\Mappers\Metadata\SortedIndex;
 use Bravo3\Orm\Services\Io\Reader;
 use Symfony\Component\Yaml\Yaml;
 
@@ -113,15 +113,15 @@ class YamlMapper extends AbstractMapper implements DereferencingMapperInterface
             }
 
             // Table sortables
-            $entity->setSortables($this->createSortables($schema));
+            $entity->setSortedIndices($this->createSortables($schema));
 
             // Table indices
             $indices = $this->getNode($schema, Schema::STD_INDICES, false, []);
             foreach ($indices as $name => $index_schema) {
-                $index = new Index($table, $name);
+                $index = new UniqueIndex($table, $name);
                 $index->setColumns($this->getNode($index_schema, Schema::INDEX_COLUMNS, false, []));
                 $index->setMethods($this->getNode($index_schema, Schema::INDEX_METHODS, false, []));
-                $entity->addIndex($index);
+                $entity->addUniqueIndex($index);
             }
 
             // Add to map
@@ -169,7 +169,7 @@ class YamlMapper extends AbstractMapper implements DereferencingMapperInterface
                      ->setInversedBy($this->getNode($column_schema, Schema::REL_INVERSED_BY, false))
                      ->setGetter($this->getNode($column_schema, Schema::GETTER, false))
                      ->setSetter($this->getNode($column_schema, Schema::SETTER, false))
-                     ->setSortableBy($this->createSortables($column_schema));
+                     ->setSortedindices($this->createSortables($column_schema));
 
         return $relationship;
     }
@@ -178,7 +178,7 @@ class YamlMapper extends AbstractMapper implements DereferencingMapperInterface
      * Create a set of sortables
      *
      * @param array $column_schema
-     * @return Sortable[]
+     * @return SortedIndex[]
      */
     private function createSortables(array $column_schema)
     {
@@ -196,7 +196,7 @@ class YamlMapper extends AbstractMapper implements DereferencingMapperInterface
                 );
             }
 
-            $out[] = new Sortable($this->getNode($sortable_schema, 'column'), $conditions, $name);
+            $out[] = new SortedIndex($this->getNode($sortable_schema, 'column'), $conditions, $name);
         }
 
         return $out;

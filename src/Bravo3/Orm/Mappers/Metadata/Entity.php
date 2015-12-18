@@ -29,14 +29,14 @@ class Entity
     protected $relationships = [];
 
     /**
-     * @var Index[]
+     * @var UniqueIndex[]
      */
-    protected $indices = [];
+    protected $unique_indices = [];
 
     /**
-     * @var Sortable[]
+     * @var SortedIndex[]
      */
-    protected $sortables = [];
+    protected $sorted_indices = [];
 
     /**
      * Used to lookup the property that matches a getter/setter function
@@ -272,34 +272,34 @@ class Entity
     /**
      * Get indices
      *
-     * @return Index[]
+     * @return UniqueIndex[]
      */
-    public function getIndices()
+    public function getUniqueIndices()
     {
-        return $this->indices;
+        return $this->unique_indices;
     }
 
     /**
      * Set indices
      *
-     * @param Index[] $indices
+     * @param UniqueIndex[] $unique_indices
      * @return $this
      */
-    public function setIndices(array $indices)
+    public function setUniqueIndices(array $unique_indices)
     {
-        $this->indices = $indices;
+        $this->unique_indices = $unique_indices;
         return $this;
     }
 
     /**
      * Add an index
      *
-     * @param Index $index
+     * @param UniqueIndex $index
      * @return $this
      */
-    public function addIndex(Index $index)
+    public function addUniqueIndex(UniqueIndex $index)
     {
-        $this->indices[] = $index;
+        $this->unique_indices[] = $index;
         return $this;
     }
 
@@ -307,11 +307,11 @@ class Entity
      * Get an index by its name, or null if no such index exists
      *
      * @param string $name
-     * @return Index|null
+     * @return UniqueIndex|null
      */
-    public function getIndexByName($name)
+    public function getUniqueIndexByName($name)
     {
-        foreach ($this->indices as $index) {
+        foreach ($this->unique_indices as $index) {
             if ($index->getName() == $name) {
                 return $index;
             }
@@ -323,22 +323,22 @@ class Entity
     /**
      * Get Sortables
      *
-     * @return Sortable[]
+     * @return SortedIndex[]
      */
-    public function getSortables()
+    public function getSortedIndices()
     {
-        return $this->sortables;
+        return $this->sorted_indices;
     }
 
     /**
      * Set Sortables
      *
-     * @param Sortable[] $sortables
+     * @param SortedIndex[] $sorted_indices
      * @return $this
      */
-    public function setSortables(array $sortables)
+    public function setSortedIndices(array $sorted_indices)
     {
-        $this->sortables = $sortables;
+        $this->sorted_indices = $sorted_indices;
         return $this;
     }
 
@@ -346,11 +346,11 @@ class Entity
      * Get a table sortable by name
      *
      * @param string $name
-     * @return Sortable|null
+     * @return SortedIndex|null
      */
     public function getSortableByName($name)
     {
-        foreach ($this->sortables as $sortable) {
+        foreach ($this->sorted_indices as $sortable) {
             if ($sortable->getName() == $name) {
                 return $sortable;
             }
@@ -362,12 +362,12 @@ class Entity
     /**
      * Add a sortable to the table metadata
      *
-     * @param Sortable $sortable
+     * @param SortedIndex $sortable
      * @return $this
      */
-    public function addSortable(Sortable $sortable)
+    public function addSortedIndex(SortedIndex $sortable)
     {
-        $this->sortables[] = $sortable;
+        $this->sorted_indices[] = $sortable;
         return $this;
     }
 }

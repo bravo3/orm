@@ -6,7 +6,7 @@ use Bravo3\Orm\Annotations\Condition;
 use Bravo3\Orm\Annotations\Entity;
 use Bravo3\Orm\Annotations\Id;
 use Bravo3\Orm\Annotations\OneToMany;
-use Bravo3\Orm\Annotations\Sortable;
+use Bravo3\Orm\Annotations\SortedIndex;
 
 /**
  * @Entity()
@@ -25,8 +25,8 @@ class Owner
      *
      * @var Leaf[]
      * @OneToMany(target="Bravo3\Orm\Tests\Entities\Refs\Leaf",
-     *      sortable_by={
-     *          @Sortable(column="id", conditions={
+     *      sorted_indices={
+     *          @SortedIndex(column="id", conditions={
      *              @Condition(column="published", value=true)
      *          })
      *      })

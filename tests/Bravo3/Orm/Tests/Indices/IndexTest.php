@@ -30,23 +30,23 @@ class IndexTest extends AbstractOrmTest
 
         $this->assertEquals('100.id2', $reader->getId());
 
-        $indices = $metadata->getIndices();
+        $indices = $metadata->getUniqueIndices();
         $this->assertCount(3, $indices);
 
-        $ab = $metadata->getIndexByName('ab');
+        $ab = $metadata->getUniqueIndexByName('ab');
         $this->assertContains('alpha', $ab->getColumns());
         $this->assertContains('bravo', $ab->getColumns());
         $this->assertCount(2, $ab->getColumns());
         $this->assertEquals('alpha.200', $reader->getIndexValue($ab));
 
-        $bc = $metadata->getIndexByName('bc');
+        $bc = $metadata->getUniqueIndexByName('bc');
         $this->assertContains('bravo', $bc->getColumns());
         $this->assertContains('getCharlie', $bc->getMethods());
         $this->assertCount(1, $bc->getColumns());
         $this->assertCount(1, $bc->getMethods());
         $this->assertEquals('200.1', $reader->getIndexValue($bc));
 
-        $b = $metadata->getIndexByName('b');
+        $b = $metadata->getUniqueIndexByName('b');
         $this->assertContains('bravo', $b->getColumns());
         $this->assertCount(1, $b->getColumns());
         $this->assertEquals('200', $reader->getIndexValue($b));

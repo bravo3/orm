@@ -4,8 +4,8 @@ namespace Bravo3\Orm\Tests\Entities\OneToOne;
 use Bravo3\Orm\Annotations as Orm;
 
 /**
- * @Orm\Entity(table="users", indices={
- *      @Orm\Index(name="slug", columns={"id", "address"})
+ * @Orm\Entity(table="users", unique_indices={
+ *      @Orm\UniqueIndex(name="slug", columns={"id", "address"})
  * })
  */
 class User

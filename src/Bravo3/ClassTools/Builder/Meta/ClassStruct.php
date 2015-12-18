@@ -36,7 +36,7 @@ class ClassStruct
     /**
      * @var int
      */
-    protected $class_type = ClassType::STANDARD;
+    protected $class_type = ClassType::TYPE_CLASS;
 
     /**
      * @var bool
@@ -53,7 +53,7 @@ class ClassStruct
      * @param string    $extends
      * @param \string[] $implements
      */
-    public function __construct(string $class_name, string $extends = '', array $implements = [])
+    public function __construct($class_name, $extends = '', array $implements = [])
     {
         $this->class_name = $class_name;
         $this->extends    = $extends;
@@ -65,7 +65,7 @@ class ClassStruct
      *
      * @return string
      */
-    public function getClassName(): string
+    public function getClassName()
     {
         return $this->class_name;
     }
@@ -76,7 +76,7 @@ class ClassStruct
      * @param string $class_name
      * @return $this
      */
-    public function setClassName(string $class_name): self
+    public function setClassName($class_name)
     {
         $this->class_name = $class_name;
         return $this;
@@ -87,7 +87,7 @@ class ClassStruct
      *
      * @return string
      */
-    public function getExtends(): self
+    public function getExtends()
     {
         return $this->extends;
     }
@@ -98,7 +98,7 @@ class ClassStruct
      * @param string $extends
      * @return $this
      */
-    public function setExtends(string $extends): self
+    public function setExtends($extends)
     {
         $this->extends = $extends;
         return $this;
@@ -109,7 +109,7 @@ class ClassStruct
      *
      * @return string[]
      */
-    public function getImplements(): array
+    public function getImplements()
     {
         return $this->implements;
     }
@@ -120,7 +120,7 @@ class ClassStruct
      * @param string[] $implements
      * @return $this
      */
-    public function setImplements(array $implements): self
+    public function setImplements(array $implements)
     {
         $this->implements = $implements;
         return $this;
@@ -131,7 +131,7 @@ class ClassStruct
      *
      * @return string[]
      */
-    public function getTraits(): array
+    public function getTraits()
     {
         return $this->traits;
     }
@@ -142,7 +142,7 @@ class ClassStruct
      * @param string[] $traits
      * @return $this
      */
-    public function setTraits(array $traits): self
+    public function setTraits(array $traits)
     {
         $this->traits = $traits;
         return $this;
@@ -153,7 +153,7 @@ class ClassStruct
      *
      * @return Property[]
      */
-    public function getProperties(): array
+    public function getProperties()
     {
         return $this->properties;
     }
@@ -164,7 +164,7 @@ class ClassStruct
      * @param Property[] $properties
      * @return $this
      */
-    public function setProperties(array $properties): self
+    public function setProperties(array $properties)
     {
         $this->properties = [];
         foreach ($properties as $property) {
@@ -178,7 +178,7 @@ class ClassStruct
      *
      * @return Method[]
      */
-    public function getMethods(): array
+    public function getMethods()
     {
         return $this->methods;
     }
@@ -189,7 +189,7 @@ class ClassStruct
      * @param Method[] $methods
      * @return $this
      */
-    public function setMethods(array $methods): self
+    public function setMethods(array $methods)
     {
         $this->methods = [];
         foreach ($methods as $method) {
@@ -204,7 +204,7 @@ class ClassStruct
      * @param Property $property
      * @return $this
      */
-    public function addProperty(Property $property): self
+    public function addProperty(Property $property)
     {
         $this->properties[$property->getName()] = $property;
         return $this;
@@ -216,7 +216,7 @@ class ClassStruct
      * @param Method $method
      * @return ClassStruct
      */
-    public function addMethod(Method $method): self
+    public function addMethod(Method $method)
     {
         $this->methods[$method->getName()] = $method;
         return $this;
@@ -227,7 +227,7 @@ class ClassStruct
      *
      * @return int
      */
-    public function getClassType(): int
+    public function getClassType()
     {
         return $this->class_type;
     }
@@ -238,7 +238,7 @@ class ClassStruct
      * @param int $class_type
      * @return $this
      */
-    public function setClassType(int $class_type): self
+    public function setClassType($class_type)
     {
         $this->class_type = $class_type;
         return $this;
@@ -249,7 +249,7 @@ class ClassStruct
      *
      * @return boolean
      */
-    public function isAbstract(): bool
+    public function isAbstract()
     {
         return $this->abstract;
     }
@@ -260,7 +260,7 @@ class ClassStruct
      * @param boolean $abstract
      * @return $this
      */
-    public function setAbstract(bool $abstract): self
+    public function setAbstract($abstract)
     {
         $this->abstract = $abstract;
         return $this;
@@ -271,7 +271,7 @@ class ClassStruct
      *
      * @return boolean
      */
-    public function getFinal(): bool
+    public function getFinal()
     {
         return $this->final;
     }
@@ -282,7 +282,7 @@ class ClassStruct
      * @param boolean $final
      * @return $this
      */
-    public function setFinal(bool $final): self
+    public function setFinal($final)
     {
         $this->final = $final;
         return $this;

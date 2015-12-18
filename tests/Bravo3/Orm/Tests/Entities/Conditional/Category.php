@@ -3,7 +3,7 @@ namespace Bravo3\Orm\Tests\Entities\Conditional;
 
 use Bravo3\Orm\Annotations as Orm;
 use Bravo3\Orm\Annotations\Condition;
-use Bravo3\Orm\Annotations\Sortable;
+use Bravo3\Orm\Annotations\SortedIndex;
 use Bravo3\Orm\Services\ListManager;
 
 /**
@@ -29,13 +29,13 @@ class Category
      * @Orm\OneToMany(
      *      target="Bravo3\Orm\Tests\Entities\Conditional\Article",
      *      inversed_by="category",
-     *      sortable_by={
-     *          @Sortable(column="last_modified", conditions={
+     *      sorted_indices={
+     *          @SortedIndex(column="last_modified", conditions={
      *              @Condition(column="published", value=true),
      *              @Condition(column="id", value=50, comparison=">")
      *          }),
      *          "id",
-     *          @Sortable(column="last_modified", conditions={
+     *          @SortedIndex(column="last_modified", conditions={
      *              @Condition(column="published", value=true),
      *          }, name="last_modified_all")
      *      })
@@ -47,8 +47,8 @@ class Category
      * @Orm\OneToMany(
      *      target="Bravo3\Orm\Tests\Entities\Conditional\Asset",
      *      inversed_by="category",
-     *      sortable_by={
-     *          @Sortable(column="last_modified", conditions={
+     *      sorted_indices={
+     *          @SortedIndex(column="last_modified", conditions={
      *              @Condition(method="isPublished", value=true),
      *              @Condition(column="id", value=50, comparison=">")
      *          }), "id"

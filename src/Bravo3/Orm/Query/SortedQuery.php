@@ -2,7 +2,9 @@
 namespace Bravo3\Orm\Query;
 
 /**
- * @deprecated Use SortedRelationshipQuery instead
+ * Use SortedRelationshipQuery instead
+ *
+ * @deprecated since 0.6.0, will be removed 0.7.0
  */
 class SortedQuery extends SortedRelationshipQuery
 {

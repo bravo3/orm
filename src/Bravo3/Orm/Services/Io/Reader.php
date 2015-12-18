@@ -4,7 +4,7 @@ namespace Bravo3\Orm\Services\Io;
 use Bravo3\Orm\Exceptions\InvalidArgumentException;
 use Bravo3\Orm\Exceptions\InvalidEntityException;
 use Bravo3\Orm\Mappers\Metadata\Entity;
-use Bravo3\Orm\Mappers\Metadata\Index;
+use Bravo3\Orm\Mappers\Metadata\UniqueIndex;
 use Bravo3\Orm\Proxy\OrmProxyInterface;
 
 /**
@@ -89,10 +89,10 @@ class Reader
     /**
      * Get the value of an index
      *
-     * @param Index $index
+     * @param UniqueIndex $index
      * @return string
      */
-    public function getIndexValue(Index $index)
+    public function getIndexValue(UniqueIndex $index)
     {
         $values = [];
 

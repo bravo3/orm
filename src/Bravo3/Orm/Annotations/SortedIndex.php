@@ -5,20 +5,20 @@ namespace Bravo3\Orm\Annotations;
  * @Annotation
  * @Target("ANNOTATION")
  */
-class Index
+class SortedIndex
 {
     /**
      * @var string
      */
-    public $name;
+    public $name = null;
+
+    /**
+     * @var string
+     */
+    public $column;
 
     /**
      * @var array
      */
-    public $columns;
-
-    /**
-     * @var array
-     */
-    public $methods;
+    public $conditions;
 }

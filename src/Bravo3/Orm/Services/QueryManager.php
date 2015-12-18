@@ -38,7 +38,7 @@ class QueryManager extends AbstractManagerUtility
                     $results[] = substr($search_key, $prefix_len);
                 }
             } else {
-                $index = $metadata->getIndexByName($index_name);
+                $index = $metadata->getUniqueIndexByName($index_name);
                 if (!$index) {
                     throw new InvalidArgumentException('Index "'.$index_name.'" does not exist on the entity');
                 }
@@ -133,7 +133,7 @@ class QueryManager extends AbstractManagerUtility
         /** @var $metadata Entity */
         list($metadata, $reader, $local_id) = $this->buildPrerequisites($entity, $metadata, $reader, $local_id);
 
-        foreach ($metadata->getSortables() as $sortable) {
+        foreach ($metadata->getSortedIndices() as $sortable) {
             $key = $this->getKeyScheme()->getTableSortKey($metadata->getTableName(), $sortable->getName());
 
             // Test conditions
@@ -182,7 +182,7 @@ class QueryManager extends AbstractManagerUtility
         /** @var $metadata Entity */
         list($metadata, , $local_id) = $this->buildPrerequisites($entity, $metadata, $reader, $local_id);
 
-        foreach ($metadata->getSortables() as $sortable) {
+        foreach ($metadata->getSortedIndices() as $sortable) {
             $key = $this->getKeyScheme()->getTableSortKey($metadata->getTableName(), $sortable->getName());
             $this->getDriver()->removeSortedIndex($key, $local_id);
         }

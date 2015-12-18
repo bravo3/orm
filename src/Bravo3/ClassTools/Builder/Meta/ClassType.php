@@ -3,7 +3,7 @@ namespace Bravo3\ClassTools\Builder\Meta;
 
 class ClassType
 {
-    const STANDARD  = 0;
-    const INTERFACE = 1;
-    const TRAIT     = 2;
+    const TYPE_CLASS     = 0;
+    const TYPE_INTERFACE = 1;
+    const TYPE_TRAIT     = 2;
 }

@@ -277,9 +277,7 @@ class EntityManager
         $this->validateId($local_id);
 
         // Delete document
-        $this->driver->delete(
-            $this->key_scheme->getEntityKey($metadata->getTableName(), $local_id)
-        );
+        $this->driver->delete($this->key_scheme->getEntityKey($metadata->getTableName(), $local_id));
 
         // Delete relationships & indices
         $this->getRelationshipManager()->deleteRelationships($entity, $metadata, $reader, $local_id);
@@ -355,6 +353,16 @@ class EntityManager
     }
 
     /**
+     * Use #retrieveByUniqueIndex() instead
+     *
+     * @deprecated since 0.6.0, will be removed 0.7.0
+     */
+    public function retrieveByIndex($class_name, $index_name, $index_key, $use_cache = true)
+    {
+        return $this->retrieveByUniqueIndex($class_name, $index_name, $index_key, $use_cache);
+    }
+
+    /**
      * Retrieve an entity by an index
      *
      * @param string $class_name
@@ -363,10 +371,10 @@ class EntityManager
      * @param bool   $use_cache
      * @return object
      */
-    public function retrieveByIndex($class_name, $index_name, $index_key, $use_cache = true)
+    public function retrieveByUniqueIndex($class_name, $index_name, $index_key, $use_cache = true)
     {
         $metadata = $this->mapper->getEntityMetadata($class_name);
-        $index    = $metadata->getIndexByName($index_name);
+        $index    = $metadata->getUniqueIndexByName($index_name);
 
         if (!$index) {
             throw new InvalidArgumentException('Index "'.$index_name.'" is not valid');

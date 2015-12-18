@@ -102,7 +102,7 @@ class RelationshipManager extends AbstractManagerUtility
             }
 
             // Delete forward sort keys (inverse keys deleted in #deleteInvertedRelationship())
-            foreach ($relationship->getSortableBy() as $sortable) {
+            foreach ($relationship->getSortedindices() as $sortable) {
                 $forward_sort_key = $this->getSortIndexKey(
                     $relationship,
                     $sortable->getName(),
@@ -131,7 +131,7 @@ class RelationshipManager extends AbstractManagerUtility
             $this->getDriver()->clearSingleValueIndex($inverse_key);
         }
 
-        foreach ($inverse_relationship->getSortableBy() as $sortable) {
+        foreach ($inverse_relationship->getSortedindices() as $sortable) {
             $sort_key = $this->getSortIndexKey(
                 $inverse_relationship,
                 $sortable->getName(),
@@ -169,7 +169,7 @@ class RelationshipManager extends AbstractManagerUtility
                     // Looks like we can skip, but check inverted sort indices first -
                     if ($relationship->getInversedBy()) {
                         $inverse_relationship = $this->invertRelationship($relationship);
-                        if ($inverse_relationship->getSortableBy()) {
+                        if ($inverse_relationship->getSortedindices()) {
                             // The inverse relationship has sortable columns, we need to check for local property
                             // changes that might have impacted this -
                             list(, , $maintain) = $this->getRelationshipDeltas($key, $relationship, $value);
@@ -193,7 +193,7 @@ class RelationshipManager extends AbstractManagerUtility
             // See: docs/RaceConditions.md
             if ($is_proxy || $value || $this->entity_manager->getMaintenanceMode()) {
                 $this->persistForwardRelationship($relationship, $key, $value);
-                if (count($relationship->getSortableBy())) {
+                if (count($relationship->getSortedindices())) {
                     $this->persistForwardSortIndices($relationship, $local_id, $value);
                 }
 
@@ -241,7 +241,7 @@ class RelationshipManager extends AbstractManagerUtility
         }
 
         $this->getDriver()->debugLog('@Setting forward sort indices for "'.$local_id.'"');
-        foreach ($relationship->getSortableBy() as $sortable) {
+        foreach ($relationship->getSortedindices() as $sortable) {
             $key = $this->getSortIndexKey($relationship, $sortable->getName(), $local_id);
             $this->getDriver()->clearSortedIndex($key);
 
@@ -302,7 +302,7 @@ class RelationshipManager extends AbstractManagerUtility
             }
 
             // If the inverted relationship has sorting, remove the local from the sorted index
-            foreach ($inverse_relationship->getSortableBy() as $sortable) {
+            foreach ($inverse_relationship->getSortedindices() as $sortable) {
                 $this->getDriver()->removeSortedIndex(
                     $this->getSortIndexKey($inverse_relationship, $sortable->getName(), $foreign_id),
                     $local_id
@@ -323,7 +323,7 @@ class RelationshipManager extends AbstractManagerUtility
                 $this->getDriver()->setSingleValueIndex($inverse_key, $local_id);
             }
 
-            foreach ($inverse_relationship->getSortableBy() as $sortable) {
+            foreach ($inverse_relationship->getSortedindices() as $sortable) {
                 // Test conditions
                 foreach ($sortable->getConditions() as $condition) {
                     if ($condition->getColumn()) {
@@ -419,7 +419,7 @@ class RelationshipManager extends AbstractManagerUtility
                                  ->getEntityMetadata($ref->getSourceClass())
                                  ->getRelationshipByName($ref->getRelationshipName());
 
-            if ($relationship->getSortableBy()) {
+            if ($relationship->getSortedindices()) {
                 $this->updateMaintainedRelationshipSortIndices(
                     $relationship,
                     [$ref->getEntityId()],
@@ -462,7 +462,7 @@ class RelationshipManager extends AbstractManagerUtility
                     break;
             }
 
-            foreach ($relationship->getSortableBy() as $sortable) {
+            foreach ($relationship->getSortedindices() as $sortable) {
                 $sort_key = $this->getSortIndexKey(
                     $relationship,
                     $sortable->getName(),
@@ -491,13 +491,13 @@ class RelationshipManager extends AbstractManagerUtility
         Reader $reader,
         $local_id
     ) {
-        if (!$inverse_relationship->getSortableBy()) {
+        if (!$inverse_relationship->getSortedindices()) {
             return;
         }
 
         // Update unchanged relationships, as the sort-by column or conditions may have changed
         foreach ($maintain as $foreign_id) {
-            foreach ($inverse_relationship->getSortableBy() as $sortable) {
+            foreach ($inverse_relationship->getSortedindices() as $sortable) {
                 $index_key = $this->getSortIndexKey(
                     $inverse_relationship,
                     $sortable->getName(),
@@ -577,7 +577,7 @@ class RelationshipManager extends AbstractManagerUtility
         }
 
         // Sorted index keys
-        foreach ($inverse_relationship->getSortableBy() as $sortable) {
+        foreach ($inverse_relationship->getSortedindices() as $sortable) {
             $sort_key = $this->getSortIndexKey(
                 $inverse_relationship,
                 $sortable->getName(),

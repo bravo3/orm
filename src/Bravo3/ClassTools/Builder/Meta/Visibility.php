@@ -3,7 +3,7 @@ namespace Bravo3\ClassTools\Builder\Meta;
 
 final class Visibility
 {
-    const PRIVATE   = 0;
-    const PROTECTED = 1;
-    const PUBLIC    = 2;
+    const VISIBILITY_PRIVATE   = 0;
+    const VISIBILITY_PROTECTED = 1;
+    const VISIBILITY_PUBLIC    = 2;
 }

@@ -6,12 +6,12 @@ use Bravo3\Orm\Annotations\AbstractSortableRelationshipAnnotation;
 use Bravo3\Orm\Annotations\Column as ColumnAnnotation;
 use Bravo3\Orm\Annotations\Condition as ConditionAnnotation;
 use Bravo3\Orm\Annotations\Entity as EntityAnnotation;
-use Bravo3\Orm\Annotations\Index as IndexAnnotation;
+use Bravo3\Orm\Annotations\UniqueIndex as IndexAnnotation;
 use Bravo3\Orm\Annotations\ManyToMany;
 use Bravo3\Orm\Annotations\ManyToOne;
 use Bravo3\Orm\Annotations\OneToMany;
 use Bravo3\Orm\Annotations\OneToOne;
-use Bravo3\Orm\Annotations\Sortable as SortableAnnotation;
+use Bravo3\Orm\Annotations\SortedIndex as SortableAnnotation;
 use Bravo3\Orm\Enum\FieldType;
 use Bravo3\Orm\Enum\RelationshipType;
 use Bravo3\Orm\Exceptions\InvalidEntityException;
@@ -20,9 +20,9 @@ use Bravo3\Orm\Exceptions\UnexpectedValueException;
 use Bravo3\Orm\Mappers\Metadata\Column;
 use Bravo3\Orm\Mappers\Metadata\Condition;
 use Bravo3\Orm\Mappers\Metadata\Entity;
-use Bravo3\Orm\Mappers\Metadata\Index;
+use Bravo3\Orm\Mappers\Metadata\UniqueIndex;
 use Bravo3\Orm\Mappers\Metadata\Relationship;
-use Bravo3\Orm\Mappers\Metadata\Sortable;
+use Bravo3\Orm\Mappers\Metadata\SortedIndex;
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Inflector\Inflector;
 
@@ -185,9 +185,9 @@ class AnnotationMetadataParser
                      ->setSetter($annotation->setter)
                      ->setInversedBy($annotation->inversed_by);
 
-        if (($annotation instanceof AbstractSortableRelationshipAnnotation) && $annotation->sortable_by) {
+        if (($annotation instanceof AbstractSortableRelationshipAnnotation) && $annotation->sorted_indices) {
             $sortables = [];
-            foreach ($annotation->sortable_by as $sortable) {
+            foreach ($annotation->sorted_indices as $sortable) {
                 if ($sortable instanceof SortableAnnotation) {
                     $conditions = [];
                     foreach ($sortable->conditions as $condition) {
@@ -204,14 +204,14 @@ class AnnotationMetadataParser
                             throw new UnexpectedValueException(self::ERR_UNKNOWN_CONDITION);
                         }
                     }
-                    $sortables[] = new Sortable($sortable->column, $conditions, $sortable->name);
+                    $sortables[] = new SortedIndex($sortable->column, $conditions, $sortable->name);
                 } elseif (is_string($sortable)) {
-                    $sortables[] = new Sortable($sortable);
+                    $sortables[] = new SortedIndex($sortable);
                 } else {
                     throw new UnexpectedValueException(self::ERR_UNKNOWN_SORTABLE);
                 }
             }
-            $relationship->setSortableBy($sortables);
+            $relationship->setSortedindices($sortables);
         }
 
         return $relationship;
@@ -257,17 +257,17 @@ class AnnotationMetadataParser
     /**
      * Get all indices on the entity
      *
-     * @return Index[]
+     * @return UniqueIndex[]
      */
     public function getIndices()
     {
         $indices            = [];
-        $annotation_indices = $this->getEntityAnnotation()->indices;
+        $annotation_indices = $this->getEntityAnnotation()->unique_indices;
         $table_name         = $this->getTableName();
 
         /** @var IndexAnnotation $annotation_index */
         foreach ($annotation_indices as $annotation_index) {
-            $index = new Index($table_name, $annotation_index->name);
+            $index = new UniqueIndex($table_name, $annotation_index->name);
             $index->setColumns($annotation_index->columns ?: []);
             $index->setMethods($annotation_index->methods ?: []);
             $indices[] = $index;
@@ -279,12 +279,12 @@ class AnnotationMetadataParser
     /**
      * Get table sortables
      *
-     * @return Sortable[]
+     * @return SortedIndex[]
      */
     public function getSortables()
     {
         $sortables            = [];
-        $annotation_sortables = $this->getEntityAnnotation()->sortable_by;
+        $annotation_sortables = $this->getEntityAnnotation()->sorted_indices;
 
         foreach ($annotation_sortables as $sortable) {
             $conditions = [];
@@ -306,9 +306,9 @@ class AnnotationMetadataParser
                         }
                     }
                 }
-                $sortables[] = new Sortable($sortable->column, $conditions, $sortable->name);
+                $sortables[] = new SortedIndex($sortable->column, $conditions, $sortable->name);
             } elseif (is_string($sortable)) {
-                $sortables[] = new Sortable($sortable);
+                $sortables[] = new SortedIndex($sortable);
             } else {
                 throw new UnexpectedValueException(self::ERR_UNKNOWN_SORTABLE);
             }
@@ -330,8 +330,8 @@ class AnnotationMetadataParser
         if (!$shallow) {
             $entity->setRelationships($this->getRelationships());
         }
-        $entity->setIndices($this->getIndices());
-        $entity->setSortables($this->getSortables());
+        $entity->setUniqueIndices($this->getIndices());
+        $entity->setSortedIndices($this->getSortables());
         return $entity;
     }
 

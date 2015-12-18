@@ -27,7 +27,7 @@ class Category
      * @Orm\OneToMany(
      *      target="Bravo3\Orm\Tests\Entities\Porter\Article",
      *      inversed_by="canonical_category",
-     *      sortable_by={"title", "sort_date"}
+     *      sorted_indices={"title", "sort_date"}
      * )
      */
     protected $articles;

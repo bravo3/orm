@@ -2,7 +2,7 @@
 namespace Bravo3\Orm\Tests\Services;
 
 use Bravo3\Orm\Exceptions\NotFoundException;
-use Bravo3\Orm\Mappers\Metadata\Index;
+use Bravo3\Orm\Mappers\Metadata\UniqueIndex;
 use Bravo3\Orm\Services\EntityManager;
 use Bravo3\Orm\Services\Maintenance;
 use Bravo3\Orm\Tests\AbstractOrmTest;
@@ -138,7 +138,7 @@ class MaintenanceTest extends AbstractOrmTest
         $article = $em->retrieveByIndex(SluggedArticle::class, 'slug', 'bar', false);
         $this->assertEquals('foo', $article->getName());
 
-        $index = $em->getMapper()->getEntityMetadata($article)->getIndexByName('slug');
+        $index = $em->getMapper()->getEntityMetadata($article)->getUniqueIndexByName('slug');
 
         // Corrupt the slug, two steps required:
         // 1. Set a new slug

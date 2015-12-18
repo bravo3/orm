@@ -4,12 +4,12 @@ namespace Bravo3\Orm\Tests\Entities\Indexed;
 use Bravo3\Orm\Annotations\Column;
 use Bravo3\Orm\Annotations\Entity;
 use Bravo3\Orm\Annotations\Id;
-use Bravo3\Orm\Annotations\Index;
+use Bravo3\Orm\Annotations\UniqueIndex;
 
 /**
- * @Entity(indices={
- *      @Index(name="slug", columns={"slug"}),
- *      @Index(name="name", columns={"name"})
+ * @Entity(unique_indices={
+ *      @UniqueIndex(name="slug", columns={"slug"}),
+ *      @UniqueIndex(name="name", columns={"name"})
  * })
  */
 class SluggedArticle

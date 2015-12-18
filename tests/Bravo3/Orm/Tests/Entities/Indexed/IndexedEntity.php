@@ -4,13 +4,13 @@ namespace Bravo3\Orm\Tests\Entities\Indexed;
 use Bravo3\Orm\Annotations\Column;
 use Bravo3\Orm\Annotations\Entity;
 use Bravo3\Orm\Annotations\Id;
-use Bravo3\Orm\Annotations\Index;
+use Bravo3\Orm\Annotations\UniqueIndex;
 
 /**
- * @Entity(indices={
- *      @Index(name="ab", columns={"alpha", "bravo"}),
- *      @Index(name="bc", columns={"bravo"}, methods={"getCharlie"}),
- *      @Index(name="b", columns={"bravo"})
+ * @Entity(unique_indices={
+ *      @UniqueIndex(name="ab", columns={"alpha", "bravo"}),
+ *      @UniqueIndex(name="bc", columns={"bravo"}, methods={"getCharlie"}),
+ *      @UniqueIndex(name="b", columns={"bravo"})
  * })
  */
 class IndexedEntity

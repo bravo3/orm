@@ -15,10 +15,10 @@ class Entity
     /**
      * @var array
      */
-    public $indices = [];
+    public $unique_indices = [];
 
     /**
      * @var array
      */
-    public $sortable_by = [];
+    public $sorted_indices = [];
 }
