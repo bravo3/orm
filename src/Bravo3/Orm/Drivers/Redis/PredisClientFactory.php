@@ -58,6 +58,8 @@ class PredisClientFactory
                     $params,
                     $masters
                 );
+            } elseif ($masters) {
+                $redis_connections = $masters;
             }
 
             // Merge additional slaves discovered
