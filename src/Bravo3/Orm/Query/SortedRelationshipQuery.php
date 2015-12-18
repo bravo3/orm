@@ -18,12 +18,12 @@ class SortedRelationshipQuery extends AbstractSortedQuery
      */
     public function __construct(
         $entity,
-        string $relationship_name,
-        string $sort_by,
+        $relationship_name,
+        $sort_by,
         Direction $direction = null,
-        int $start = null,
-        int $end = null
+        $start = null,
+        $end = null
     ) {
-        parent::__construct($entity, $relationship_name, $sort_by, $direction, $start, $entity);
+        parent::__construct($entity, $relationship_name, $sort_by, $direction, $start, $end);
     }
 }

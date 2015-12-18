@@ -2,6 +2,7 @@
 namespace Bravo3\Orm\Tests\Events;
 
 use Bravo3\Orm\Query\SortedQuery;
+use Bravo3\Orm\Query\SortedRelationshipQuery;
 use Bravo3\Orm\Services\EntityManager;
 use Bravo3\Orm\Tests\AbstractOrmTest;
 use Bravo3\Orm\Tests\Entities\OneToMany\Article;
@@ -40,7 +41,7 @@ class HydrationExceptionEventsTest extends AbstractOrmTest
         $category = $em->retrieve(Category::class, 5000, false);
 
         $results = $em->sortedQuery(
-            new SortedQuery($category, 'articles', 'sort_date')
+            new SortedRelationshipQuery($category, 'articles', 'sort_date')
         );
 
         // Iterating through these results should trigger an exception

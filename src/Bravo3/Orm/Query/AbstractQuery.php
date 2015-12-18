@@ -23,7 +23,7 @@ abstract class AbstractQuery implements QueryInterface
      *
      * @return string
      */
-    public function getClassName(): self
+    public function getClassName()
     {
         return $this->class_name;
     }

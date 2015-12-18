@@ -85,6 +85,8 @@ class IndexManager extends AbstractManagerUtility
     /**
      * Traverse an array of indices and persist them
      *
+     * FIXME: should we need $local_id?
+     *
      * @param Index[] $indices
      * @param object  $entity
      * @param Reader  $reader

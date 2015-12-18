@@ -3,7 +3,7 @@ namespace Bravo3\Orm\Tests\Services;
 
 use Bravo3\Orm\Enum\Direction;
 use Bravo3\Orm\Mappers\Annotation\AnnotationMapper;
-use Bravo3\Orm\Query\IndexedQuery;
+use Bravo3\Orm\Query\KeyScan;
 use Bravo3\Orm\Query\SortedQuery;
 use Bravo3\Orm\Services\EntityManager;
 use Bravo3\Orm\Services\Porter;
@@ -45,10 +45,10 @@ class PorterTest extends AbstractOrmTest
         $porter->portTable(Category::class, 'redis', 'tar');
 
         // Check entity counts
-        $articles = $dest->indexedQuery(new IndexedQuery(Article::class, ['@id' => '*']), false);
+        $articles = $dest->keyScan(new KeyScan(Article::class, ['@id' => '*']), false);
         $this->assertCount(15, $articles);
 
-        $categories = $dest->indexedQuery(new IndexedQuery(Category::class, ['@id' => '*']), false);
+        $categories = $dest->keyScan(new KeyScan(Category::class, ['@id' => '*']), false);
         $this->assertCount(1, $categories);
 
         // Test indices were preserved

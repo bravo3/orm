@@ -2,7 +2,7 @@
 namespace Bravo3\Orm\Services;
 
 use Bravo3\Orm\Proxy\OrmProxyInterface;
-use Bravo3\Orm\Query\IndexedQuery;
+use Bravo3\Orm\Query\KeyScan;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -48,7 +48,7 @@ class Maintenance
             function () use ($class_name, $batch_size) {
                 $metadata = $this->entity_manager->getMapper()->getEntityMetadata($class_name);
                 $this->logger->info("Rebuilding `".$metadata->getTableName()."`..");
-                $records = $this->entity_manager->indexedQuery(new IndexedQuery($class_name, ['@id' => '*']), false);
+                $records = $this->entity_manager->keyScan(new KeyScan($class_name, ['@id' => '*']), false);
                 $this->logger->info(
                     number_format($records->count()).' records to rebuild, '.number_format($batch_size).' at a time'
                 );

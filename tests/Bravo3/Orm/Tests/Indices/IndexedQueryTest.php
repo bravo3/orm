@@ -1,7 +1,7 @@
 <?php
 namespace Bravo3\Orm\Tests\Indices;
 
-use Bravo3\Orm\Query\IndexedQuery;
+use Bravo3\Orm\Query\KeyScan;
 use Bravo3\Orm\Services\EntityManager;
 use Bravo3\Orm\Tests\AbstractOrmTest;
 use Bravo3\Orm\Tests\Entities\Indexed\IndexedEntity;
@@ -29,7 +29,7 @@ class IndexedQueryTest extends AbstractOrmTest
 
         $em->persist($a)->persist($b)->persist($c)->persist($d)->flush();
 
-        $result = $em->indexedQuery(new IndexedQuery(SluggedArticle::class, ['slug' => 'article-al*']));
+        $result = $em->keyScan(new KeyScan(SluggedArticle::class, ['slug' => 'article-al*']));
         $this->assertCount(2, $result);
 
         $names = ['Article A', 'Document D'];
@@ -41,8 +41,8 @@ class IndexedQueryTest extends AbstractOrmTest
         }
         $this->assertEquals(2, $count);
 
-        $result = $em->indexedQuery(
-            new IndexedQuery(SluggedArticle::class, ['slug' => 'article-al*', 'name' => 'Docu*'])
+        $result = $em->keyScan(
+            new KeyScan(SluggedArticle::class, ['slug' => 'article-al*', 'name' => 'Docu*'])
         );
         $this->assertCount(1, $result);
         $ids = $result->getIdList();
@@ -74,7 +74,7 @@ class IndexedQueryTest extends AbstractOrmTest
 
         $em->persist($a)->persist($b)->flush();
 
-        $result = $em->indexedQuery(new IndexedQuery(IndexedEntity::class, ['@id' => '1.fir*']));
+        $result = $em->keyScan(new KeyScan(IndexedEntity::class, ['@id' => '1.fir*']));
         $this->assertCount(1, $result);
 
         /** @var IndexedEntity $entity */
@@ -83,10 +83,10 @@ class IndexedQueryTest extends AbstractOrmTest
         $this->assertEquals('first', $entity->getId2());
         $this->assertEquals('alpha1', $entity->getAlpha());
 
-        $result = $em->indexedQuery(new IndexedQuery(IndexedEntity::class, ['@id' => '*']));
+        $result = $em->keyScan(new KeyScan(IndexedEntity::class, ['@id' => '*']));
         $this->assertGreaterThanOrEqual(2, count($result));
 
-        $result = $em->indexedQuery(new IndexedQuery(IndexedEntity::class, ['@id' => '*', 'ab' => 'alpha1*']));
+        $result = $em->keyScan(new KeyScan(IndexedEntity::class, ['@id' => '*', 'ab' => 'alpha1*']));
         $this->assertCount(1, $result);
 
         /** @var IndexedEntity $entity */

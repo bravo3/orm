@@ -2,9 +2,9 @@
 namespace Bravo3\Orm\Query;
 
 /**
- * TODO: What do I do?
+ * Perform an unoptimised key-scan on a set of indices
  */
-class IndexedQuery extends AbstractQuery
+class KeyScan extends AbstractQuery
 {
     /**
      * @var array
@@ -26,7 +26,7 @@ class IndexedQuery extends AbstractQuery
      *
      * @return array
      */
-    public function getIndices(): array
+    public function getIndices()
     {
         return $this->indices;
     }
@@ -37,7 +37,7 @@ class IndexedQuery extends AbstractQuery
      * @param array $indices
      * @return $this
      */
-    public function setIndices($indices): self
+    public function setIndices(array $indices)
     {
         $this->indices = $indices;
         return $this;
@@ -50,7 +50,7 @@ class IndexedQuery extends AbstractQuery
      * @param string $value
      * @return $this
      */
-    public function addIndex($index_name, $value): self
+    public function addIndex($index_name, $value)
     {
         $this->indices[$index_name] = $value;
         return $this;

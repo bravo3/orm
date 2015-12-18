@@ -45,6 +45,7 @@ class EntityManagerInterceptorFactory implements InterceptorFactoryInterface
      */
     protected function getPrePersist()
     {
+        /** @noinspection PhpUnusedParameterInspection */
         return function ($proxy, $instance, $method, $params, &$returnEarly) {
             /** @var EntityManager $instance */
             $event = new PersistEvent($instance, $params['entity']);
@@ -63,6 +64,7 @@ class EntityManagerInterceptorFactory implements InterceptorFactoryInterface
      */
     protected function getPreRetrieve()
     {
+        /** @noinspection PhpUnusedParameterInspection */
         return function ($proxy, $instance, $method, $params, &$returnEarly) {
             /** @var EntityManager $instance */
             $event = new RetrieveEvent($instance, $params['class_name'], $params['id']);
@@ -80,6 +82,7 @@ class EntityManagerInterceptorFactory implements InterceptorFactoryInterface
      */
     protected function getPreDelete()
     {
+        /** @noinspection PhpUnusedParameterInspection */
         return function ($proxy, $instance, $method, $params, &$returnEarly) {
             /** @var EntityManager $instance */
             $event = new DeleteEvent($instance, $params['entity']);
@@ -98,6 +101,7 @@ class EntityManagerInterceptorFactory implements InterceptorFactoryInterface
      */
     protected function getPreFlush()
     {
+        /** @noinspection PhpUnusedParameterInspection */
         return function ($proxy, $instance, $method, $params, &$returnEarly) {
             /** @var EntityManager $instance */
             $event = new FlushEvent($instance);
@@ -116,6 +120,7 @@ class EntityManagerInterceptorFactory implements InterceptorFactoryInterface
      */
     protected function getPostPersist()
     {
+        /** @noinspection PhpUnusedParameterInspection */
         return function ($proxy, $instance, $method, $params, $returnValue, &$returnEarly) {
             /** @var EntityManager $instance */
             $event = new PersistEvent($instance, $params['entity']);
@@ -134,6 +139,7 @@ class EntityManagerInterceptorFactory implements InterceptorFactoryInterface
      */
     protected function getPostRetrieve()
     {
+        /** @noinspection PhpUnusedParameterInspection */
         return function ($proxy, $instance, $method, $params, $returnValue, &$returnEarly) {
             /** @var EntityManager $instance */
             $event = new RetrieveEvent($instance, $params['class_name'], $params['id'], $returnValue);
@@ -152,6 +158,7 @@ class EntityManagerInterceptorFactory implements InterceptorFactoryInterface
      */
     protected function getPostDelete()
     {
+        /** @noinspection PhpUnusedParameterInspection */
         return function ($proxy, $instance, $method, $params, $returnValue, &$returnEarly) {
             /** @var EntityManager $instance */
             $event = new DeleteEvent($instance, $params['entity']);
@@ -170,6 +177,7 @@ class EntityManagerInterceptorFactory implements InterceptorFactoryInterface
      */
     protected function getPostFlush()
     {
+        /** @noinspection PhpUnusedParameterInspection */
         return function ($proxy, $instance, $method, $params, $returnValue, &$returnEarly) {
             /** @var EntityManager $instance */
             $event = new FlushEvent($instance);

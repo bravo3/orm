@@ -8,7 +8,7 @@ interface QueryInterface
      *
      * @return string
      */
-    public function getClassName(): string;
+    public function getClassName();
 
     /**
      * Set entity class name by name or entity object

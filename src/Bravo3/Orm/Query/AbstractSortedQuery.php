@@ -49,10 +49,10 @@ abstract class AbstractSortedQuery extends AbstractQuery implements SortedQueryI
     public function __construct(
         $entity,
         $relationship_name,
-        string $sort_by,
+        $sort_by,
         Direction $direction = null,
-        int $start = null,
-        int $end = null
+        $start = null,
+        $end = null
     ) {
         parent::__construct($entity);
         $this->entity            = $entity;
@@ -68,7 +68,7 @@ abstract class AbstractSortedQuery extends AbstractQuery implements SortedQueryI
      *
      * @return string
      */
-    public function getRelationshipName(): string
+    public function getRelationshipName()
     {
         return $this->relationship_name;
     }
@@ -79,7 +79,7 @@ abstract class AbstractSortedQuery extends AbstractQuery implements SortedQueryI
      * @param string $relationship_name
      * @return $this
      */
-    public function setRelationshipName(string $relationship_name): self
+    public function setRelationshipName($relationship_name)
     {
         $this->relationship_name = $relationship_name;
         return $this;
@@ -90,7 +90,7 @@ abstract class AbstractSortedQuery extends AbstractQuery implements SortedQueryI
      *
      * @return string
      */
-    public function getSortBy(): string
+    public function getSortBy()
     {
         return $this->sort_by;
     }
@@ -101,7 +101,7 @@ abstract class AbstractSortedQuery extends AbstractQuery implements SortedQueryI
      * @param string $sort_by
      * @return $this
      */
-    public function setSortBy(string $sort_by): self
+    public function setSortBy($sort_by)
     {
         $this->sort_by = $sort_by;
         return $this;
@@ -123,7 +123,7 @@ abstract class AbstractSortedQuery extends AbstractQuery implements SortedQueryI
      * @param object $entity
      * @return $this
      */
-    public function setEntity($entity): self
+    public function setEntity($entity)
     {
         $this->entity = $entity;
         return $this;
@@ -134,7 +134,7 @@ abstract class AbstractSortedQuery extends AbstractQuery implements SortedQueryI
      *
      * @return Direction
      */
-    public function getDirection(): Direction
+    public function getDirection()
     {
         return $this->direction;
     }
@@ -145,7 +145,7 @@ abstract class AbstractSortedQuery extends AbstractQuery implements SortedQueryI
      * @param Direction $direction
      * @return $this
      */
-    public function setDirection(Direction $direction): self
+    public function setDirection(Direction $direction)
     {
         $this->direction = $direction;
         return $this;
@@ -156,7 +156,7 @@ abstract class AbstractSortedQuery extends AbstractQuery implements SortedQueryI
      *
      * @return int
      */
-    public function getStart(): int
+    public function getStart()
     {
         return $this->start;
     }
@@ -167,7 +167,7 @@ abstract class AbstractSortedQuery extends AbstractQuery implements SortedQueryI
      * @param int $start
      * @return $this
      */
-    public function setStart(int $start): self
+    public function setStart($start)
     {
         $this->start = $start;
         return $this;
@@ -178,7 +178,7 @@ abstract class AbstractSortedQuery extends AbstractQuery implements SortedQueryI
      *
      * @return int
      */
-    public function getEnd(): int
+    public function getEnd()
     {
         return $this->end;
     }
@@ -189,7 +189,7 @@ abstract class AbstractSortedQuery extends AbstractQuery implements SortedQueryI
      * @param int $end
      * @return $this
      */
-    public function setEnd(int $end): self
+    public function setEnd($end)
     {
         $this->end = $end;
         return $this;

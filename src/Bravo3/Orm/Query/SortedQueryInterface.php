@@ -13,14 +13,14 @@ interface SortedQueryInterface extends QueryInterface
      *
      * @return string
      */
-    public function getRelationshipName(): string;
+    public function getRelationshipName();
 
     /**
      * Get sorting field name
      *
      * @return string
      */
-    public function getSortBy(): string;
+    public function getSortBy();
 
     /**
      * Get Entity
@@ -34,19 +34,19 @@ interface SortedQueryInterface extends QueryInterface
      *
      * @return Direction
      */
-    public function getDirection(): Direction;
+    public function getDirection();
 
     /**
      * Get start index
      *
      * @return int
      */
-    public function getStart(): int;
+    public function getStart();
 
     /**
      * Get end index
      *
      * @return int
      */
-    public function getEnd(): int;
+    public function getEnd();
 }

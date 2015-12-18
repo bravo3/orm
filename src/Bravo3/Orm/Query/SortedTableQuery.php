@@ -13,11 +13,11 @@ class SortedTableQuery extends AbstractSortedQuery
      * @param int       $end        Stop index (inclusive), null/-1 for end of set, -2 for penultimate record
      */
     public function __construct(
-        string $class_name,
-        string $sort_by,
+        $class_name,
+        $sort_by,
         Direction $direction = null,
-        int $start = null,
-        int $end = null
+        $start = null,
+        $end = null
     ) {
         parent::__construct($class_name, null, $sort_by, $direction, $start, $end);
     }

@@ -4,21 +4,24 @@ namespace Bravo3\Orm\Services;
 use Bravo3\Orm\Enum\Direction;
 use Bravo3\Orm\Exceptions\InvalidArgumentException;
 use Bravo3\Orm\Mappers\Metadata\Entity;
-use Bravo3\Orm\Query\IndexedQuery;
+use Bravo3\Orm\Query\KeyScan;
 use Bravo3\Orm\Query\QueryResult;
 use Bravo3\Orm\Query\SortedQueryInterface;
 use Bravo3\Orm\Services\Io\Reader;
 
+/**
+ * Query management for the entity manager
+ */
 class QueryManager extends AbstractManagerUtility
 {
     /**
-     * Create a query against a table matching one or more indices
+     * Perform an unoptimised key-scan on a set of indices
      *
-     * @param IndexedQuery $query
-     * @param bool         $use_cache
+     * @param KeyScan $query
+     * @param bool    $use_cache
      * @return QueryResult
      */
-    public function indexedQuery(IndexedQuery $query, $use_cache = true)
+    public function keyScan(KeyScan $query, $use_cache = true)
     {
         $metadata   = $this->getMapper()->getEntityMetadata($query->getClassName());
         $prefix     = $this->getKeyScheme()->getEntityKey($metadata->getTableName(), '');
@@ -70,8 +73,11 @@ class QueryManager extends AbstractManagerUtility
      * @param bool                 $use_cache
      * @return QueryResult
      */
-    public function sortedQuery(SortedQueryInterface $query, bool $check_full_set_size = false, bool $use_cache = true)
-    {
+    public function sortedQuery(
+        SortedQueryInterface $query,
+        $check_full_set_size = false,
+        $use_cache = true
+    ) {
         $metadata = $this->getMapper()->getEntityMetadata($query->getClassName());
 
         if ($query->getRelationshipName()) {
@@ -118,8 +124,12 @@ class QueryManager extends AbstractManagerUtility
      * @param string $local_id Optionally provide the local entity ID to prevent recalculation
      * @return $this
      */
-    public function persistTableQueries($entity, Entity $metadata = null, Reader $reader = null, $local_id = null)
-    {
+    public function persistTableQueries(
+        $entity,
+        Entity $metadata = null,
+        Reader $reader = null,
+        $local_id = null
+    ) {
         /** @var $metadata Entity */
         list($metadata, $reader, $local_id) = $this->buildPrerequisites($entity, $metadata, $reader, $local_id);
 
@@ -163,8 +173,12 @@ class QueryManager extends AbstractManagerUtility
      * @param string $local_id Optionally provide the local entity ID to prevent recalculation
      * @return $this
      */
-    public function deleteTableQueries($entity, Entity $metadata = null, Reader $reader = null, $local_id = null)
-    {
+    public function deleteTableQueries(
+        $entity,
+        Entity $metadata = null,
+        Reader $reader = null,
+        $local_id = null
+    ) {
         /** @var $metadata Entity */
         list($metadata, , $local_id) = $this->buildPrerequisites($entity, $metadata, $reader, $local_id);
 

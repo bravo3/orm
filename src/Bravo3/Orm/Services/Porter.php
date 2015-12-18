@@ -2,7 +2,7 @@
 namespace Bravo3\Orm\Services;
 
 use Bravo3\Orm\Exceptions\UnexpectedValueException;
-use Bravo3\Orm\Query\IndexedQuery;
+use Bravo3\Orm\Query\KeyScan;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -95,7 +95,7 @@ class Porter implements LoggerAwareInterface
         $table = $src->getMapper()->getEntityMetadata($class_name)->getTableName();
 
         $this->logger->notice('Copying '.$table.' from '.$source.' to '.$destination);
-        $entities = $src->indexedQuery(new IndexedQuery($class_name, ['@id' => '*']), false);
+        $entities = $src->keyScan(new KeyScan($class_name, ['@id' => '*']), false);
         $this->logger->notice('Found '.number_format(count($entities)).' records');
 
         $maintenance = $dest->getMaintenanceMode();
