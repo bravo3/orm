@@ -193,7 +193,7 @@ abstract class AbstractOrmTest extends \PHPUnit_Framework_TestCase
 
     protected function getIndexKey(EntityManager $em, $table, $index, $key)
     {
-        return $em->getKeyScheme()->getIndexKey(new UniqueIndex($table, $index), $key);
+        return $em->getKeyScheme()->getUniqueIndexKey(new UniqueIndex($table, $index), $key);
     }
 
     protected function getRelKey(EntityManager $em, $from, $to, $id, $property, RelationshipType $type)

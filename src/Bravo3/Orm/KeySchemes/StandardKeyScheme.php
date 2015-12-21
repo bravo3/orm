@@ -5,7 +5,7 @@ use Bravo3\Orm\Mappers\Metadata\UniqueIndex;
 use Bravo3\Orm\Mappers\Metadata\Relationship;
 
 /**
- * Stores all keys with a configurable section delimiter which defaults to a colon (:)
+ * Stores all keys with a configurable section delimiter which defaults to a colon (:).
  */
 class StandardKeyScheme implements KeySchemeInterface
 {
@@ -26,7 +26,7 @@ class StandardKeyScheme implements KeySchemeInterface
     }
 
     /**
-     * Get the section delimiter
+     * Get the section delimiter.
      *
      * @return string
      */
@@ -36,7 +36,7 @@ class StandardKeyScheme implements KeySchemeInterface
     }
 
     /**
-     * Set the section delimiter
+     * Set the section delimiter.
      *
      * @param string $delimiter
      * @return $this
@@ -48,7 +48,7 @@ class StandardKeyScheme implements KeySchemeInterface
     }
 
     /**
-     * Return the key for an entity document
+     * Return the key for an entity document.
      *
      * @param string $table_name Table name
      * @param string $id         Entity ID
@@ -63,7 +63,7 @@ class StandardKeyScheme implements KeySchemeInterface
     }
 
     /**
-     * Return the key for an entity ref table
+     * Return the key for an entity ref table.
      *
      * @param string $table_name Table name
      * @param string $id         Entity ID
@@ -78,31 +78,31 @@ class StandardKeyScheme implements KeySchemeInterface
     }
 
     /**
-     * Get the key for a foreign relationship
+     * Get the key for a foreign relationship.
      *
      * @param Relationship $relationship Relationship
-     * @param string       $source_table Source table name
+     * @param string       $src_table    Source table name
      * @param string       $target_table Target table name
      * @param string       $id           Source entity ID
      * @return string
      */
-    public function getRelationshipKey(Relationship $relationship, $source_table, $target_table, $id)
+    public function getRelationshipKey(Relationship $relationship, $src_table, $target_table, $id)
     {
         // otm:user-address:89726:home_address
         return (string)$relationship->getRelationshipType()->value().$this->delimiter.
-               $source_table.'-'.$target_table.$this->delimiter.
+               $src_table.'-'.$target_table.$this->delimiter.
                $id.$this->delimiter.
                $relationship->getName();
     }
 
     /**
-     * Get the key for an standard index
+     * Get the key for an standard index.
      *
      * @param UniqueIndex $index Index belonging to entity
      * @param string      $key   Index key
      * @return string
      */
-    public function getIndexKey(UniqueIndex $index, $key)
+    public function getUniqueIndexKey(UniqueIndex $index, $key)
     {
         // idx:article:slug:some-slug
         return static::INDEX_NAMESPACE.$this->delimiter.
@@ -112,33 +112,33 @@ class StandardKeyScheme implements KeySchemeInterface
     }
 
     /**
-     * Get the key for a sort index on a relationship
+     * Get the key for a sort index on a relationship.
      *
      * @param Relationship $relationship Relationship
-     * @param string       $source_table Source table name
+     * @param string       $src_table    Source table name
      * @param string       $target_table Target table name
      * @param string       $sort_field   Property name on the inverse entity
      * @param string       $id           Local ID
      * @return string
      */
-    public function getSortIndexKey(Relationship $relationship, $source_table, $target_table, $sort_field, $id)
+    public function getSortedRelationshipKey(Relationship $relationship, $src_table, $target_table, $sort_field, $id)
     {
         // srt:category-article:89726:title
         return static::SORT_NAMESPACE.$this->delimiter.
-               $source_table.'-'.$target_table.$this->delimiter.
+               $src_table.'-'.$target_table.$this->delimiter.
                $id.$this->delimiter.
                $relationship->getName().$this->delimiter.
                $sort_field;
     }
 
     /**
-     * Get the key for a sort index on a table
+     * Get the key for a sort index on a table.
      *
      * @param string $table_name Name of table containing sorted entity list
      * @param string $sort_field Sortable field on the table
      * @return string
      */
-    public function getTableSortKey($table_name, $sort_field)
+    public function getSortedTableKey($table_name, $sort_field)
     {
         // srt:category:title
         return static::SORT_NAMESPACE.$this->delimiter.

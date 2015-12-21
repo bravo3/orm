@@ -56,7 +56,7 @@ class EntityManager
     protected $relationship_manager = null;
 
     /**
-     * @var IndexManager
+     * @var UniqueKeyManager
      */
     protected $index_manager = null;
 
@@ -223,7 +223,7 @@ class EntityManager
         );
 
         $this->getRelationshipManager()->persistRelationships($entity, $metadata, $reader, $id);
-        $this->getIndexManager()->persistIndices($entity, $metadata, $reader, $id);
+        $this->getIndexManager()->persistUniqueKeys($entity, $metadata, $reader, $id);
         $this->getQueryManager()->persistTableQueries($entity, $metadata, $reader, $id);
 
         if ($entity instanceof OrmProxyInterface) {
@@ -281,7 +281,7 @@ class EntityManager
 
         // Delete relationships & indices
         $this->getRelationshipManager()->deleteRelationships($entity, $metadata, $reader, $local_id);
-        $this->getIndexManager()->deleteIndices($entity, $metadata, $reader, $local_id);
+        $this->getIndexManager()->deleteUniqueKeys($entity, $metadata, $reader, $local_id);
         $this->getQueryManager()->deleteTableQueries($entity, $metadata, $reader, $local_id);
 
         return $this->getProxy();
@@ -380,7 +380,7 @@ class EntityManager
             throw new InvalidArgumentException('Index "'.$index_name.'" is not valid');
         }
 
-        $id = $this->driver->getSingleValueIndex($this->key_scheme->getIndexKey($index, $index_key));
+        $id = $this->driver->getSingleValueIndex($this->key_scheme->getUniqueIndexKey($index, $index_key));
 
         if (!$id) {
             throw new NotFoundException('Index "'.$index_key.'" not found');
@@ -506,12 +506,12 @@ class EntityManager
     /**
      * Lazy-loading index manager
      *
-     * @return IndexManager
+     * @return UniqueKeyManager
      */
     protected function getIndexManager()
     {
         if ($this->index_manager === null) {
-            $this->index_manager = new IndexManager($this);
+            $this->index_manager = new UniqueKeyManager($this);
         }
 
         return $this->index_manager;

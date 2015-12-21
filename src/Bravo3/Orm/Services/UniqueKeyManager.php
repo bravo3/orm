@@ -6,10 +6,13 @@ use Bravo3\Orm\Mappers\Metadata\UniqueIndex;
 use Bravo3\Orm\Proxy\OrmProxyInterface;
 use Bravo3\Orm\Services\Io\Reader;
 
-class IndexManager extends AbstractManagerUtility
+/**
+ * Persists and deletes unique keys.
+ */
+class UniqueKeyManager extends AbstractManagerUtility
 {
     /**
-     * Persist entity indices
+     * Persist entity unique keys.
      *
      * @param object $entity   Local entity object
      * @param Entity $metadata Optionally provide entity metadata to prevent recalculation
@@ -17,11 +20,11 @@ class IndexManager extends AbstractManagerUtility
      * @param string $local_id Optionally provide the local entity ID to prevent recalculation
      * @return $this
      */
-    public function persistIndices($entity, Entity $metadata = null, Reader $reader = null, $local_id = null)
+    public function persistUniqueKeys($entity, Entity $metadata = null, Reader $reader = null, $local_id = null)
     {
         /** @var $metadata Entity */
         list($metadata, $reader, $local_id) = $this->buildPrerequisites($entity, $metadata, $reader, $local_id);
-        $this->traversePersistIndices($metadata->getUniqueIndices(), $entity, $reader, $local_id);
+        $this->traversePersistUniqueKeys($metadata->getUniqueIndices(), $entity, $reader, $local_id);
         return $this;
     }
 
@@ -34,11 +37,11 @@ class IndexManager extends AbstractManagerUtility
      * @param string $local_id Optionally provide the local entity ID to prevent recalculation
      * @return $this
      */
-    public function deleteIndices($entity, Entity $metadata = null, Reader $reader = null, $local_id = null)
+    public function deleteUniqueKeys($entity, Entity $metadata = null, Reader $reader = null, $local_id = null)
     {
         /** @var $metadata Entity */
-        list($metadata, $reader, $local_id) = $this->buildPrerequisites($entity, $metadata, $reader, $local_id);
-        $this->traverseDeleteIndices($metadata->getUniqueIndices(), $entity, $reader, $local_id);
+        list($metadata, $reader, ) = $this->buildPrerequisites($entity, $metadata, $reader, $local_id);
+        $this->traverseDeleteUniqueKeys($metadata->getUniqueIndices(), $entity, $reader);
         return $this;
     }
 
@@ -50,7 +53,7 @@ class IndexManager extends AbstractManagerUtility
      * @param Reader        $reader
      * @param string        $local_id
      */
-    private function traversePersistIndices(array $indices, $entity, Reader $reader, $local_id)
+    private function traversePersistUniqueKeys(array $indices, $entity, Reader $reader, $local_id)
     {
         $is_proxy = $entity instanceof OrmProxyInterface;
 
@@ -70,29 +73,26 @@ class IndexManager extends AbstractManagerUtility
                     }
                 } else {
                     // Former index is redundant, remove it
+                    // TODO: If key is contested, this will remove other entity's key
                     $this->getDriver()->clearSingleValueIndex(
-                        $this->getKeyScheme()->getIndexKey($index, $original_value)
+                        $this->getKeyScheme()->getUniqueIndexKey($index, $original_value)
                     );
                 }
             }
 
-            $key   = $this->getKeyScheme()->getIndexKey($index, $index_value);
-            $value = $local_id;
-            $this->getDriver()->setSingleValueIndex($key, $value);
+            $key = $this->getKeyScheme()->getUniqueIndexKey($index, $index_value);
+            $this->getDriver()->setSingleValueIndex($key, $local_id);
         }
     }
 
     /**
      * Traverse an array of indices and persist them
      *
-     * FIXME: should we need $local_id?
-     *
      * @param UniqueIndex[] $indices
      * @param object        $entity
      * @param Reader        $reader
-     * @param string        $local_id
      */
-    private function traverseDeleteIndices(array $indices, $entity, Reader $reader, $local_id)
+    private function traverseDeleteUniqueKeys(array $indices, $entity, Reader $reader)
     {
         $is_proxy = $entity instanceof OrmProxyInterface;
 
@@ -105,7 +105,7 @@ class IndexManager extends AbstractManagerUtility
             }
 
             $this->getDriver()->clearSingleValueIndex(
-                $this->getKeyScheme()->getIndexKey($index, $index_value)
+                $this->getKeyScheme()->getUniqueIndexKey($index, $index_value)
             );
         }
 

@@ -143,13 +143,13 @@ class MaintenanceTest extends AbstractOrmTest
         // Corrupt the slug, two steps required:
         // 1. Set a new slug
         $em->getDriver()->setSingleValueIndex(
-            $em->getKeyScheme()->getIndexKey($index, 'evil'),
+            $em->getKeyScheme()->getUniqueIndexKey($index, 'evil'),
             $article->getId()
         );
 
         // 2. Remove the correct slug
         $em->getDriver()->clearSingleValueIndex(
-            $em->getKeyScheme()->getIndexKey($index, 'bar')
+            $em->getKeyScheme()->getUniqueIndexKey($index, 'bar')
         );
 
         $em->getDriver()->flush();

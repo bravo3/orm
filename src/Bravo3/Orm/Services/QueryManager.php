@@ -43,7 +43,7 @@ class QueryManager extends AbstractManagerUtility
                     throw new InvalidArgumentException('Index "'.$index_name.'" does not exist on the entity');
                 }
 
-                $key = $this->getKeyScheme()->getIndexKey($index, $index_key);
+                $key = $this->getKeyScheme()->getUniqueIndexKey($index, $index_key);
                 $set = $this->getDriver()->scan($key);
 
                 $results = [];
@@ -94,7 +94,7 @@ class QueryManager extends AbstractManagerUtility
             $key = $this->getSortIndexKey($relationship, $query->getSortBy(), $reader->getId());
         } else {
             // Table based query
-            $key = $this->getKeyScheme()->getTableSortKey($metadata->getTableName(), $query->getSortBy());
+            $key = $this->getKeyScheme()->getSortedTableKey($metadata->getTableName(), $query->getSortBy());
         }
 
         $results = $this->getDriver()->getSortedIndex(
@@ -134,7 +134,7 @@ class QueryManager extends AbstractManagerUtility
         list($metadata, $reader, $local_id) = $this->buildPrerequisites($entity, $metadata, $reader, $local_id);
 
         foreach ($metadata->getSortedIndices() as $sortable) {
-            $key = $this->getKeyScheme()->getTableSortKey($metadata->getTableName(), $sortable->getName());
+            $key = $this->getKeyScheme()->getSortedTableKey($metadata->getTableName(), $sortable->getName());
 
             // Test conditions
             $pass = true;
@@ -183,7 +183,7 @@ class QueryManager extends AbstractManagerUtility
         list($metadata, , $local_id) = $this->buildPrerequisites($entity, $metadata, $reader, $local_id);
 
         foreach ($metadata->getSortedIndices() as $sortable) {
-            $key = $this->getKeyScheme()->getTableSortKey($metadata->getTableName(), $sortable->getName());
+            $key = $this->getKeyScheme()->getSortedTableKey($metadata->getTableName(), $sortable->getName());
             $this->getDriver()->removeSortedIndex($key, $local_id);
         }
 

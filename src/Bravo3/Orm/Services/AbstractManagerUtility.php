@@ -156,7 +156,7 @@ abstract class AbstractManagerUtility
      */
     protected function getSortIndexKey(Relationship $relationship, $sort_name, $source_id)
     {
-        return $this->getKeyScheme()->getSortIndexKey(
+        return $this->getKeyScheme()->getSortedRelationshipKey(
             $relationship,
             $this->getSourceTable($relationship),
             $this->getTargetTable($relationship),
