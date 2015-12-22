@@ -1,6 +1,7 @@
 <?php
 namespace Bravo3\Orm\Tests\Indices;
 
+use Bravo3\Orm\Exceptions\AlreadyExistsException;
 use Bravo3\Orm\Exceptions\NotFoundException;
 use Bravo3\Orm\Proxy\OrmProxyInterface;
 use Bravo3\Orm\Services\EntityManager;
@@ -59,13 +60,13 @@ class IndexTest extends AbstractOrmTest
         $em->persist($retrieved)->flush();
 
         try {
-            $em->retrieveByIndex(self::INDEXED_ENTITY, 'ab', 'alpha.200');
+            $em->retrieveByUniqueIndex(self::INDEXED_ENTITY, 'ab', 'alpha.200');
             $this->fail("Former index was found");
         } catch (NotFoundException $e) {
         }
 
         /** @var IndexedEntity $retrieved_by_index */
-        $retrieved_by_index = $em->retrieveByIndex(self::INDEXED_ENTITY, 'ab', 'omega.200');
+        $retrieved_by_index = $em->retrieveByUniqueIndex(self::INDEXED_ENTITY, 'ab', 'omega.200');
         $this->assertEquals(101, $retrieved_by_index->getId1());
         $this->assertEquals('id2', $retrieved_by_index->getId2());
         $this->assertSame('omega', $retrieved_by_index->getAlpha());

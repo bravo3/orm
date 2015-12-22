@@ -1,6 +1,7 @@
 <?php
 namespace Bravo3\Orm\Services;
 
+use Bravo3\Orm\Exceptions\AlreadyExistsException;
 use Bravo3\Orm\Mappers\Metadata\Entity;
 use Bravo3\Orm\Mappers\Metadata\UniqueIndex;
 use Bravo3\Orm\Proxy\OrmProxyInterface;
@@ -40,7 +41,7 @@ class UniqueKeyManager extends AbstractManagerUtility
     public function deleteUniqueKeys($entity, Entity $metadata = null, Reader $reader = null, $local_id = null)
     {
         /** @var $metadata Entity */
-        list($metadata, $reader, ) = $this->buildPrerequisites($entity, $metadata, $reader, $local_id);
+        list($metadata, $reader,) = $this->buildPrerequisites($entity, $metadata, $reader, $local_id);
         $this->traverseDeleteUniqueKeys($metadata->getUniqueIndices(), $entity, $reader);
         return $this;
     }
@@ -55,7 +56,8 @@ class UniqueKeyManager extends AbstractManagerUtility
      */
     private function traversePersistUniqueKeys(array $indices, $entity, Reader $reader, $local_id)
     {
-        $is_proxy = $entity instanceof OrmProxyInterface;
+        $is_proxy     = $entity instanceof OrmProxyInterface;
+        $force_unique = $this->entity_manager->getConfig()->getForceUniqueKeys();
 
         foreach ($indices as $index) {
             $index_value = $reader->getIndexValue($index);
@@ -72,15 +74,42 @@ class UniqueKeyManager extends AbstractManagerUtility
                         continue;
                     }
                 } else {
-                    // Former index is redundant, remove it
-                    // TODO: If key is contested, this will remove other entity's key
-                    $this->getDriver()->clearSingleValueIndex(
-                        $this->getKeyScheme()->getUniqueIndexKey($index, $original_value)
-                    );
+                    /*
+                     * The former index is now redundant and must be removed, however if forcing unique keys is
+                     * disabled then the index might be "contested" and another entity owns the index. If other entity
+                     * owns the index we don't want to delete else we'll be creating (more) data corruption.
+                     */
+                    $former_key = $this->getKeyScheme()->getUniqueIndexKey($index, $original_value);
+
+                    if ($force_unique) {
+                        // No possibility of contestation, just kill the previous index
+                        $this->getDriver()->clearSingleValueIndex($former_key);
+                    } else {
+                        // Unique restraints are disabled - check if the index belows to this entity before deleting
+                        $former_value = $this->getDriver()->getSingleValueIndex($former_key);
+                        if ($former_value && ($former_value == $entity->getOriginalId())) {
+                            $this->getDriver()->clearSingleValueIndex($former_key);
+                        }
+                    }
                 }
             }
 
             $key = $this->getKeyScheme()->getUniqueIndexKey($index, $index_value);
+
+            if ($force_unique) {
+                $value = $this->getDriver()->getSingleValueIndex($key);
+
+                if ($value && ($value != $entity->getOriginalId())) {
+                    throw new AlreadyExistsException(
+                        sprintf("Key '%s' for index '%s' is already owned by '%s' but wanted by '%s'",
+                                $index_value,
+                                $index->getName(),
+                                $value,
+                                $local_id)
+                    );
+                }
+            }
+
             $this->getDriver()->setSingleValueIndex($key, $local_id);
         }
     }
