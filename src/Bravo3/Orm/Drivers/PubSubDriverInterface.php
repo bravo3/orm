@@ -3,7 +3,7 @@ namespace Bravo3\Orm\Drivers;
 
 interface PubSubDriverInterface
 {
-    const SUBSCRIPTION_PATTERN = 'PUBSUB_EVENT_PREFIX-*';
+    const SUBSCRIPTION_PATTERN = 'BRAVO3_EVT-*';
 
     /**
      * Start listening to subscribed channels of the database (if PubSub is supported)

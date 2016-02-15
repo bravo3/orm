@@ -3,10 +3,13 @@ namespace Bravo3\Orm\Services;
 
 use Bravo3\Orm\Drivers\PubSubDriverInterface;
 use Bravo3\Orm\Events\PubSubEvent;
+use Bravo3\Orm\Exceptions\InvalidArgumentException;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 
 class PubSubManager
 {
+    const EVENT_PREFIX = 'PUBSUB';
+
     /**
      * @var PubSubDriverInterface
      */
@@ -50,7 +53,7 @@ class PubSubManager
      */
     private static function generateEventName($channel)
     {
-        return sprintf('%s-%s', PubSubDriverInterface::SUBSCRIPTION_PATTERN, $channel);
+        return sprintf('%s-%s', static::EVENT_PREFIX, $channel);
     }
 
     /**
@@ -61,9 +64,14 @@ class PubSubManager
      * @param int      $priority  Default: 0
      *
      * @return PubSubManager
+     * @throws InvalidArgumentException
      */
     public function addListener($channel, callable $callback, $priority = 0)
     {
+        if (empty($channel)) {
+            throw new InvalidArgumentException('Empty event channel name supplied.');
+        }
+
         $this->event_dispatcher->addListener(
             static::generateEventName($channel),
             $callback,
@@ -93,6 +101,8 @@ class PubSubManager
      */
     public function run()
     {
-        $this->driver->listenToPubSub([$this, 'eventTrigger']);
+        while (1) {
+            $this->driver->listenToPubSub([$this, 'eventTrigger']);
+        }
     }
 }
