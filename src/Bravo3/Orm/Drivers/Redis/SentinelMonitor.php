@@ -1,7 +1,6 @@
 <?php
 namespace Bravo3\Orm\Drivers\Redis;
 
-use Bravo3\Orm\Drivers\Common\Command;
 use Predis\Client;
 
 class SentinelMonitor
@@ -36,11 +35,43 @@ class SentinelMonitor
      * passed to Predis Client.
      *
      * @param  string $master_name
+     *
      * @return array
      */
     public function findSentinels($master_name = 'mymaster')
     {
         return $this->client->sentinel('sentinels', $master_name);
+    }
+
+    /**
+     * Return an array of SLAVE servers in the form that can be
+     * passed to Predis Client.
+     *
+     * If $master_name parameter is not set this function will return
+     * slaves attached to all connected master servers.
+     *
+     * @param  string $master_name
+     *
+     * @return array
+     */
+    public function findSlaves($master_name = null)
+    {
+        $slaves = [];
+
+        if (null !== $master_name) {
+            $slaves = $this->client->sentinel('slaves', $master_name);
+        } else {
+            // Find out slaves attached to each master instance
+            foreach ($this->findMasters() as $master) {
+                $name   = $master['name'];
+                $slaves = array_merge(
+                    $slaves,
+                    $this->client->sentinel('slaves', $name)
+                );
+            }
+        }
+
+        return $this->getConnectionParams($slaves, 'slave');
     }
 
     /**
@@ -58,43 +89,15 @@ class SentinelMonitor
     }
 
     /**
-     * Return an array of SLAVE servers in the form that can be
-     * passed to Predis Client.
-     *
-     * If $master_name parameter is not set this function will return
-     * slaves attached to all connected master servers.
-     *
-     * @param  string $master_name
-     * @return array
-     */
-    public function findSlaves($master_name = null)
-    {
-        $slaves = [];
-
-        if (null !== $master_name) {
-            $slaves = $this->client->sentinel('slaves', $master_name);
-        } else {
-            // Find out slaves attached to each master instance
-            foreach ($this->findMasters() as $master) {
-                $name = $master['name'];
-                $slaves = array_merge(
-                    $slaves,
-                    $this->client->sentinel('slaves', $name)
-                );
-            }
-        }
-
-        return $this->getConnectionParams($slaves, 'slave');
-    }
-
-    /**
      * Return an array of formatted output from Sentinel to be used
      * as Redis connection parameters for the Predis client.
      *
      * Inactive connection parameters will be removed if sentinel reports
      * services as inactive.
      *
-     * @param  array $sentinel_output
+     * @param  array  $sentinel_output
+     * @param  string $alias            Redis DB connection type "master" or "slave"
+     *
      * @return array|null
      */
     protected function getConnectionParams($sentinel_output, $alias = null)
@@ -103,9 +106,9 @@ class SentinelMonitor
 
         foreach ($sentinel_output as $params) {
             $connection = [
-                'name'  => $params['name'],
-                'host'  => $params['ip'],
-                'port'  => $params['port'],
+                'name' => $params['name'],
+                'host' => $params['ip'],
+                'port' => $params['port'],
             ];
 
             if (!empty($alias)) {
@@ -126,6 +129,7 @@ class SentinelMonitor
      * accessible based on the output received from Sentinel.
      *
      * @param  array $host_info
+     *
      * @return bool
      */
     protected function validateConnection($host_info)
@@ -134,7 +138,7 @@ class SentinelMonitor
             // Verify reported master is up based on parameters discovered
             // by sentinel
             $down_after_interval = (int) $host_info['down-after-milliseconds'];
-            $last_ok_since = (int) $host_info['last-ok-ping-reply'];
+            $last_ok_since       = (int) $host_info['last-ok-ping-reply'];
 
             if ($last_ok_since > $down_after_interval) {
                 return false;

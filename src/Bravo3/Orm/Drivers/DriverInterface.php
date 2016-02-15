@@ -220,4 +220,11 @@ interface DriverInterface extends DebugInterface
      * @return string[]
      */
     public function validateId($id);
+
+    /**
+     * Checks if the driver supports publish/subscribe pattern.
+     *
+     * @return bool
+     */
+    public function isPubSubSupported();
 }

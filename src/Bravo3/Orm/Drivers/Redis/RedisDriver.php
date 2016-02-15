@@ -62,11 +62,6 @@ class RedisDriver implements DriverInterface
     protected $client;
 
     /**
-     * @var SentinelMonitor
-     */
-    protected $sentinel = null;
-
-    /**
      * @var ScoreNormaliser
      */
     protected $score_normaliser = null;
@@ -685,5 +680,20 @@ class RedisDriver implements DriverInterface
         } else {
             return 0;
         }
+    }
+    
+    /**
+     * Checks if the driver supports publish/subscribe pattern.
+     *
+     * @return bool
+     */
+    public function isPubSubSupported()
+    {
+        $info = $this->client->info();
+        if ((float) $info['redis_version'] >= 2.8) {
+            return true;
+        }
+
+        return false;
     }
 }
