@@ -1,23 +1,21 @@
 <?php
 namespace Bravo3\Orm\Events;
 
-use Bravo3\Orm\Services\EntityManager;
+use Symfony\Component\EventDispatcher\Event;
 
-class PubSubEvent extends EntityManagerEvent
+class PubSubEvent extends Event
 {
     /**
      * Message received via the Pub/Sub event
      * @var string
      */
-    protected $message;
+    protected $payload;
 
     /**
-     * @param EntityManager $entity_manager
-     * @param               $message
+     * @param string $message
      */
-    public function __construct(EntityManager $entity_manager, $message)
+    public function __construct($message)
     {
-        parent::__construct($entity_manager);
         $this->message = $message;
     }
 

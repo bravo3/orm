@@ -8,6 +8,8 @@ use Bravo3\Orm\Drivers\Common\SerialisedData;
 use Bravo3\Orm\Drivers\Common\StandardIdValidatorTrait;
 use Bravo3\Orm\Drivers\Common\UnitOfWork;
 use Bravo3\Orm\Drivers\DriverInterface;
+use Bravo3\Orm\Drivers\PubSubDriverInterface;
+use Bravo3\Orm\Drivers\PubSubInterface;
 use Bravo3\Orm\Exceptions\NotFoundException;
 use Bravo3\Orm\KeySchemes\KeySchemeInterface;
 use Bravo3\Orm\KeySchemes\StandardKeyScheme;
@@ -21,8 +23,11 @@ use Predis\Connection\Aggregate\PredisCluster;
 use Predis\Connection\Aggregate\ReplicationInterface;
 use Predis\Connection\NodeConnectionInterface;
 use Predis\Pipeline\Pipeline;
+use Predis\PubSub\Consumer;
+use Predis\PubSub\DispatcherLoop;
+use Symfony\Component\EventDispatcher\Event;
 
-class RedisDriver implements DriverInterface
+class RedisDriver implements DriverInterface, PubSubDriverInterface
 {
     use DebugTrait;
     use StandardIdValidatorTrait;
@@ -67,6 +72,11 @@ class RedisDriver implements DriverInterface
     protected $score_normaliser = null;
 
     /**
+     * @var DispatcherLoop
+     */
+    protected $dispatcher = null;
+
+    /**
      * Create a new Redis driver
      *
      * @param mixed                $params
@@ -84,6 +94,12 @@ class RedisDriver implements DriverInterface
             $this->client = PredisClientFactory::create($params, $options, $sentinel_params);
         } else {
             $this->client = $client;
+        }
+
+        // Enable Pub/Sub mechanism
+        if ($this->isPubSubSupported()) {
+            $consumer         = new Consumer($this->client);
+            $this->dispatcher = new DispatcherLoop($consumer);
         }
 
         $this->unit_of_work = new UnitOfWork();
@@ -681,7 +697,7 @@ class RedisDriver implements DriverInterface
             return 0;
         }
     }
-    
+
     /**
      * Checks if the driver supports publish/subscribe pattern.
      *
@@ -690,10 +706,46 @@ class RedisDriver implements DriverInterface
     public function isPubSubSupported()
     {
         $info = $this->client->info();
-        if ((float) $info['redis_version'] >= 2.8) {
+        if ((float) $info['Server']['redis_version'] >= 2.8) {
             return true;
         }
 
         return false;
+    }
+
+    /**
+     * Add a callback to a particular subscription channel.
+     *
+     * @param string    $channel_name
+     * @param callable  $callback
+     *
+     * @return RedisDriver
+     */
+    public function addSubscriber($channel_name, callable $callback)
+    {
+        $this->dispatcher->attachCallback($channel_name, $callback);
+        return $this;
+    }
+
+    /**
+     * Remove a callback from a particular subscription channel.
+
+     * @param string $channel_name
+     *
+     * @return RedisDriver
+     */
+    public function removeSubscriber($channel_name)
+    {
+        $this->dispatcher->detachCallback($channel_name);
+        return $this;
+    }
+
+    /**
+     * Start listening to subscribed channels of the Redis PubSub mechanism.
+     * @return void
+     */
+    public function listenToPubSub()
+    {
+        $this->dispatcher->run();
     }
 }
