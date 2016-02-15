@@ -101,8 +101,6 @@ class PubSubManager
      */
     public function run()
     {
-        while (1) {
-            $this->driver->listenToPubSub([$this, 'eventTrigger']);
-        }
+        $this->driver->listenToPubSub([$this, 'eventTrigger']);
     }
 }

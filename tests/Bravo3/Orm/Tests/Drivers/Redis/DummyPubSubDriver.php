@@ -5,22 +5,21 @@ use Bravo3\Orm\Drivers\PubSubDriverInterface;
 
 class DummyPubSubDriver implements PubSubDriverInterface
 {
-    protected $callbacks = [];
+    protected $message;
 
-    public function addSubscriber($channel_name, callable $callback)
+    public function setMessage($message)
     {
-        $this->callbacks[$channel_name] = $callback;
+        $this->message = $message;
     }
 
-    public function removeSubscriber($channel_name)
+    public function listenToPubSub(callable $callback)
     {
-        unset($this->callbacks[$channel_name]);
-    }
-
-    public function listenToPubSub()
-    {
-        foreach ($this->callbacks as $channel => $callback) {
-            call_user_func($callback, '');
-        }
+        call_user_func(
+            $callback,
+            [
+                'channel' => 'unittest',
+                'message' => $this->message,
+            ]
+        );
     }
 }

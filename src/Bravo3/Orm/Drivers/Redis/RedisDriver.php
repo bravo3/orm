@@ -716,18 +716,20 @@ class RedisDriver implements DriverInterface, PubSubDriverInterface
      */
     public function listenToPubSub(callable $callback)
     {
-        $this->client->executeCommand(RawCommand::create('PSUBSCRIBE', self::SUBSCRIPTION_PATTERN));
-        $payload = $this->client->getConnection()->read();
+        while (1) {
+            $this->client->executeCommand(RawCommand::create('PSUBSCRIBE', self::SUBSCRIPTION_PATTERN));
+            $payload = $this->client->getConnection()->read();
 
-        $channel = ltrim($payload[2], self::SUBSCRIPTION_PATTERN);
-        $message = $payload[3];
+            $channel = ltrim($payload[2], self::SUBSCRIPTION_PATTERN);
+            $message = $payload[3];
 
-        call_user_func(
-            $callback,
-            [
-                'channel' => $channel,
-                'message' => $message,
-            ]
-        );
+            call_user_func(
+                $callback,
+                [
+                    'channel' => $channel,
+                    'message' => $message,
+                ]
+            );
+        }
     }
 }
