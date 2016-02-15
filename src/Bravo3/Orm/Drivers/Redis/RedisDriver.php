@@ -19,6 +19,7 @@ use Predis\Client;
 use Predis\Command\CommandInterface;
 use Predis\ClientInterface;
 use Predis\Command\KeyScan;
+use Predis\Command\RawCommand;
 use Predis\Connection\Aggregate\PredisCluster;
 use Predis\Connection\Aggregate\ReplicationInterface;
 use Predis\Connection\NodeConnectionInterface;
@@ -72,11 +73,6 @@ class RedisDriver implements DriverInterface, PubSubDriverInterface
     protected $score_normaliser = null;
 
     /**
-     * @var DispatcherLoop
-     */
-    protected $dispatcher = null;
-
-    /**
      * Create a new Redis driver
      *
      * @param mixed                $params
@@ -98,8 +94,6 @@ class RedisDriver implements DriverInterface, PubSubDriverInterface
 
         // Enable Pub/Sub mechanism
         if ($this->isPubSubSupported()) {
-            $consumer         = new Consumer($this->client);
-            $this->dispatcher = new DispatcherLoop($consumer);
         }
 
         $this->unit_of_work = new UnitOfWork();
@@ -714,38 +708,28 @@ class RedisDriver implements DriverInterface, PubSubDriverInterface
     }
 
     /**
+     * Start listening to subscribed channels of the Redis PubSub mechanism.
      * Add a callback to a particular subscription channel.
      *
-     * @param string    $channel_name
-     * @param callable  $callback
-     *
-     * @return RedisDriver
-     */
-    public function addSubscriber($channel_name, callable $callback)
-    {
-        $this->dispatcher->attachCallback($channel_name, $callback);
-        return $this;
-    }
-
-    /**
-     * Remove a callback from a particular subscription channel.
-
-     * @param string $channel_name
-     *
-     * @return RedisDriver
-     */
-    public function removeSubscriber($channel_name)
-    {
-        $this->dispatcher->detachCallback($channel_name);
-        return $this;
-    }
-
-    /**
-     * Start listening to subscribed channels of the Redis PubSub mechanism.
+     * @param callable $callback
      * @return void
      */
-    public function listenToPubSub()
+    public function listenToPubSub(callable $callback)
     {
-        $this->dispatcher->run();
+        while (1) {
+            $this->client->executeCommand(RawCommand::create('PSUBSCRIBE', self::SUBSCRIPTION_PATTERN));
+            $payload = $this->client->getConnection()->read();
+
+            $channel = substr($payload[1], 0, strlen(self::SUBSCRIPTION_PATTERN));
+            $message = $payload[2];
+
+            call_user_func(
+                $callback,
+                [
+                    'channel' => $channel,
+                    'message' => $message,
+                ]
+            );
+        }
     }
 }
