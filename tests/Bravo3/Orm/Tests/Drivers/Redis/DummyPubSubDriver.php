@@ -7,6 +7,13 @@ class DummyPubSubDriver implements PubSubDriverInterface
 {
     protected $message;
 
+    protected $channel;
+
+    public function setChannel($channel)
+    {
+        $this->channel = $channel;
+    }
+
     public function setMessage($message)
     {
         $this->message = $message;
@@ -17,7 +24,7 @@ class DummyPubSubDriver implements PubSubDriverInterface
         call_user_func(
             $callback,
             [
-                'channel' => 'unittest',
+                'channel' => $this->channel,
                 'message' => $this->message,
             ]
         );

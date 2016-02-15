@@ -33,15 +33,51 @@ class PubSubManagerTest extends AbstractOrmTest
         });
     }
 
-    public function pubSubListener(PubSubEvent $e)
+    public function pubSubListener_1(PubSubEvent $e)
     {
         $this->assertEquals('event-message', $e->getMessage());
     }
 
-    public function testPubSub()
+    public function pubSubListener_2(PubSubEvent $e)
     {
+        $this->assertEquals('event-message', $e->getMessage());
+    }
+
+    public function pubSubListener_3(PubSubEvent $e)
+    {
+        $this->assertEquals('dummy-task', $e->getMessage());
+    }
+
+    public function testPubSubMultipleListeners()
+    {
+        // Setup driver
         $this->dummy_driver->setMessage('event-message');
-        $this->pubsub_manager->addListener('unittest', [$this, 'pubSubListener']);
+        $this->dummy_driver->setChannel('unittest');
+
+        // Listeners
+        $this->pubsub_manager->addListener('unittest', [$this, 'pubSubListener_1']);
+        $this->pubsub_manager->addListener('unittest', [$this, 'pubSubListener_2']);
+
+        $this->pubsub_manager->run();
+    }
+
+    public function testPubSubMultipleChannelsAndListeners()
+    {
+        // Driver config 1
+        $this->dummy_driver->setMessage('event-message');
+        $this->dummy_driver->setChannel('unittest');
+
+        // First set of listeners on 'unittest' channel
+        $this->pubsub_manager->addListener('unittest', [$this, 'pubSubListener_1']);
+        $this->pubsub_manager->addListener('unittest', [$this, 'pubSubListener_2']);
+
+        // Driver config 2
+        $this->dummy_driver->setMessage('dummy-task');
+        $this->dummy_driver->setChannel('dummy');
+
+        // Second set of listeners on 'dummy' channel
+        $this->pubsub_manager->addListener('dummy', [$this, 'pubSubListener_3']);
+
         $this->pubsub_manager->run();
     }
 }
