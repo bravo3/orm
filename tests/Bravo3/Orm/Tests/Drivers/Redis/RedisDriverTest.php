@@ -57,7 +57,7 @@ class RedisDriverTest extends AbstractOrmTest
      */
     public function testClientConnectionFailure()
     {
-        $client = $this->prophesize(PredisClient::class);
+        $client = $this->prophesize(DummyClient::class);
         $driver = new RedisDriver(null, null, null, $client->reveal());
 
         $client->exists('doc:article:1')->shouldBeCalledTimes(1)->willReturn(true);

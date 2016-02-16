@@ -92,10 +92,6 @@ class RedisDriver implements DriverInterface, PubSubDriverInterface
             $this->client = $client;
         }
 
-        // Enable Pub/Sub mechanism
-        if ($this->isPubSubSupported()) {
-        }
-
         $this->unit_of_work = new UnitOfWork();
     }
 
