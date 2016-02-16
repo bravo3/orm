@@ -722,7 +722,7 @@ class RedisDriver implements DriverInterface, PubSubDriverInterface
             $payload = $this->client->getConnection()->read();
 
             $channel = ltrim($payload[2], self::SUBSCRIPTION_PATTERN);
-            $message = $payload[3];
+            $message = base64_decode($payload[3]);
 
             call_user_func(
                 $callback,
@@ -743,6 +743,6 @@ class RedisDriver implements DriverInterface, PubSubDriverInterface
      */
     public function publishMessage($channel, $message)
     {
-        return $this->client->publish($channel, $message);
+        return $this->client->publish($channel, base64_encode($message));
     }
 }
