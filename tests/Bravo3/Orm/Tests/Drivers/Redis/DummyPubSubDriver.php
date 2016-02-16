@@ -19,6 +19,11 @@ class DummyPubSubDriver implements PubSubDriverInterface
         $this->message = $message;
     }
 
+    public function isPubSubSupported()
+    {
+        return true;
+    }
+
     public function listenToPubSub(callable $callback)
     {
         call_user_func(

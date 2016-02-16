@@ -4,6 +4,7 @@ namespace Bravo3\Orm\Services;
 use Bravo3\Orm\Drivers\PubSubDriverInterface;
 use Bravo3\Orm\Events\PubSubEvent;
 use Bravo3\Orm\Exceptions\InvalidArgumentException;
+use Bravo3\Orm\Exceptions\NotSupportedException;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 
 class PubSubManager
@@ -25,6 +26,10 @@ class PubSubManager
      */
     public function __construct(PubSubDriverInterface $driver)
     {
+        if (!$driver->isPubSubSupported()) {
+            throw new NotSupportedException('Driver does not support Pub/Sub messaging.');
+        }
+
         $this->driver           = $driver;
         $this->event_dispatcher = new EventDispatcher();
     }

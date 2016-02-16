@@ -6,7 +6,16 @@ interface PubSubDriverInterface
     const SUBSCRIPTION_PATTERN = 'BRAVO3_EVT-*';
 
     /**
+     * Confirm that the driver supports Pub/Sub messaging.
+     *
+     * @return bool
+     */
+    public function isPubSubSupported();
+
+    /**
      * Start listening to subscribed channels of the database (if PubSub is supported)
+     *
+     * @param callable $callback
      * @return void
      */
     public function listenToPubSub(callable $callback);
