@@ -8,23 +8,28 @@ use Bravo3\Orm\Drivers\Common\SerialisedData;
 use Bravo3\Orm\Drivers\Common\StandardIdValidatorTrait;
 use Bravo3\Orm\Drivers\Common\UnitOfWork;
 use Bravo3\Orm\Drivers\DriverInterface;
+use Bravo3\Orm\Drivers\PubSubDriverInterface;
+use Bravo3\Orm\Drivers\PubSubInterface;
 use Bravo3\Orm\Exceptions\NotFoundException;
 use Bravo3\Orm\KeySchemes\KeySchemeInterface;
 use Bravo3\Orm\KeySchemes\StandardKeyScheme;
 use Bravo3\Orm\Services\ScoreNormaliser;
 use Bravo3\Orm\Traits\DebugTrait;
+use Bravo3\Orm\Traits\PubSubTrait;
 use Predis\Client;
 use Predis\Command\CommandInterface;
 use Predis\ClientInterface;
 use Predis\Command\KeyScan;
+use Predis\Command\RawCommand;
 use Predis\Connection\Aggregate\PredisCluster;
 use Predis\Connection\Aggregate\ReplicationInterface;
 use Predis\Connection\NodeConnectionInterface;
 use Predis\Pipeline\Pipeline;
 
-class RedisDriver implements DriverInterface
+class RedisDriver implements DriverInterface, PubSubDriverInterface
 {
     use DebugTrait;
+    use PubSubTrait;
     use StandardIdValidatorTrait;
 
     /**
@@ -60,11 +65,6 @@ class RedisDriver implements DriverInterface
      * @var Client
      */
     protected $client;
-
-    /**
-     * @var SentinelMonitor
-     */
-    protected $sentinel = null;
 
     /**
      * @var ScoreNormaliser
@@ -685,5 +685,64 @@ class RedisDriver implements DriverInterface
         } else {
             return 0;
         }
+    }
+
+    /**
+     * Checks if the driver supports publish/subscribe pattern.
+     *
+     * @return bool
+     */
+    public function isPubSubSupported()
+    {
+        $info = $this->client->info();
+        if ((float) $info['Server']['redis_version'] >= 2.8) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Start listening to subscribed channels of the Redis PubSub mechanism.
+     * Add a callback to a particular subscription channel.
+     *
+     * @param callable $callback
+     * @return void
+     */
+    public function listenToPubSub(callable $callback)
+    {
+        while (1) {
+            $this->client->executeCommand(
+                RawCommand::create(
+                    'PSUBSCRIBE',
+                    $this->pubsub_channel_prefix
+                )
+            );
+
+            $payload = $this->client->getConnection()->read();
+
+            $channel = ltrim($payload[2], self::SUBSCRIPTION_PATTERN);
+            $message = $payload[3];
+
+            call_user_func(
+                $callback,
+                [
+                    'channel' => $channel,
+                    'message' => $message,
+                ]
+            );
+        }
+    }
+
+    /**
+     * Uses Redis PubSub implementation to push messages to the channel specified.
+     *
+     * @param string $channel
+     * @param string $message
+     * @return int
+     */
+    public function publishMessage($channel, $message)
+    {
+        return $this->client->publish($channel, $message);
     }
 }

@@ -11,6 +11,7 @@ Table of Contents
 * [Drivers](docs/Drivers.md)
 * [Entity Mapping Definitions](docs/EntityDefinitions.md)
 * [Events](docs/Events.md)
+* [PubSub](docs/PubSub.md)
 * [Important Notes](docs/ImportantNotes.md)
 * [Index Types](docs/IndexTypes.md)
 * [Key Schemes](docs/KeySchemes.md)
