@@ -1,6 +1,59 @@
-Bravo3\Orm\Tests\Entities\BadEntity:
-    table: bad_entity
-    columns: {  }
+Bravo3\Orm\Tests\Entities\OneToOne\Address:
+    table: address
+    columns:
+        id: { type: int, id: true }
+        street: { type: string }
+        user: { association: oto, target: Bravo3\Orm\Tests\Entities\OneToOne\User, inversed_by: address }
+Bravo3\Orm\Tests\Entities\OneToOne\User:
+    table: users
+    columns:
+        id: { type: int, id: true }
+        name: { type: string }
+        address: { association: oto, target: Bravo3\Orm\Tests\Entities\OneToOne\Address, inversed_by: user }
+    indices:
+        slug: { columns: [id, address] }
+Bravo3\Orm\Tests\Entities\ProductLess:
+    table: products
+    columns:
+        id: { type: int, id: true }
+        name: { type: string }
+        price: { type: decimal }
+        active: { type: bool }
+        create_time: { type: datetime }
+        enum: { type: object, class: Bravo3\Orm\Tests\Resources\Enum }
+        list: { type: set }
+Bravo3\Orm\Tests\Entities\Product:
+    table: products
+    columns:
+        id: { type: int, id: true }
+        description: { type: string }
+        price: { type: decimal }
+        active: { type: bool }
+        create_time: { type: datetime }
+        enum: { type: object, class: Bravo3\Orm\Tests\Resources\Enum }
+        list: { type: set }
+        name: { type: string }
+Bravo3\Orm\Tests\Entities\Indexed\IndexedEntity:
+    table: indexed_entity
+    columns:
+        id1: { type: int, id: true }
+        id2: { type: string, id: true }
+        alpha: { type: string }
+        bravo: { type: int }
+        charlie: { type: bool }
+    indices:
+        ab: { columns: [alpha, bravo] }
+        bc: { columns: [bravo], methods: [getCharlie] }
+        b: { columns: [bravo] }
+Bravo3\Orm\Tests\Entities\Indexed\SluggedArticle:
+    table: slugged_article
+    columns:
+        id: { type: int, id: true }
+        name: { type: string }
+        slug: { type: string }
+    indices:
+        slug: { columns: [slug] }
+        name: { columns: [name] }
 Bravo3\Orm\Tests\Entities\Conditional\Article:
     table: article
     columns:
@@ -26,56 +79,12 @@ Bravo3\Orm\Tests\Entities\Conditional\Category:
         name: { type: string }
         articles: { association: otm, target: Bravo3\Orm\Tests\Entities\Conditional\Article, inversed_by: category, sortable: { last_modified: { column: last_modified, conditions: [{ value: true, column: published }, { value: 50, column: id, comparison: '>' }] }, id: { column: id }, last_modified_all: { column: last_modified, conditions: [{ value: true, column: published }] } } }
         assets: { association: otm, target: Bravo3\Orm\Tests\Entities\Conditional\Asset, inversed_by: category, sortable: { last_modified: { column: last_modified, conditions: [{ value: true, method: isPublished }, { value: 50, column: id, comparison: '>' }] }, id: { column: id } } }
-Bravo3\Orm\Tests\Entities\Indexed\IndexedEntity:
-    table: indexed_entity
-    columns:
-        id1: { type: int, id: true }
-        id2: { type: string, id: true }
-        alpha: { type: string }
-        bravo: { type: int }
-        charlie: { type: bool }
-    indices:
-        ab: { columns: [alpha, bravo] }
-        bc: { columns: [bravo], methods: [getCharlie] }
-        b: { columns: [bravo] }
-Bravo3\Orm\Tests\Entities\Indexed\SluggedArticle:
-    table: slugged_article
-    columns:
-        id: { type: int, id: true }
-        name: { type: string }
-        slug: { type: string }
-    indices:
-        slug: { columns: [slug] }
-        name: { columns: [name] }
-Bravo3\Orm\Tests\Entities\Maintenance\Alpha:
-    table: alpha
-    columns:
-        id: { type: string, id: true }
-        name: { type: string }
-        bravo: { association: oto, target: Bravo3\Orm\Tests\Entities\Maintenance\Bravo }
 Bravo3\Orm\Tests\Entities\Maintenance\AlphaRevised:
     table: alpha
     columns:
         id: { type: string, id: true }
         name: { type: string }
         bravo: { association: oto, target: Bravo3\Orm\Tests\Entities\Maintenance\BravoRevised, inversed_by: alpha }
-Bravo3\Orm\Tests\Entities\Maintenance\Bravo:
-    table: bravo
-    columns:
-        id: { type: string, id: true }
-        name: { type: string }
-Bravo3\Orm\Tests\Entities\Maintenance\BravoRevised:
-    table: bravo
-    columns:
-        id: { type: string, id: true }
-        name: { type: string }
-        alpha: { association: oto, target: Bravo3\Orm\Tests\Entities\Maintenance\AlphaRevised, inversed_by: bravo }
-Bravo3\Orm\Tests\Entities\Maintenance\Charlie:
-    table: charlie
-    columns:
-        id: { type: string, id: true }
-        name: { type: string }
-        delta: { association: mtm, target: Bravo3\Orm\Tests\Entities\Maintenance\Delta }
 Bravo3\Orm\Tests\Entities\Maintenance\CharlieRevised:
     table: charlie
     columns:
@@ -87,20 +96,41 @@ Bravo3\Orm\Tests\Entities\Maintenance\Delta:
     columns:
         id: { type: string, id: true }
         name: { type: string }
+Bravo3\Orm\Tests\Entities\Maintenance\Charlie:
+    table: charlie
+    columns:
+        id: { type: string, id: true }
+        name: { type: string }
+        delta: { association: mtm, target: Bravo3\Orm\Tests\Entities\Maintenance\Delta }
+Bravo3\Orm\Tests\Entities\Maintenance\BravoRevised:
+    table: bravo
+    columns:
+        id: { type: string, id: true }
+        name: { type: string }
+        alpha: { association: oto, target: Bravo3\Orm\Tests\Entities\Maintenance\AlphaRevised, inversed_by: bravo }
 Bravo3\Orm\Tests\Entities\Maintenance\DeltaRevised:
     table: delta
     columns:
         id: { type: string, id: true }
         name: { type: string }
         charlie: { association: mtm, target: Bravo3\Orm\Tests\Entities\Maintenance\CharlieRevised, inversed_by: delta }
-Bravo3\Orm\Tests\Entities\ModifiedEntity:
-    table: modified_entity
+Bravo3\Orm\Tests\Entities\Maintenance\Alpha:
+    table: alpha
     columns:
-        id: { type: int, id: true }
+        id: { type: string, id: true }
         name: { type: string }
-        time_created: { type: datetime }
-        last_modified: { type: datetime }
-Bravo3\Orm\Tests\Entities\OneToMany\Article:
+        bravo: { association: oto, target: Bravo3\Orm\Tests\Entities\Maintenance\Bravo }
+Bravo3\Orm\Tests\Entities\Maintenance\Bravo:
+    table: bravo
+    columns:
+        id: { type: string, id: true }
+        name: { type: string }
+Bravo3\Orm\Tests\Entities\Refs\Owner:
+    table: owner
+    columns:
+        id: { type: string, id: true }
+        leaf: { association: otm, target: Bravo3\Orm\Tests\Entities\Refs\Leaf, sortable: { id: { column: id, conditions: [{ value: true, column: published }] } } }
+Bravo3\Orm\Tests\Entities\Refs\Article:
     table: article
     columns:
         id: { type: int, id: true }
@@ -108,27 +138,38 @@ Bravo3\Orm\Tests\Entities\OneToMany\Article:
         time_created: { type: datetime }
         last_modified: { type: datetime }
         sort_date: { type: datetime }
-        canonical_category: { association: mto, target: Bravo3\Orm\Tests\Entities\OneToMany\Category, inversed_by: articles }
-Bravo3\Orm\Tests\Entities\OneToMany\Category:
+        canonical_category: { association: mto, target: Bravo3\Orm\Tests\Entities\Refs\Category }
+Bravo3\Orm\Tests\Entities\Refs\Leaf:
+    table: leaf
+    columns:
+        id: { type: string, id: true }
+        published: { type: bool }
+Bravo3\Orm\Tests\Entities\Refs\Category:
     table: category
     columns:
         id: { type: int, id: true }
         name: { type: string }
-        articles: { association: otm, target: Bravo3\Orm\Tests\Entities\OneToMany\Article, inversed_by: canonical_category, sortable: { title: { column: title }, sort_date: { column: sort_date } } }
-Bravo3\Orm\Tests\Entities\OneToOne\Address:
-    table: address
-    columns:
-        id: { type: int, id: true }
-        street: { type: string }
-        user: { association: oto, target: Bravo3\Orm\Tests\Entities\OneToOne\User, inversed_by: address }
-Bravo3\Orm\Tests\Entities\OneToOne\User:
-    table: users
+Bravo3\Orm\Tests\Entities\SortedUser:
+    table: sorted_user
     columns:
         id: { type: int, id: true }
         name: { type: string }
-        address: { association: oto, target: Bravo3\Orm\Tests\Entities\OneToOne\Address, inversed_by: user }
-    indices:
-        slug: { columns: [id, address] }
+        active: { type: bool }
+    sortable:
+        name_active: { column: name, conditions: [{ value: true, column: active }] }
+        name_all: { column: name }
+Bravo3\Orm\Tests\Entities\ProductMore:
+    table: products
+    columns:
+        id: { type: int, id: true }
+        name: { type: string }
+        short_description: { type: string }
+        description: { type: string }
+        price: { type: decimal }
+        active: { type: bool }
+        create_time: { type: datetime }
+        enum: { type: object, class: Bravo3\Orm\Tests\Resources\Enum }
+        list: { type: set }
 Bravo3\Orm\Tests\Entities\Porter\Article:
     table: particle
     columns:
@@ -144,40 +185,7 @@ Bravo3\Orm\Tests\Entities\Porter\Category:
         id: { type: int, id: true }
         name: { type: string }
         articles: { association: otm, target: Bravo3\Orm\Tests\Entities\Porter\Article, inversed_by: canonical_category, sortable: { title: { column: title }, sort_date: { column: sort_date } } }
-Bravo3\Orm\Tests\Entities\Product:
-    table: products
-    columns:
-        id: { type: int, id: true }
-        description: { type: string }
-        price: { type: decimal }
-        active: { type: bool }
-        create_time: { type: datetime }
-        enum: { type: object, class: Bravo3\Orm\Tests\Resources\Enum }
-        list: { type: set }
-        name: { type: string }
-Bravo3\Orm\Tests\Entities\ProductLess:
-    table: products
-    columns:
-        id: { type: int, id: true }
-        name: { type: string }
-        price: { type: decimal }
-        active: { type: bool }
-        create_time: { type: datetime }
-        enum: { type: object, class: Bravo3\Orm\Tests\Resources\Enum }
-        list: { type: set }
-Bravo3\Orm\Tests\Entities\ProductMore:
-    table: products
-    columns:
-        id: { type: int, id: true }
-        name: { type: string }
-        short_description: { type: string }
-        description: { type: string }
-        price: { type: decimal }
-        active: { type: bool }
-        create_time: { type: datetime }
-        enum: { type: object, class: Bravo3\Orm\Tests\Resources\Enum }
-        list: { type: set }
-Bravo3\Orm\Tests\Entities\Refs\Article:
+Bravo3\Orm\Tests\Entities\OneToMany\Article:
     table: article
     columns:
         id: { type: int, id: true }
@@ -185,28 +193,20 @@ Bravo3\Orm\Tests\Entities\Refs\Article:
         time_created: { type: datetime }
         last_modified: { type: datetime }
         sort_date: { type: datetime }
-        canonical_category: { association: mto, target: Bravo3\Orm\Tests\Entities\Refs\Category }
-Bravo3\Orm\Tests\Entities\Refs\Category:
+        canonical_category: { association: mto, target: Bravo3\Orm\Tests\Entities\OneToMany\Category, inversed_by: articles }
+Bravo3\Orm\Tests\Entities\OneToMany\Category:
     table: category
     columns:
         id: { type: int, id: true }
         name: { type: string }
-Bravo3\Orm\Tests\Entities\Refs\Leaf:
-    table: leaf
-    columns:
-        id: { type: string, id: true }
-        published: { type: bool }
-Bravo3\Orm\Tests\Entities\Refs\Owner:
-    table: owner
-    columns:
-        id: { type: string, id: true }
-        leaf: { association: otm, target: Bravo3\Orm\Tests\Entities\Refs\Leaf, sortable: { id: { column: id, conditions: [{ value: true, column: published }] } } }
-Bravo3\Orm\Tests\Entities\SortedUser:
-    table: sorted_user
+        articles: { association: otm, target: Bravo3\Orm\Tests\Entities\OneToMany\Article, inversed_by: canonical_category, sortable: { title: { column: title }, sort_date: { column: sort_date } } }
+Bravo3\Orm\Tests\Entities\ModifiedEntity:
+    table: modified_entity
     columns:
         id: { type: int, id: true }
         name: { type: string }
-        active: { type: bool }
-    sortable:
-        name_active: { column: name, conditions: [{ value: true, column: active }] }
-        name_all: { column: name }
+        time_created: { type: datetime }
+        last_modified: { type: datetime }
+Bravo3\Orm\Tests\Entities\BadEntity:
+    table: bad_entity
+    columns: {  }
