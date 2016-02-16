@@ -18,7 +18,7 @@ class DummyPubSubDriver implements PubSubDriverInterface
 
     public function setMessage($message)
     {
-        $this->message = $message;
+        $this->message = base64_encode($message);
     }
 
     public function isPubSubSupported()
@@ -42,7 +42,7 @@ class DummyPubSubDriver implements PubSubDriverInterface
             $callback,
             [
                 'channel' => $this->channel,
-                'message' => $this->message,
+                'message' => base64_decode($this->message),
             ]
         );
     }
