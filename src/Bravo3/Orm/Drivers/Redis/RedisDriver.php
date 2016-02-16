@@ -15,6 +15,7 @@ use Bravo3\Orm\KeySchemes\KeySchemeInterface;
 use Bravo3\Orm\KeySchemes\StandardKeyScheme;
 use Bravo3\Orm\Services\ScoreNormaliser;
 use Bravo3\Orm\Traits\DebugTrait;
+use Bravo3\Orm\Traits\PubSubTrait;
 use Predis\Client;
 use Predis\Command\CommandInterface;
 use Predis\ClientInterface;
@@ -24,13 +25,11 @@ use Predis\Connection\Aggregate\PredisCluster;
 use Predis\Connection\Aggregate\ReplicationInterface;
 use Predis\Connection\NodeConnectionInterface;
 use Predis\Pipeline\Pipeline;
-use Predis\PubSub\Consumer;
-use Predis\PubSub\DispatcherLoop;
-use Symfony\Component\EventDispatcher\Event;
 
 class RedisDriver implements DriverInterface, PubSubDriverInterface
 {
     use DebugTrait;
+    use PubSubTrait;
     use StandardIdValidatorTrait;
 
     /**
@@ -71,11 +70,6 @@ class RedisDriver implements DriverInterface, PubSubDriverInterface
      * @var ScoreNormaliser
      */
     protected $score_normaliser = null;
-
-    /**
-     * @var string
-     */
-    protected $pubsub_channel_prefix = self::SUBSCRIPTION_PATTERN;
 
     /**
      * Create a new Redis driver
@@ -706,28 +700,6 @@ class RedisDriver implements DriverInterface, PubSubDriverInterface
         }
 
         return false;
-    }
-
-    /**
-     * Sets the PubSub messaging channel prefix used in the underlying database driver.
-     *
-     * @param string $prefix
-     *
-     * @return RedisDriver
-     */
-    public function setChannelPrefix($prefix)
-    {
-        $this->pubsub_channel_prefix = $prefix;
-    }
-
-    /**
-     * Return the PubSub messaging channel prefix used in the underlying database driver.
-     *
-     * @return string
-     */
-    public function getChannelPrefix()
-    {
-        return $this->pubsub_channel_prefix;
     }
 
     /**
