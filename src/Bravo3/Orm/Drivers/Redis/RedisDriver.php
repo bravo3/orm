@@ -73,6 +73,11 @@ class RedisDriver implements DriverInterface, PubSubDriverInterface
     protected $score_normaliser = null;
 
     /**
+     * @var string
+     */
+    protected $pubsub_channel_prefix = self::SUBSCRIPTION_PATTERN;
+
+    /**
      * Create a new Redis driver
      *
      * @param mixed                $params
@@ -704,6 +709,28 @@ class RedisDriver implements DriverInterface, PubSubDriverInterface
     }
 
     /**
+     * Sets the PubSub messaging channel prefix used in the underlying database driver.
+     *
+     * @param string $prefix
+     *
+     * @return RedisDriver
+     */
+    public function setChannelPrefix($prefix)
+    {
+        $this->pubsub_channel_prefix = $prefix;
+    }
+
+    /**
+     * Return the PubSub messaging channel prefix used in the underlying database driver.
+     *
+     * @return string
+     */
+    public function getChannelPrefix()
+    {
+        return $this->pubsub_channel_prefix;
+    }
+
+    /**
      * Start listening to subscribed channels of the Redis PubSub mechanism.
      * Add a callback to a particular subscription channel.
      *
@@ -713,7 +740,13 @@ class RedisDriver implements DriverInterface, PubSubDriverInterface
     public function listenToPubSub(callable $callback)
     {
         while (1) {
-            $this->client->executeCommand(RawCommand::create('PSUBSCRIBE', self::SUBSCRIPTION_PATTERN));
+            $this->client->executeCommand(
+                RawCommand::create(
+                    'PSUBSCRIBE',
+                    $this->pubsub_channel_prefix
+                )
+            );
+
             $payload = $this->client->getConnection()->read();
 
             $channel = ltrim($payload[2], self::SUBSCRIPTION_PATTERN);

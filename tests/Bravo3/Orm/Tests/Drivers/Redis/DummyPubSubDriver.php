@@ -9,6 +9,8 @@ class DummyPubSubDriver implements PubSubDriverInterface
 
     protected $channel;
 
+    protected $pubsub_channel_prefix;
+
     public function setChannel($channel)
     {
         $this->channel = $channel;
@@ -22,6 +24,16 @@ class DummyPubSubDriver implements PubSubDriverInterface
     public function isPubSubSupported()
     {
         return true;
+    }
+
+    public function setChannelPrefix($prefix)
+    {
+        $this->pubsub_channel_prefix = $prefix;
+    }
+
+    public function getChannelPrefix()
+    {
+        return $this->pubsub_channel_prefix;
     }
 
     public function listenToPubSub(callable $callback)

@@ -13,6 +13,22 @@ interface PubSubDriverInterface
     public function isPubSubSupported();
 
     /**
+     * Sets the PubSub messaging channel prefix used in the underlying database driver.
+     *
+     * @param string $prefix
+     *
+     * @return PubSubDriverInterface
+     */
+    public function setChannelPrefix($prefix);
+
+    /**
+     * Return the PubSub messaging channel prefix used in the underlying database driver.
+     *
+     * @return string
+     */
+    public function getChannelPrefix();
+
+    /**
      * Start listening to subscribed channels of the database (if PubSub is supported)
      *
      * @param callable $callback
