@@ -29,4 +29,9 @@ class DummyPubSubDriver implements PubSubDriverInterface
             ]
         );
     }
+
+    public function publishMessage($channel, $message)
+    {
+        // do nothing
+    }
 }

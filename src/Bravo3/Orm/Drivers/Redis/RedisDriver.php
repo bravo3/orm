@@ -732,4 +732,16 @@ class RedisDriver implements DriverInterface, PubSubDriverInterface
             );
         }
     }
+
+    /**
+     * Uses Redis PubSub implementation to push messages to the channel specified.
+     *
+     * @param string $channel
+     * @param string $message
+     * @return int
+     */
+    public function publishMessage($channel, $message)
+    {
+        return $this->client->publish($channel, $message);
+    }
 }

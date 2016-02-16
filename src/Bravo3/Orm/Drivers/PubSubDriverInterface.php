@@ -10,4 +10,13 @@ interface PubSubDriverInterface
      * @return void
      */
     public function listenToPubSub(callable $callback);
+
+    /**
+     * Publishes a message to the configured channel. Channel and Message length is limited based on the driver used.
+     *
+     * @param string $channel
+     * @param string $message
+     * @return int
+     */
+    public function publishMessage($channel, $message);
 }

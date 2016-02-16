@@ -30,6 +30,20 @@ class PubSubManager
     }
 
     /**
+     * Publishes a message to the configured channel. Channel and Message length is limited based on the driver used.
+     * Returns true on success of delivery of the message, or false on failure.
+     * Usually a message delivery fails if there are not subscribed clients for the channel.
+     *
+     * @param string $channel
+     * @param string $message
+     * @return bool
+     */
+    public function publish($channel, $message)
+    {
+        return (bool) $this->driver->publishMessage($channel, $message);
+    }
+
+    /**
      * Function triggers PubSub events based on the messages received on subscribed channels.
      *
      * @param array $payload
