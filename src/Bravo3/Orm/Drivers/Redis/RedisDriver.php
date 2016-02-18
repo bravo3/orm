@@ -694,13 +694,13 @@ class RedisDriver implements DriverInterface, PubSubDriverInterface
      */
     public function isPubSubSupported()
     {
-        $info = $this->client->info();
-        if ((float) $info['Server']['redis_version'] >= 2.8) {
+        if ((float) $this->client->getProfile()->getVersion() >= 2.8) {
             return true;
         }
 
         return false;
     }
+
 
     /**
      * Start listening to subscribed channels of the Redis PubSub mechanism.
