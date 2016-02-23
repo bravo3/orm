@@ -21,6 +21,7 @@ use Predis\Command\CommandInterface;
 use Predis\ClientInterface;
 use Predis\Command\KeyScan;
 use Predis\Command\RawCommand;
+use Predis\Connection\Aggregate\MasterSlaveReplication;
 use Predis\Connection\Aggregate\PredisCluster;
 use Predis\Connection\Aggregate\ReplicationInterface;
 use Predis\Connection\NodeConnectionInterface;
@@ -712,14 +713,19 @@ class RedisDriver implements DriverInterface, PubSubDriverInterface
     public function listenToPubSub(callable $callback)
     {
         while (1) {
-            $this->client->executeCommand(
-                RawCommand::create(
-                    'PSUBSCRIBE',
-                    $this->pubsub_channel_prefix
-                )
+
+            $command = RawCommand::create(
+                'PSUBSCRIBE',
+                sprintf('%s-%s', $this->pubsub_channel_prefix, '*')
             );
 
-            $payload = $this->client->getConnection()->read();
+            $this->client->executeCommand($command);
+
+            if ($this->client->getConnection() instanceof MasterSlaveReplication) {
+                $payload = $this->client->getConnection()->getConnection($command)->read();
+            } else {
+                $payload = $this->client->getConnection()->read();
+            }
 
             $channel = ltrim($payload[2], self::SUBSCRIPTION_PATTERN);
             $message = base64_decode($payload[3]);
@@ -743,6 +749,9 @@ class RedisDriver implements DriverInterface, PubSubDriverInterface
      */
     public function publishMessage($channel, $message)
     {
-        return $this->client->publish($channel, base64_encode($message));
+        return $this->client->publish(
+            sprintf('%s-%s', $this->pubsub_channel_prefix, $channel),
+            base64_encode($message)
+        );
     }
 }
