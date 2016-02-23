@@ -45,7 +45,7 @@ class PubSubManager
      */
     public function publish($channel, $message)
     {
-        return (bool) $this->driver->publishMessage(static::generateEventName($channel), $message);
+        return (bool) $this->driver->publishMessage($channel, $message);
     }
 
     /**

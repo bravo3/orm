@@ -3,7 +3,7 @@ namespace Bravo3\Orm\Drivers;
 
 interface PubSubDriverInterface
 {
-    const SUBSCRIPTION_PATTERN = 'BRAVO3_EVT-*';
+    const SUBSCRIPTION_PATTERN = 'BRAVO3_EVT';
 
     /**
      * Confirm that the driver supports Pub/Sub messaging.
